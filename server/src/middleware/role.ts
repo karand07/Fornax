@@ -1,0 +1,20 @@
+import { Request, Response, NextFunction } from 'express';
+import { Role } from '@prisma/client';
+
+export { Role };
+
+export function requireRole(...allowedRoles: Role[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      res.status(403).json({ error: 'Forbidden: Insufficient permissions for this resource' });
+      return;
+    }
+
+    next();
+  };
+}
