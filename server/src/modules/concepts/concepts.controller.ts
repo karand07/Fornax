@@ -1,0 +1,118 @@
+import { Request, Response } from 'express';
+import { z } from 'zod';
+import { conceptsService } from './concepts.service.js';
+
+const createConceptSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  order: z.number().int().optional(),
+  courseId: z.string().uuid('Valid course ID is required'),
+  prerequisiteIds: z.array(z.string().uuid()).optional(),
+});
+
+const updateConceptSchema = z.object({
+  title: z.string().min(1, 'Title is required').optional(),
+  description: z.string().optional(),
+  order: z.number().int().optional(),
+  prerequisiteIds: z.array(z.string().uuid()).optional(),
+});
+
+const prerequisiteSchema = z.object({
+  prerequisiteId: z.string().uuid('Valid prerequisite ID is required'),
+});
+
+export class ConceptsController {
+  async getAllConcepts(req: Request, res: Response): Promise<void> {
+    try {
+      const courseId = typeof req.query.courseId === 'string' ? req.query.courseId : undefined;
+      const concepts = await conceptsService.getAllConcepts(courseId);
+      res.status(200).json(concepts);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch concepts';
+      res.status(500).json({ error: msg });
+    }
+  }
+
+  async getConceptById(req: Request, res: Response): Promise<void> {
+    try {
+      const concept = await conceptsService.getConceptById(req.params.id);
+      res.status(200).json(concept);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Concept not found';
+      res.status(404).json({ error: msg });
+    }
+  }
+
+  async createConcept(req: Request, res: Response): Promise<void> {
+    const parseResult = createConceptSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    try {
+      const concept = await conceptsService.createConcept(parseResult.data);
+      res.status(201).json(concept);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create concept';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async updateConcept(req: Request, res: Response): Promise<void> {
+    const parseResult = updateConceptSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    try {
+      const concept = await conceptsService.updateConcept(req.params.id, parseResult.data);
+      res.status(200).json(concept);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update concept';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async deleteConcept(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await conceptsService.deleteConcept(req.params.id);
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete concept';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async addPrerequisite(req: Request, res: Response): Promise<void> {
+    const parseResult = prerequisiteSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    try {
+      const result = await conceptsService.addPrerequisite(req.params.id, parseResult.data.prerequisiteId);
+      res.status(201).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to add prerequisite';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async removePrerequisite(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await conceptsService.removePrerequisite(req.params.id, req.params.prerequisiteId);
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to remove prerequisite';
+      res.status(400).json({ error: msg });
+    }
+  }
+}
+
+export const conceptsController = new ConceptsController();

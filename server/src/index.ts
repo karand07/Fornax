@@ -12,6 +12,9 @@ import gradingRouter from './modules/grading/grading.routes.js';
 import masteryRouter from './modules/mastery/mastery.routes.js';
 import profileRouter from './modules/profile/profile.routes.js';
 import analyticsRouter from './modules/analytics/analytics.routes.js';
+import conceptsRouter from './modules/concepts/concepts.routes.js';
+import resourcesRouter from './modules/resources/resources.routes.js';
+import faceRouter from './modules/face/face.routes.js';
 
 const app = express();
 
@@ -28,12 +31,15 @@ app.get('/api/health', (_req, res) => {
 // Module routes
 app.use('/api/auth', authRouter);
 app.use('/api/courses', coursesRouter);
+app.use('/api/concepts', conceptsRouter);
+app.use('/api/resources', resourcesRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/assessments', assessmentsRouter);
 app.use('/api/grading', gradingRouter);
 app.use('/api/mastery', masteryRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/face', faceRouter);
 
 // Error Handling Middleware
 app.use(errorHandler);

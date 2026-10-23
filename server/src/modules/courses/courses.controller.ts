@@ -19,6 +19,21 @@ export class CoursesController {
     }
   }
 
+  async getMyEnrolledCourses(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const courses = await coursesService.getMyEnrolledCourses(userId);
+      res.status(200).json(courses);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch enrolled courses';
+      res.status(500).json({ error: msg });
+    }
+  }
+
   async getCourseById(req: Request, res: Response): Promise<void> {
     try {
       const course = await coursesService.getCourseById(req.params.id);
@@ -67,6 +82,31 @@ export class CoursesController {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to enroll in course';
       res.status(400).json({ error: msg });
+    }
+  }
+
+  async unenroll(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const result = await coursesService.unenrollStudent(req.params.id, userId);
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to unenroll from course';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async getCourseEnrollments(req: Request, res: Response): Promise<void> {
+    try {
+      const enrollments = await coursesService.getCourseEnrollments(req.params.id);
+      res.status(200).json(enrollments);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch course enrollments';
+      res.status(500).json({ error: msg });
     }
   }
 }

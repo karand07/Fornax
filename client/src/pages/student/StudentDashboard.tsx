@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth-context';
 import {
   useCourses,
@@ -7,31 +8,52 @@ import {
   useStudentAnalytics,
   useScanQRAttendance,
   useFaceAttendance,
+  useFaceStatus,
 } from '@/api/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { FaceCapture } from '@/components/FaceCapture';
+import { ConceptResourceViewer } from '@/components/ConceptResourceViewer';
 import {
   BookOpen,
   CalendarCheck,
   TrendingUp,
+  Layers,
+  GraduationCap,
   ScanLine,
   CheckCircle,
-  GraduationCap,
+  ScanFace,
 } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: courses, isLoading: coursesLoading } = useCourses();
   const { data: attendanceHistory } = useMyAttendance();
   const { data: analytics } = useStudentAnalytics();
+  const { data: faceStatus } = useFaceStatus();
   const enrollMutation = useEnrollCourse();
   const scanQrMutation = useScanQRAttendance();
   const faceAttendanceMutation = useFaceAttendance();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'courses'>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab') as 'overview' | 'attendance' | 'courses' | 'concepts' | 'analytics' | null;
+  const [activeTab, setActiveTab] = useState<'overview' | 'attendance' | 'courses' | 'concepts' | 'analytics'>(
+    urlTab || 'overview'
+  );
+
+  useEffect(() => {
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab);
+    }
+  }, [urlTab]);
+
+  const handleTabChange = (tab: 'overview' | 'attendance' | 'courses' | 'concepts' | 'analytics') => {
+    setActiveTab(tab);
+    setSearchParams(tab === 'overview' ? {} : { tab });
+  };
   const [manualSessionId, setManualSessionId] = useState('');
   const [manualQrToken, setManualQrToken] = useState('');
   const [checkInMsg, setCheckInMsg] = useState<{ text: string; success: boolean } | null>(null);
@@ -80,23 +102,36 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Welcome Banner */}
-      <div className="rounded-lg bg-card border border-border p-6 md:p-7">
-        <Badge variant="secondary" className="mb-2">
-          Student Portal
-        </Badge>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight">
-          Welcome back, {user?.firstName}
-        </h1>
-        <p className="mt-1.5 text-sm text-slate-400">
-          Track your course enrollment, log attendance verification, and review academic competencies.
-        </p>
+      <div className="rounded-lg bg-card border border-border p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <Badge variant="secondary" className="mb-2">
+            Student Portal
+          </Badge>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight">
+            Welcome back, {user?.firstName}
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-400">
+            Track your course enrollment, log attendance verification, and review academic competencies.
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/student/enroll-face')}
+            className="text-xs font-mono border-blue-500/30 text-blue-400 hover:bg-blue-500/10 gap-2"
+          >
+            <ScanFace className="w-4 h-4" />
+            {faceStatus?.enrolled ? 'Face Profile Active ✓' : 'Enroll Face Biometrics'}
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border gap-6 text-sm font-medium">
+      <div className="flex border-b border-border gap-6 text-sm font-medium overflow-x-auto">
         <button
-          onClick={() => setActiveTab('overview')}
-          className={`pb-3 px-1 transition-colors ${
+          onClick={() => handleTabChange('overview')}
+          className={`pb-3 px-1 transition-colors whitespace-nowrap ${
             activeTab === 'overview'
               ? 'border-b-2 border-blue-500 text-blue-400 font-semibold'
               : 'text-slate-400 hover:text-slate-200'
@@ -105,24 +140,35 @@ export const StudentDashboard: React.FC = () => {
           Overview & Mastery
         </button>
         <button
-          onClick={() => setActiveTab('attendance')}
-          className={`pb-3 px-1 transition-colors ${
-            activeTab === 'attendance'
+          onClick={() => handleTabChange('concepts')}
+          className={`pb-3 px-1 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'concepts'
               ? 'border-b-2 border-blue-500 text-blue-400 font-semibold'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Check-in & Attendance
+          <Layers className="w-4 h-4" />
+          <span>Curriculum & Concept Graph</span>
         </button>
         <button
-          onClick={() => setActiveTab('courses')}
-          className={`pb-3 px-1 transition-colors ${
+          onClick={() => handleTabChange('courses')}
+          className={`pb-3 px-1 transition-colors whitespace-nowrap ${
             activeTab === 'courses'
               ? 'border-b-2 border-blue-500 text-blue-400 font-semibold'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           Courses & Enrollments
+        </button>
+        <button
+          onClick={() => handleTabChange('attendance')}
+          className={`pb-3 px-1 transition-colors whitespace-nowrap ${
+            activeTab === 'attendance'
+              ? 'border-b-2 border-blue-500 text-blue-400 font-semibold'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          Check-in & Attendance
         </button>
       </div>
 
@@ -250,9 +296,11 @@ export const StudentDashboard: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-300 mb-1 block">QR Code Token</label>
+                    <label className="text-xs font-medium text-slate-300 mb-1 block">
+                      Attendance Passcode or QR Token
+                    </label>
                     <Input
-                      placeholder="e.g. 9f8a3c2e..."
+                      placeholder="e.g. 582914 (or scan token)"
                       value={manualQrToken}
                       onChange={(e) => setManualQrToken(e.target.value)}
                       required
@@ -298,7 +346,25 @@ export const StudentDashboard: React.FC = () => {
             </Card>
           </div>
 
-          <div>
+          <div className="space-y-4">
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-slate-300">
+                <ScanFace className="w-4 h-4 text-blue-400" />
+                <span>
+                  {faceStatus?.enrolled
+                    ? 'Biometric face profile active'
+                    : 'Facial profile not yet enrolled'}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/student/enroll-face')}
+                className="text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-7 px-2.5"
+              >
+                {faceStatus?.enrolled ? 'Manage Biometrics' : 'Enroll Face Now →'}
+              </Button>
+            </div>
             <FaceCapture
               title="Biometric Face Verification"
               description="Verify your attendance using biometric facial recognition"
@@ -340,16 +406,27 @@ export const StudentDashboard: React.FC = () => {
                         {c.teacher?.firstName} {c.teacher?.lastName}
                       </span>
                     </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-blue-400 hover:text-white hover:bg-blue-600 transition-colors"
-                      onClick={() => enrollMutation.mutate(c.id)}
-                      disabled={enrollMutation.isPending}
-                    >
-                      <BookOpen className="w-3.5 h-3.5 mr-1" />
-                      Enroll in Course
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                        onClick={() => handleTabChange('concepts')}
+                      >
+                        <Layers className="w-3.5 h-3.5 mr-1" />
+                        Explore Curriculum & Concepts
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-blue-400 hover:text-white hover:bg-blue-600 transition-colors"
+                        onClick={() => enrollMutation.mutate(c.id)}
+                        disabled={enrollMutation.isPending}
+                      >
+                        <BookOpen className="w-3.5 h-3.5 mr-1" />
+                        Enroll in Course
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -357,6 +434,9 @@ export const StudentDashboard: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* CONCEPTS & CURRICULUM TAB */}
+      {activeTab === 'concepts' && <ConceptResourceViewer />}
     </div>
   );
 };

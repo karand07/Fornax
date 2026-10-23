@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 import { isFaceMatch } from '../../lib/face.js';
+import { generateRotatingHMAC, verifyRotatingCode } from '../../lib/token.js';
 import crypto from 'crypto';
 
 export class AttendanceService {
@@ -12,14 +13,93 @@ export class AttendanceService {
         qrCodeToken,
         isActive: true,
       },
+      include: {
+        course: {
+          select: { id: true, code: true, title: true },
+        },
+      },
+    });
+  }
+
+  async startSession(sessionId: string) {
+    const session = await prisma.classSession.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new Error('Class session not found');
+    }
+
+    return prisma.classSession.update({
+      where: { id: sessionId },
+      data: { isActive: true },
+      include: {
+        course: {
+          select: { id: true, code: true, title: true },
+        },
+      },
     });
   }
 
   async closeSession(sessionId: string) {
+    const session = await prisma.classSession.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new Error('Class session not found');
+    }
+
     return prisma.classSession.update({
       where: { id: sessionId },
       data: { isActive: false },
+      include: {
+        course: {
+          select: { id: true, code: true, title: true },
+        },
+      },
     });
+  }
+
+  async getSession(sessionId: string) {
+    const session = await prisma.classSession.findUnique({
+      where: { id: sessionId },
+      include: {
+        course: {
+          select: { id: true, code: true, title: true },
+        },
+        _count: {
+          select: { attendances: true },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new Error('Class session not found');
+    }
+
+    return session;
+  }
+
+  async getSessionCode(sessionId: string) {
+    const session = await prisma.classSession.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new Error('Class session not found');
+    }
+
+    if (!session.isActive) {
+      throw new Error('Class session is closed. Start the session to generate rotating codes.');
+    }
+
+    const codeData = generateRotatingHMAC(sessionId);
+    return {
+      sessionId: session.id,
+      isActive: session.isActive,
+      ...codeData,
+    };
   }
 
   async checkInViaQR(sessionId: string, userId: string, qrCodeToken: string) {
@@ -35,8 +115,12 @@ export class AttendanceService {
       throw new Error('Attendance session is closed');
     }
 
-    if (session.qrCodeToken !== qrCodeToken) {
-      throw new Error('Invalid or expired QR token');
+    // Verify rotating HMAC code (or static session.qrCodeToken as fallback)
+    const isRotatingValid = verifyRotatingCode(sessionId, qrCodeToken);
+    const isStaticValid = session.qrCodeToken && session.qrCodeToken === qrCodeToken;
+
+    if (!isRotatingValid && !isStaticValid) {
+      throw new Error('Invalid or expired attendance code. Please check the screen for the current code.');
     }
 
     return prisma.attendanceRecord.upsert({
@@ -56,6 +140,11 @@ export class AttendanceService {
         userId,
         status: 'PRESENT',
         verifiedBy: 'QR',
+      },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
       },
     });
   }
@@ -105,6 +194,11 @@ export class AttendanceService {
         userId,
         status: 'PRESENT',
         verifiedBy: 'FACE',
+      },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
       },
     });
   }

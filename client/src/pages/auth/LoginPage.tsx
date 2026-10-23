@@ -101,29 +101,36 @@ export const LoginPage: React.FC = () => {
           {/* Quick Demo Logins */}
           <div className="mt-6 pt-4 border-t border-slate-800">
             <span className="text-[11px] uppercase tracking-wider text-slate-400 font-mono block mb-2 text-center">
-              Quick Test Credentials
+              Quick Test Credentials (password123)
             </span>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-1.5 justify-center">
               <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-slate-800 text-xs py-1 transition-colors"
-                onClick={() => fillQuickCredentials('student@fornax.edu')}
+                className="cursor-pointer hover:bg-blue-600 hover:text-white text-[11px] py-1 transition-colors"
+                onClick={() => fillQuickCredentials('student1@fornax.edu')}
               >
-                Student Demo
+                Student 1 (Alex)
               </Badge>
               <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-slate-800 text-xs py-1 transition-colors"
+                className="cursor-pointer hover:bg-blue-600 hover:text-white text-[11px] py-1 transition-colors"
+                onClick={() => fillQuickCredentials('student2@fornax.edu')}
+              >
+                Student 2 (Samantha)
+              </Badge>
+              <Badge
+                variant="outline"
+                className="cursor-pointer hover:bg-amber-600 hover:text-white text-[11px] py-1 transition-colors"
                 onClick={() => fillQuickCredentials('teacher@fornax.edu')}
               >
-                Teacher Demo
+                Teacher (Jane)
               </Badge>
               <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-slate-800 text-xs py-1 transition-colors"
+                className="cursor-pointer hover:bg-emerald-600 hover:text-white text-[11px] py-1 transition-colors"
                 onClick={() => fillQuickCredentials('admin@fornax.edu')}
               >
-                Admin Demo
+                Admin (System)
               </Badge>
             </div>
           </div>

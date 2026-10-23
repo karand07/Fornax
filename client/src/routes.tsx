@@ -4,9 +4,11 @@ import { useAuth } from '@/auth-context';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { StudentDashboard } from '@/pages/student/StudentDashboard';
+import { EnrollFacePage } from '@/pages/student/EnrollFacePage';
 import { TeacherDashboard } from '@/pages/teacher/TeacherDashboard';
+import { LiveAttendancePage } from '@/pages/teacher/LiveAttendancePage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
-import { Header } from '@/components/Header';
+import { RoleLayout } from '@/components/layout/RoleLayout';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,7 +21,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-slate-400">
-        <div className="flex items-center gap-2 text-sm">Loading Fornax Portal...</div>
+        <div className="flex items-center gap-2 text-sm font-mono animate-pulse">
+          Loading Fornax Academic Hub...
+        </div>
       </div>
     );
   }
@@ -29,18 +33,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If unauthorized, redirect to their home portal
+    // If unauthorized, redirect to their role home portal
     if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
     if (user.role === 'TEACHER') return <Navigate to="/teacher" replace />;
     return <Navigate to="/student" replace />;
   }
 
-  return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">{children}</main>
-    </div>
-  );
+  return <RoleLayout>{children}</RoleLayout>;
 };
 
 export const AppRoutes: React.FC = () => {
@@ -76,6 +75,18 @@ export const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/student/enroll-face"
+        element={
+          <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+            <EnrollFacePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/face-enroll"
+        element={<Navigate to="/student/enroll-face" replace />}
+      />
 
       {/* Teacher Portal */}
       <Route
@@ -83,6 +94,22 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
             <TeacherDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/live-attendance"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <LiveAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/live-attendance/:sessionId"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <LiveAttendancePage />
           </ProtectedRoute>
         }
       />

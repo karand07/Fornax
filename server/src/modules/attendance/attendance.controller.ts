@@ -9,7 +9,7 @@ const createSessionSchema = z.object({
 
 const scanQrSchema = z.object({
   sessionId: z.string().uuid('Valid session ID is required'),
-  qrCodeToken: z.string().min(1, 'QR code token is required'),
+  qrCodeToken: z.string().min(1, 'Attendance code or token is required'),
 });
 
 const verifyFaceSchema = z.object({
@@ -38,12 +38,66 @@ export class AttendanceController {
     }
   }
 
-  async closeSession(req: Request, res: Response): Promise<void> {
+  async startSession(req: Request, res: Response): Promise<void> {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID parameter is required' });
+      return;
+    }
+
     try {
-      const session = await attendanceService.closeSession(req.params.sessionId);
+      const session = await attendanceService.startSession(sessionId);
+      res.status(200).json(session);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to start session';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async closeSession(req: Request, res: Response): Promise<void> {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID parameter is required' });
+      return;
+    }
+
+    try {
+      const session = await attendanceService.closeSession(sessionId);
       res.status(200).json(session);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to close session';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async getSessionById(req: Request, res: Response): Promise<void> {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID parameter is required' });
+      return;
+    }
+
+    try {
+      const session = await attendanceService.getSession(sessionId);
+      res.status(200).json(session);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve session';
+      res.status(404).json({ error: msg });
+    }
+  }
+
+  async getSessionCode(req: Request, res: Response): Promise<void> {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID parameter is required' });
+      return;
+    }
+
+    try {
+      const codeData = await attendanceService.getSessionCode(sessionId);
+      res.status(200).json(codeData);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate session code';
       res.status(400).json({ error: msg });
     }
   }
@@ -59,7 +113,7 @@ export class AttendanceController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        res.status(401).json({ error: 'Unauthorized' });
+        res.status(401).json({ error: 'Unauthorized: User not authenticated' });
         return;
       }
 
@@ -70,7 +124,7 @@ export class AttendanceController {
       );
       res.status(200).json({ success: true, record });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'QR check-in failed';
+      const msg = err instanceof Error ? err.message : 'Attendance check-in failed';
       res.status(400).json({ error: msg });
     }
   }
@@ -86,7 +140,7 @@ export class AttendanceController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        res.status(401).json({ error: 'Unauthorized' });
+        res.status(401).json({ error: 'Unauthorized: User not authenticated' });
         return;
       }
 
@@ -103,8 +157,14 @@ export class AttendanceController {
   }
 
   async getSessionRecords(req: Request, res: Response): Promise<void> {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID parameter is required' });
+      return;
+    }
+
     try {
-      const records = await attendanceService.getSessionRecords(req.params.sessionId);
+      const records = await attendanceService.getSessionRecords(sessionId);
       res.status(200).json(records);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to retrieve records';
@@ -116,7 +176,7 @@ export class AttendanceController {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        res.status(401).json({ error: 'Unauthorized' });
+        res.status(401).json({ error: 'Unauthorized: User not authenticated' });
         return;
       }
       const records = await attendanceService.getStudentAttendance(userId);

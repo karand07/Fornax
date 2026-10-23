@@ -51,6 +51,7 @@ model Course {
   enrollments Enrollment[]
   sessions    ClassSession[]
   assessments Assessment[]
+  concepts    Concept[]
 }
 
 model Enrollment {
@@ -134,4 +135,55 @@ model MasteryScore {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, topic])
+}
+
+enum ResourceDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum ResourceType {
+  DOCUMENT
+  VIDEO
+  ARTICLE
+  EXERCISE
+}
+
+model Concept {
+  id             String                @id @default(uuid())
+  title          String
+  description    String?
+  order          Int                   @default(0)
+  courseId       String
+  course         Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources      Resource[]
+  prerequisites  ConceptPrerequisite[] @relation("ConceptPrerequisites")
+  prerequisiteFor ConceptPrerequisite[] @relation("ConceptPrerequisiteFor")
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+}
+
+model ConceptPrerequisite {
+  id             String   @id @default(uuid())
+  conceptId      String
+  prerequisiteId String
+  concept        Concept  @relation("ConceptPrerequisites", fields: [conceptId], references: [id], onDelete: Cascade)
+  prerequisite   Concept  @relation("ConceptPrerequisiteFor", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@unique([conceptId, prerequisiteId])
+}
+
+model Resource {
+  id          String             @id @default(uuid())
+  title       String
+  description String?
+  url         String?
+  type        ResourceType       @default(ARTICLE)
+  difficulty  ResourceDifficulty @default(BEGINNER)
+  conceptId   String
+  concept     Concept            @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }

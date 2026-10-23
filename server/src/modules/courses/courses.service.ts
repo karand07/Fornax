@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma.js';
 
+
 export class CoursesService {
   async getAllCourses() {
     return prisma.course.findMany({
@@ -8,7 +9,7 @@ export class CoursesService {
           select: { id: true, firstName: true, lastName: true, email: true },
         },
         _count: {
-          select: { enrollments: true, sessions: true, assessments: true },
+          select: { enrollments: true, sessions: true, assessments: true, concepts: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -28,6 +29,28 @@ export class CoursesService {
           include: {
             user: {
               select: { id: true, firstName: true, lastName: true, email: true },
+            },
+          },
+        },
+        concepts: {
+          orderBy: { order: 'asc' },
+          include: {
+            resources: {
+              orderBy: { createdAt: 'asc' },
+            },
+            prerequisites: {
+              include: {
+                prerequisite: {
+                  select: { id: true, title: true, order: true },
+                },
+              },
+            },
+            prerequisiteFor: {
+              include: {
+                concept: {
+                  select: { id: true, title: true, order: true },
+                },
+              },
             },
           },
         },
@@ -70,11 +93,91 @@ export class CoursesService {
       throw new Error('Course not found');
     }
 
+    const existing = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+    if (existing) {
+      return existing;
+    }
+
     return prisma.enrollment.create({
       data: {
         courseId,
         userId,
       },
+    });
+  }
+
+  async unenrollStudent(courseId: string, userId: string) {
+    const enrollment = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    await prisma.enrollment.delete({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    return { success: true };
+  }
+
+  async getMyEnrolledCourses(userId: string) {
+    return prisma.course.findMany({
+      where: {
+        enrollments: {
+          some: { userId },
+        },
+      },
+      include: {
+        teacher: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+        _count: {
+          select: { concepts: true, assessments: true, sessions: true, enrollments: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getCourseEnrollments(courseId: string) {
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    return prisma.enrollment.findMany({
+      where: { courseId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
     });
   }
 }
