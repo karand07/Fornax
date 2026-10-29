@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { coursesController } from './courses.controller.js';
+import { assessmentsController } from '../assessments/assessments.controller.js';
 import { authMiddleware } from '../../middleware/auth.js';
 import { requireRole } from '../../middleware/role.js';
 import { Role } from '@prisma/client';
@@ -37,6 +38,20 @@ router.delete(
   authMiddleware,
   requireRole(Role.STUDENT),
   (req, res) => coursesController.unenroll(req, res)
+);
+
+// Course assessments
+router.post(
+  '/:id/assessments',
+  authMiddleware,
+  requireRole(Role.TEACHER, Role.ADMIN),
+  (req, res) => assessmentsController.createAssessment(req, res)
+);
+
+router.get(
+  '/:id/assessments',
+  authMiddleware,
+  (req, res) => assessmentsController.getCourseAssessments(req, res)
 );
 
 export default router;

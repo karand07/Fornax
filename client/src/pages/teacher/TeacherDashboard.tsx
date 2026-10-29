@@ -17,6 +17,7 @@ import {
   Layers,
   LayoutDashboard,
   Radio,
+  HelpCircle,
 } from 'lucide-react';
 
 export const TeacherDashboard: React.FC = () => {
@@ -310,15 +311,26 @@ export const TeacherDashboard: React.FC = () => {
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Automated Evaluation
                       </span>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs text-blue-400 hover:text-white hover:bg-blue-600 gap-1"
-                      onClick={() => handleTabChange('curriculum')}
-                    >
-                      <Layers className="w-3.5 h-3.5" />
-                      Manage Curriculum & Concepts
-                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-xs text-blue-400 hover:text-white hover:bg-blue-600 gap-1"
+                        onClick={() => handleTabChange('curriculum')}
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        Curriculum
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="w-full text-xs bg-indigo-600 hover:bg-indigo-500 text-white gap-1"
+                        onClick={() => navigate(`/teacher/courses/${c.id}/assessments`)}
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        Assessments
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

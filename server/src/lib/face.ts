@@ -15,6 +15,9 @@ export function euclideanDistance(arr1: number[], arr2: number[]): number {
   return Math.sqrt(sum);
 }
 
+export const euclidean = euclideanDistance;
+export const dist = euclideanDistance;
+
 export function isFaceMatch(
   storedDescriptor: number[],
   incomingDescriptor: number[],

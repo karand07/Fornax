@@ -10,6 +10,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   CLIENT_URL: z.string().default('http://localhost:5173'),
+  TRUST_PROXY: z.string().optional().default(''),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

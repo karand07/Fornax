@@ -76,9 +76,16 @@ export interface AttendanceRecord {
   id: string;
   sessionId: string;
   userId: string;
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED' | 'FLAGGED';
   verifiedBy: 'QR' | 'FACE' | 'MANUAL';
   timestamp: string;
+  faceDistance?: number | null;
+  livenessPassed?: boolean | null;
+  codeValid?: boolean;
+  networkOk?: boolean;
+  integrityScore?: number | null;
+  method?: string;
+  reviewedBy?: string | null;
   user?: {
     id: string;
     firstName: string;
@@ -300,6 +307,7 @@ export interface ClassSessionDetails {
   title: string;
   sessionDate: string;
   qrCodeToken: string | null;
+  windowEndsAt?: string | null;
   isActive: boolean;
   createdAt: string;
   course: {
@@ -418,6 +426,158 @@ export function useFaceAttendance() {
   });
 }
 
+// Mode B Attendance Hooks
+export function useOpenAttendanceWindow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ sessionId, seconds }: { sessionId: string; seconds: number }) => {
+      const res = await api.post(`/attendance/sessions/${sessionId}/open-window`, { seconds });
+      return res.data as { windowEndsAt: string };
+    },
+    onSuccess: (_, { sessionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
+    },
+  });
+}
+
+export function useCheckAttendanceCode() {
+  return useMutation({
+    mutationFn: async ({ sessionId, code }: { sessionId: string; code: string }) => {
+      const res = await api.post(`/attendance/sessions/${sessionId}/check-code`, { code });
+      return res.data as { ok: boolean; secondsLeft: number };
+    },
+  });
+}
+
+export function useMarkSelfAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      code,
+      descriptor,
+      livenessPassed,
+    }: {
+      sessionId: string;
+      code: string;
+      descriptor: number[];
+      livenessPassed: boolean;
+    }) => {
+      const res = await api.post(`/attendance/sessions/${sessionId}/mark`, {
+        code,
+        descriptor,
+        livenessPassed,
+      });
+      return res.data as {
+        status: 'PRESENT' | 'FLAGGED';
+        integrityScore: number;
+        message: string;
+      };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myAttendance'] });
+      queryClient.invalidateQueries({ queryKey: ['sessionRecords'] });
+    },
+  });
+}
+
+export function useReviewAttendanceRecord() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      recordId,
+      status,
+    }: {
+      recordId: string;
+      status: 'PRESENT' | 'ABSENT';
+    }) => {
+      const res = await api.patch(`/attendance/records/${recordId}/review`, { status });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessionRecords'] });
+    },
+  });
+}
+
+// Mode A Class-Photo Attendance Types & Hooks
+export interface ClassPhotoMatchedStudent {
+  recordId: string;
+  studentId: string;
+  name: string;
+  distance: number;
+  status: 'PRESENT' | 'FLAGGED';
+  integrityScore: number;
+}
+
+export interface ClassPhotoNotFoundStudent {
+  studentId: string;
+  name: string;
+  hasFaceEnrolled: boolean;
+}
+
+export interface ClassPhotoSkippedStudent {
+  studentId: string;
+  name: string;
+  reason: string;
+}
+
+export interface ClassPhotoResult {
+  matched: ClassPhotoMatchedStudent[];
+  flagged: ClassPhotoMatchedStudent[];
+  notFound: ClassPhotoNotFoundStudent[];
+  unknownFaces: number;
+  skipped: ClassPhotoSkippedStudent[];
+}
+
+export function useClassPhotoAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      photos,
+    }: {
+      sessionId: string;
+      photos: number[][][];
+    }) => {
+      const res = await api.post(`/attendance/sessions/${sessionId}/class-photo`, { photos });
+      return res.data as ClassPhotoResult;
+    },
+    onSuccess: (_, { sessionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['sessionRecords', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['sessionRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
+    },
+  });
+}
+
+export function useManualAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      studentId,
+      status,
+    }: {
+      sessionId: string;
+      studentId: string;
+      status: 'PRESENT' | 'ABSENT';
+    }) => {
+      const res = await api.post(`/attendance/sessions/${sessionId}/manual`, {
+        studentId,
+        status,
+      });
+      return res.data;
+    },
+    onSuccess: (_, { sessionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['sessionRecords', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['sessionRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['sessionDetails', sessionId] });
+    },
+  });
+}
+
+
 export function useEnrollFace() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -453,15 +613,271 @@ export function useMyAttendance() {
   });
 }
 
-// Assessments Hooks
+// Day 6 Assessment & Question Interfaces
+export interface RubricCriterion {
+  id?: string;
+  description: string;
+  marks?: number;
+}
+
+export interface Question {
+  id: string;
+  assessmentId: string;
+  conceptId: string;
+  type: 'MCQ' | 'SHORT' | 'HANDWRITTEN';
+  prompt: string;
+  maxMarks: number;
+  options: string[];
+  correctIndex?: number;
+  modelAnswer?: string;
+  rubrics?: RubricCriterion[];
+  rubricCriteria?: RubricCriterion[];
+}
+
+export interface AssessmentDetail {
+  id: string;
+  courseId: string;
+  title: string;
+  description?: string;
+  published: boolean;
+  submitted?: boolean;
+  questions: Question[];
+  course?: { id: string; code: string; title: string; teacherId?: string };
+}
+
+export interface AssessmentListItem {
+  id: string;
+  courseId?: string;
+  title: string;
+  published?: boolean;
+  questionCount: number;
+  totalMarks?: number;
+  submissionCount?: number;
+  submitted?: boolean;
+  createdAt?: string;
+}
+
+export interface AssessmentSummary {
+  totalAwarded: number;
+  totalMax: number;
+  gradedCount: number;
+  pendingCount: number;
+  percentage: number | null;
+}
+
+export interface AssessmentConceptResult {
+  conceptId: string;
+  name: string;
+  awarded: number;
+  max: number;
+  masteryBefore: number;
+  masteryAfter: number;
+}
+
+export interface AssessmentQuestionResultItem {
+  questionId: string;
+  conceptId: string;
+  conceptName: string;
+  prompt: string;
+  type: 'MCQ' | 'SHORT' | 'HANDWRITTEN';
+  maxMarks: number;
+  options?: string[];
+  studentAnswer: number | string | null;
+  correctIndex?: number | null;
+  explanation?: string | null;
+  marksObtained: number | null;
+  status: 'GRADED' | 'PENDING';
+  grade?: {
+    marks: number;
+    confidence: number;
+    summary: string | null;
+  } | null;
+  rubrics?: RubricCriterion[];
+}
+
+export interface AssessmentMyResultResponse {
+  summary: AssessmentSummary;
+  concepts: AssessmentConceptResult[];
+  questions: AssessmentQuestionResultItem[];
+}
+
+// Backward compatibility alias
+export type AssessmentResultItem = AssessmentQuestionResultItem;
+
+export interface SubmitAssessmentResult {
+  submissionCount: number;
+  autoGraded: number;
+  pendingGrading: number;
+  mcqScore: number;
+  mcqMax: number;
+}
+
+export interface ConceptMasteryItem {
+  conceptId: string;
+  name: string;
+  score: number;
+  attempts: number;
+  prerequisiteId: string | null;
+  prerequisiteName: string | null;
+  lastUpdated: string | null;
+}
+
+export interface StudentCourseAttendanceHistoryItem {
+  sessionId: string;
+  date: string;
+  status: 'PRESENT' | 'FLAGGED' | 'ABSENT';
+}
+
+export interface StudentCourseAttendance {
+  totalSessions: number;
+  present: number;
+  flagged: number;
+  absent: number;
+  rate: number | null;
+  history: StudentCourseAttendanceHistoryItem[];
+}
+
+// Day 6 Assessments Hooks
 export function useCourseAssessments(courseId: string) {
-  return useQuery<Assessment[]>({
+  return useQuery<AssessmentListItem[]>({
     queryKey: ['assessments', courseId],
     queryFn: async () => {
-      const res = await api.get(`/assessments/course/${courseId}`);
+      const res = await api.get(`/courses/${courseId}/assessments`);
       return res.data;
     },
     enabled: Boolean(courseId),
+  });
+}
+
+export function useCreateAssessment(defaultCourseId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { courseId?: string; title: string }) => {
+      const cid = vars.courseId || defaultCourseId;
+      const res = await api.post(`/courses/${cid}/assessments`, { title: vars.title });
+      return res.data;
+    },
+    onSuccess: (_, vars) => {
+      const cid = vars.courseId || defaultCourseId;
+      if (cid) {
+        queryClient.invalidateQueries({ queryKey: ['assessments', cid] });
+      }
+    },
+  });
+}
+
+export function useAssessment(id: string) {
+  return useQuery<AssessmentDetail>({
+    queryKey: ['assessment', id],
+    queryFn: async () => {
+      const res = await api.get(`/assessments/${id}`);
+      return res.data;
+    },
+    enabled: Boolean(id),
+  });
+}
+
+export function useAddQuestion(assessmentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const res = await api.post(`/assessments/${assessmentId}/questions`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assessment', assessmentId] });
+    },
+  });
+}
+
+export function useUpdateQuestion(assessmentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ questionId, data }: { questionId: string; data: any }) => {
+      const res = await api.patch(`/questions/${questionId}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assessment', assessmentId] });
+    },
+  });
+}
+
+export function useDeleteQuestion(assessmentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (questionId: string) => {
+      const res = await api.delete(`/questions/${questionId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assessment', assessmentId] });
+    },
+  });
+}
+
+export function usePublishAssessment(assessmentId: string, courseId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await api.patch(`/assessments/${assessmentId}/publish`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assessment', assessmentId] });
+      if (courseId) {
+        queryClient.invalidateQueries({ queryKey: ['assessments', courseId] });
+      }
+    },
+  });
+}
+
+export function useSubmitAssessment(assessmentId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { answers: { questionId: string; selectedIndex?: number; answerText?: string }[] }) => {
+      const res = await api.post(`/assessments/${assessmentId}/submit`, payload);
+      return res.data as SubmitAssessmentResult;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assessment', assessmentId] });
+      queryClient.invalidateQueries({ queryKey: ['assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['myResult', assessmentId] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+    },
+  });
+}
+
+export function useMyAssessmentResult(assessmentId: string) {
+  return useQuery<AssessmentMyResultResponse>({
+    queryKey: ['myResult', assessmentId],
+    queryFn: async () => {
+      const res = await api.get(`/assessments/${assessmentId}/my-result`);
+      return res.data;
+    },
+    enabled: Boolean(assessmentId),
+  });
+}
+
+export function useStudentCourseAttendance(courseId: string) {
+  return useQuery<StudentCourseAttendance>({
+    queryKey: ['studentAttendance', courseId],
+    queryFn: async () => {
+      const res = await api.get(`/attendance/me?courseId=${courseId}`);
+      return res.data;
+    },
+    enabled: Boolean(courseId),
+  });
+}
+
+export function useStudentCourseMastery(studentId: string, courseId: string) {
+  return useQuery<ConceptMasteryItem[]>({
+    queryKey: ['studentMastery', studentId, courseId],
+    queryFn: async () => {
+      const res = await api.get(`/students/${studentId}/mastery?courseId=${courseId}`);
+      return res.data;
+    },
+    enabled: Boolean(studentId) && Boolean(courseId),
   });
 }
 
@@ -486,3 +902,99 @@ export function useStudentAnalytics(studentId?: string) {
     },
   });
 }
+
+// Day 9 Teacher Grading Hooks & Types
+export interface TeacherSubmissionListItem {
+  id: string;
+  assessmentId: string;
+  questionId: string;
+  student: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  question: {
+    id: string;
+    prompt: string;
+    maxMarks: number;
+    type?: string;
+  };
+  answerText?: string | null;
+  marks: number | null;
+  autoMarks: number | null;
+  finalMarks: number | null;
+  confidence: number | null;
+  needsReview: boolean;
+  overridden: boolean;
+  submittedAt: string;
+  gradedAt?: string | null;
+}
+
+export interface TeacherSubmissionDetail {
+  id: string;
+  assessmentId: string;
+  questionId: string;
+  userId: string;
+  student: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  question: {
+    id: string;
+    prompt: string;
+    maxMarks: number;
+    type: string;
+  };
+  answerText?: string | null;
+  grade: {
+    autoMarks: number;
+    totalMarks: number;
+    finalMarks: number;
+    confidence: number;
+    confidenceLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+    modelVersion: string | null;
+    needsReview: boolean;
+    overriddenBy: string | null;
+    overridden: boolean;
+    provisional: boolean;
+    summary: string | null;
+    missingPoints: string[];
+    criteria: Array<{
+      criterionId?: string;
+      description: string;
+      maxMarks: number;
+      awarded: number;
+      justification?: string;
+      evidenceSpan?: string | null;
+    }>;
+    notes?: string | null;
+  } | null;
+  submittedAt: string;
+  gradedAt?: string | null;
+}
+
+export function useAssessmentSubmissions(assessmentId: string) {
+  return useQuery<TeacherSubmissionListItem[]>({
+    queryKey: ['assessmentSubmissions', assessmentId],
+    queryFn: async () => {
+      const res = await api.get(`/grading/assessments/${assessmentId}/submissions`);
+      return res.data;
+    },
+    enabled: Boolean(assessmentId),
+  });
+}
+
+export function useSubmissionDetail(submissionId: string | null) {
+  return useQuery<TeacherSubmissionDetail>({
+    queryKey: ['submissionDetail', submissionId],
+    queryFn: async () => {
+      const res = await api.get(`/grading/submissions/${submissionId}`);
+      return res.data;
+    },
+    enabled: Boolean(submissionId),
+  });
+}
+

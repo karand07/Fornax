@@ -36,10 +36,11 @@ export const RoleSidebar: React.FC = () => {
 
   const studentNav: NavItem[] = [
     { label: 'Overview', href: '/student', icon: LayoutDashboard },
+    { label: 'Mark Attendance', href: '/student/mark-attendance', icon: CalendarCheck, badge: 'Mode B' },
     { label: 'Enroll Face', href: '/student/enroll-face', icon: ScanFace },
     { label: 'My Courses', href: '/student?tab=courses', icon: BookOpen },
     { label: 'Concept Graph', href: '/student?tab=concepts', icon: Layers, badge: '6 Units' },
-    { label: 'Attendance Check-In', href: '/student?tab=attendance', icon: CalendarCheck },
+    { label: 'Check-In History', href: '/student?tab=attendance', icon: CalendarCheck },
     { label: 'Mastery & Growth', href: '/student?tab=analytics', icon: TrendingUp },
   ];
 

@@ -99,3 +99,13 @@ export function verifyRotatingCode(
 
   return false;
 }
+
+export function isValid(
+  sessionId: string,
+  inputCodeOrToken: string,
+  stepSeconds: number = ROTATING_CODE_STEP_SECONDS,
+  toleranceSteps: number = 1
+): boolean {
+  return verifyRotatingCode(sessionId, inputCodeOrToken, stepSeconds, toleranceSteps);
+}
+

@@ -69,6 +69,50 @@ export class GradingController {
       res.status(500).json({ error: msg });
     }
   }
+
+  async getSubmission(req: Request, res: Response): Promise<void> {
+    try {
+      const teacherId = req.user?.userId;
+      const userRole = req.user?.role;
+      if (!teacherId || !userRole) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const submission = await gradingService.getSubmissionById(
+        req.params.id,
+        teacherId,
+        userRole
+      );
+      res.status(200).json(submission);
+    } catch (err: unknown) {
+      const statusCode = (err as any)?.statusCode || 400;
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve submission';
+      res.status(statusCode).json({ error: msg });
+    }
+  }
+
+  async getAssessmentSubmissions(req: Request, res: Response): Promise<void> {
+    try {
+      const teacherId = req.user?.userId;
+      const userRole = req.user?.role;
+      if (!teacherId || !userRole) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const submissions = await gradingService.getAssessmentSubmissions(
+        req.params.assessmentId,
+        teacherId,
+        userRole
+      );
+      res.status(200).json(submissions);
+    } catch (err: unknown) {
+      const statusCode = (err as any)?.statusCode || 400;
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve assessment submissions';
+      res.status(statusCode).json({ error: msg });
+    }
+  }
 }
 
 export const gradingController = new GradingController();

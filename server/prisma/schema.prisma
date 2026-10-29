@@ -18,6 +18,7 @@ enum AttendanceStatus {
   ABSENT
   LATE
   EXCUSED
+  FLAGGED
 }
 
 model User {
@@ -36,17 +37,19 @@ model User {
   attendances    AttendanceRecord[]
   submissions    Submission[]
   masteryScores  MasteryScore[]
+  masteries      Mastery[]
 }
 
 model Course {
-  id          String         @id @default(uuid())
-  code        String         @unique
-  title       String
-  description String?
-  teacherId   String
-  teacher     User           @relation("TeacherCourses", fields: [teacherId], references: [id])
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id                String         @id @default(uuid())
+  code              String         @unique
+  title             String
+  description       String?
+  allowedIpPrefixes String[]       @default([])
+  teacherId         String
+  teacher           User           @relation("TeacherCourses", fields: [teacherId], references: [id])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   enrollments Enrollment[]
   sessions    ClassSession[]
@@ -67,26 +70,36 @@ model Enrollment {
 }
 
 model ClassSession {
-  id          String             @id @default(uuid())
-  courseId    String
-  title       String
-  sessionDate DateTime           @default(now())
-  qrCodeToken String?
-  isActive    Boolean            @default(false)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id           String             @id @default(uuid())
+  courseId     String
+  title        String
+  sessionDate  DateTime           @default(now())
+  qrCodeToken  String?
+  windowEndsAt DateTime?
+  isActive     Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
   course      Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
   attendances AttendanceRecord[]
 }
 
 model AttendanceRecord {
-  id           String           @id @default(uuid())
-  sessionId    String
-  userId       String
-  status       AttendanceStatus @default(PRESENT)
-  verifiedBy   String           @default("QR") // "QR" | "FACE" | "MANUAL"
-  timestamp    DateTime         @default(now())
+  id             String           @id @default(uuid())
+  sessionId      String
+  userId         String
+  status         AttendanceStatus @default(PRESENT)
+  verifiedBy     String           @default("QR") // "QR" | "FACE" | "MANUAL"
+  timestamp      DateTime         @default(now())
+
+  // Attendance Mode B fields
+  faceDistance   Float?
+  livenessPassed Boolean?
+  codeValid      Boolean          @default(false)
+  networkOk      Boolean          @default(false)
+  integrityScore Float?
+  method         String           @default("SELF") // SELF | CLASS_PHOTO | MANUAL
+  reviewedBy     String?
 
   session ClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -101,28 +114,105 @@ model Assessment {
   description String?
   maxScore    Float        @default(100)
   dueDate     DateTime?
+  published   Boolean      @default(false)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   submissions Submission[]
+  questions   Question[]
+}
+
+enum QuestionType {
+  MCQ
+  SHORT
+  HANDWRITTEN
+}
+
+model Question {
+  id           String            @id @default(uuid())
+  assessmentId String
+  conceptId    String
+  type         QuestionType
+  prompt       String
+  maxMarks     Float
+  options      String[]          @default([])
+  correctIndex Int?
+  modelAnswer  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  assessment   Assessment        @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  concept      Concept           @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  rubrics      RubricCriterion[]
+  submissions  Submission[]
+}
+
+model RubricCriterion {
+  id          String   @id @default(uuid())
+  questionId  String
+  description String
+  marks       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Submission {
-  id           String    @id @default(uuid())
-  assessmentId String
-  userId       String
-  content      String?
-  fileUrl      String?
-  score        Float?
-  feedback     String?
-  submittedAt  DateTime  @default(now())
-  gradedAt     DateTime?
+  id            String    @id @default(uuid())
+  assessmentId  String
+  questionId    String?
+  userId        String
+  content       String?
+  fileUrl       String?
+  score         Float?
+  feedback      String?
+  selectedIndex Int?
+  answerText    String?
+  submittedAt   DateTime  @default(now())
+  gradedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question      Question?  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grade         Grade?
 
-  @@unique([assessmentId, userId])
+  @@unique([userId, questionId])
+  @@index([assessmentId, userId])
+}
+
+model Grade {
+  id            String     @id @default(uuid())
+  submissionId  String     @unique
+  totalMarks    Float
+  finalMarks    Float?
+  confidence    Float      @default(1.0)
+  needsReview   Boolean    @default(false)
+  graderType    String     @default("AUTO") // "AUTO" | "LLM" | "MANUAL"
+  summary       String?
+  missingPoints String[]   @default([])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model Mastery {
+  id        String   @id @default(uuid())
+  userId    String
+  conceptId String
+  score     Float    @default(0.5)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  concept   Concept  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conceptId])
 }
 
 model MasteryScore {
@@ -160,6 +250,8 @@ model Concept {
   resources      Resource[]
   prerequisites  ConceptPrerequisite[] @relation("ConceptPrerequisites")
   prerequisiteFor ConceptPrerequisite[] @relation("ConceptPrerequisiteFor")
+  questions      Question[]
+  masteries      Mastery[]
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
 }

@@ -1,0 +1,66 @@
+export type MasteryBandName = 'weak' | 'developing' | 'strong';
+
+export interface MasteryBand {
+  band: MasteryBandName;
+  label: string;
+  color: string;
+  textColor: string;
+  bgColor: string;
+  borderColor: string;
+  progressColor: string;
+  badgeVariant: 'destructive' | 'secondary' | 'success' | 'default';
+}
+
+/**
+ * Mastery band thresholds:
+ * - Weak: < 0.4
+ * - Developing: 0.4 <= score < 0.7
+ * - Strong: >= 0.7
+ */
+export function masteryBand(score: number): MasteryBand {
+  if (score < 0.4) {
+    return {
+      band: 'weak',
+      label: 'Weak',
+      color: '#f43f5e',
+      textColor: 'text-rose-400',
+      bgColor: 'bg-rose-500/10',
+      borderColor: 'border-rose-500/30',
+      progressColor: 'bg-rose-500',
+      badgeVariant: 'destructive',
+    };
+  }
+  if (score < 0.7) {
+    return {
+      band: 'developing',
+      label: 'Developing',
+      color: '#f59e0b',
+      textColor: 'text-amber-400',
+      bgColor: 'bg-amber-500/10',
+      borderColor: 'border-amber-500/30',
+      progressColor: 'bg-amber-500',
+      badgeVariant: 'secondary',
+    };
+  }
+  return {
+    band: 'strong',
+    label: 'Strong',
+    color: '#10b981',
+    textColor: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/30',
+    progressColor: 'bg-emerald-500',
+    badgeVariant: 'success',
+  };
+}
+
+/**
+ * Format a ratio (0..1) or percentage (0..100) to a whole percent string.
+ */
+export function formatPercent(x: number | null | undefined): string {
+  if (x === null || x === undefined || isNaN(x)) {
+    return 'N/A';
+  }
+  const val = x >= 0 && x <= 1 ? x * 100 : x;
+  return `${Math.round(val)}%`;
+}

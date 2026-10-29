@@ -1,6 +1,7 @@
 import { PrismaClient, Role, ResourceDifficulty, ResourceType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import process from 'node:process';
+import { assessmentsService } from '../src/modules/assessments/assessments.service.js';
 
 
 const prisma = new PrismaClient();
@@ -71,6 +72,7 @@ async function main() {
       description:
         'Foundations of relational database engines, schema design, relational algebra, SQL optimization, ACID transactions, and disk-based indexing structures.',
       teacherId: teacher.id,
+      allowedIpPrefixes: ['127.0.0.1', '::1', '::ffff:127.0.0.1'],
     },
     create: {
       code: 'CS301',
@@ -78,6 +80,7 @@ async function main() {
       description:
         'Foundations of relational database engines, schema design, relational algebra, SQL optimization, ACID transactions, and disk-based indexing structures.',
       teacherId: teacher.id,
+      allowedIpPrefixes: ['127.0.0.1', '::1', '::ffff:127.0.0.1'],
     },
   });
 
@@ -368,6 +371,290 @@ async function main() {
     }
   }
 
+  // 8. Add published assessment "Normalization Quiz" with 6 MCQs and 2 SHORT questions
+  let assessmentId: string;
+  const existingAssessment = await prisma.assessment.findFirst({
+    where: { courseId: course.id, title: 'Normalization Quiz' },
+    include: { questions: true },
+  });
+
+  if (!existingAssessment) {
+    const createdAssessment = await assessmentsService.createAssessment(
+      course.id,
+      'Normalization Quiz',
+      teacher.id,
+      Role.TEACHER
+    );
+
+    // 6 MCQs (2 each on 3 different concepts)
+    // Concept 1 (ER Modeling)
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'MCQ',
+        conceptId: createdConcepts[1],
+        prompt: 'In an Entity-Relationship diagram, what does a double rectangle represent?',
+        maxMarks: 5,
+        options: ['Weak entity set', 'Relationship set', 'Multivalued attribute', 'Derived attribute'],
+        correctIndex: 0,
+        modelAnswer: 'A double rectangle represents a weak entity set that depends on an identifying entity set.',
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'MCQ',
+        conceptId: createdConcepts[1],
+        prompt: 'Which cardinality ratio specifies that an entity in A is associated with at most one entity in B?',
+        maxMarks: 5,
+        options: ['One-to-many', 'Many-to-many', 'One-to-one', 'Zero-to-many'],
+        correctIndex: 2,
+        modelAnswer: 'One-to-one specifies that at most one entity in B is associated with each entity in A.',
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    // Concept 2 (Relational Algebra)
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'MCQ',
+        conceptId: createdConcepts[2],
+        prompt: 'Which relational algebra operation filters rows that satisfy a given predicate?',
+        maxMarks: 5,
+        options: ['Projection (π)', 'Selection (σ)', 'Cartesian product (×)', 'Natural Join (⋈)'],
+        correctIndex: 1,
+        modelAnswer: 'Selection (sigma) is the unary operator used to filter tuples based on a condition.',
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'MCQ',
+        conceptId: createdConcepts[2],
+        prompt: 'What is the result cardinality of Cartesian product R × S where |R| = 4 and |S| = 5?',
+        maxMarks: 5,
+        options: ['9', '20', '1', '4^5'],
+        correctIndex: 1,
+        modelAnswer: 'The size of a Cartesian product is |R| * |S| = 4 * 5 = 20.',
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    // Concept 3 (Functional Dependencies & Normalization)
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'MCQ',
+        conceptId: createdConcepts[3],
+        prompt: 'A relation is in 2NF if it is in 1NF and what condition holds?',
+        maxMarks: 5,
+        options: [
+          'No transitive dependencies exist',
+          'Every non-prime attribute is fully functionally dependent on every candidate key',
+          'All multivalued dependencies are trivial',
+          'Every determinant is a candidate key',
+        ],
+        correctIndex: 1,
+        modelAnswer: '2NF requires that no non-prime attribute is partially dependent on any candidate key.',
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'MCQ',
+        conceptId: createdConcepts[3],
+        prompt: 'Which normal form strictly requires that for every functional dependency X -> Y, X is a superkey?',
+        maxMarks: 5,
+        options: ['1NF', '2NF', '3NF', 'Boyce-Codd Normal Form (BCNF)'],
+        correctIndex: 3,
+        modelAnswer: 'BCNF strictly requires the determinant X to be a superkey for every non-trivial functional dependency.',
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    // 2 SHORT questions with rubrics on Concept 3
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'SHORT',
+        conceptId: createdConcepts[3],
+        prompt: 'Explain how to decompose a relation with partial dependencies into Second Normal Form (2NF).',
+        maxMarks: 10,
+        modelAnswer:
+          'Identify partial dependencies where non-key attributes depend on a proper subset of a composite primary key. Create a new relation containing the determinant subset and the dependent attributes, leaving the original key in place.',
+        rubric: [
+          { description: 'Identifies partial dependencies on composite keys', marks: 5 },
+          { description: 'Explains creating new relations with subset determinants', marks: 5 },
+        ],
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    await assessmentsService.addQuestion(
+      createdAssessment.id,
+      {
+        type: 'SHORT',
+        conceptId: createdConcepts[3],
+        prompt: 'Discuss the difference between 3NF and BCNF with respect to dependency preservation.',
+        maxMarks: 10,
+        modelAnswer:
+          '3NF allows dependencies X -> A where A is a prime attribute, which guarantees that all functional dependencies can be preserved during decomposition. BCNF does not allow this exception, so certain BCNF decompositions cannot preserve all original dependencies without cross-relation joins.',
+        rubric: [
+          { description: 'Explains prime attribute exception in 3NF', marks: 5 },
+          { description: 'Analyzes why BCNF may not preserve all functional dependencies', marks: 5 },
+        ],
+      },
+      teacher.id,
+      Role.TEACHER
+    );
+
+    // Publish the assessment
+    const publishedAssessment = await assessmentsService.publishAssessment(
+      createdAssessment.id,
+      teacher.id,
+      Role.TEACHER
+    );
+    assessmentId = publishedAssessment.id;
+  } else {
+    assessmentId = existingAssessment.id;
+  }
+
+  // Reload assessment with questions for student submissions
+  const fullAssessment = await prisma.assessment.findUnique({
+    where: { id: assessmentId },
+    include: { questions: { orderBy: { createdAt: 'asc' } } },
+  });
+
+  if (!fullAssessment) {
+    throw new Error('Assessment not found');
+  }
+
+  const q = fullAssessment.questions;
+
+    // Pre-create submissions and grades for 3 of the 5 demo students
+    // Student 1 (Alex Rivera): Strong student (6/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[0].id, [
+      { questionId: q[0].id, selectedIndex: 0 },
+      { questionId: q[1].id, selectedIndex: 2 },
+      { questionId: q[2].id, selectedIndex: 1 },
+      { questionId: q[3].id, selectedIndex: 1 },
+      { questionId: q[4].id, selectedIndex: 1 },
+      { questionId: q[5].id, selectedIndex: 3 },
+      { questionId: q[6].id, answerText: 'To achieve 2NF, we identify partial dependencies and decompose into separate relations where attributes depend on the full candidate key.' },
+      { questionId: q[7].id, answerText: '3NF permits X->A if A is prime, allowing dependency preservation. BCNF strictly requires X to be a superkey, which may sacrifice dependency preservation.' },
+    ]);
+
+    // Student 2 (Samantha Chen): Weak student (1/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[1].id, [
+      { questionId: q[0].id, selectedIndex: 1 },
+      { questionId: q[1].id, selectedIndex: 0 },
+      { questionId: q[2].id, selectedIndex: 0 },
+      { questionId: q[3].id, selectedIndex: 1 }, // correct
+      { questionId: q[4].id, selectedIndex: 0 },
+      { questionId: q[5].id, selectedIndex: 1 },
+      { questionId: q[6].id, answerText: 'Put data in tables.' },
+      { questionId: q[7].id, answerText: 'They are both normal forms.' },
+    ]);
+
+    // Student 3 (Marcus Johnson): Mixed student (4/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[2].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 2 }, // correct
+      { questionId: q[2].id, selectedIndex: 1 }, // correct
+      { questionId: q[3].id, selectedIndex: 0 }, // wrong
+      { questionId: q[4].id, selectedIndex: 0 }, // wrong
+      { questionId: q[5].id, selectedIndex: 3 }, // correct
+      { questionId: q[6].id, answerText: 'Remove partial functional dependencies by moving those columns to their own table.' },
+      { questionId: q[7].id, answerText: '3NF is easier to achieve while preserving dependencies.' },
+    ]);
+
+  // 9. Seed 10 ended class sessions and attendance records for CS301
+  const existingSessions = await prisma.classSession.findMany({
+    where: { courseId: course.id },
+  });
+
+  if (existingSessions.length === 0) {
+    const sessionTitles = [
+      'Lecture 1: Introduction to Relational Databases',
+      'Lecture 2: Entity-Relationship Models & ERD',
+      'Lecture 3: Relational Algebra Operators',
+      'Lecture 4: SQL DDL, DML, and Integrity Constraints',
+      'Lecture 5: Functional Dependencies & Boyce-Codd Normal Form',
+      'Lecture 6: Multivalued Dependencies & 4NF',
+      'Lecture 7: Buffer Pool Management & Storage Engine',
+      'Lecture 8: B+ Tree Indexing & Search Keys',
+      'Lecture 9: Query Parsing, Optimization & Plan Selection',
+      'Lecture 10: ACID Properties & Concurrency Control',
+    ];
+
+    const now = Date.now();
+    for (let i = 0; i < sessionTitles.length; i++) {
+      const daysAgo = 10 - i;
+      const sessionDate = new Date(now - daysAgo * 24 * 60 * 60 * 1000);
+      const windowEndsAt = new Date(sessionDate.getTime() + 60 * 60 * 1000); // 1 hour after start
+
+      const session = await prisma.classSession.create({
+        data: {
+          courseId: course.id,
+          title: sessionTitles[i],
+          sessionDate,
+          windowEndsAt,
+          isActive: false, // Ended session
+        },
+      });
+
+      // Seed attendance for demo students
+      for (const student of students) {
+        let status: 'PRESENT' | 'FLAGGED' | 'ABSENT' = 'PRESENT';
+        let integrityScore = 1.0;
+
+        if (i === 7) {
+          // Lecture 8: FLAGGED for teacher review
+          status = 'FLAGGED';
+          integrityScore = 0.68;
+        } else if (i === 8) {
+          // Lecture 9: ABSENT
+          status = 'ABSENT';
+          integrityScore = 0.0;
+        } else if (i === 9) {
+          // Lecture 10: Skip creating record for student3 and student@fornax.edu so it counts as absent with no record
+          if (student.email === 'student3@fornax.edu' || student.email === 'student@fornax.edu') {
+            continue;
+          }
+        }
+
+        await prisma.attendanceRecord.create({
+          data: {
+            sessionId: session.id,
+            userId: student.id,
+            status,
+            verifiedBy: status === 'FLAGGED' ? 'FACE' : 'QR',
+            integrityScore,
+            timestamp: sessionDate,
+            method: 'SELF',
+            codeValid: true,
+            networkOk: status !== 'FLAGGED',
+            livenessPassed: true,
+          },
+        });
+      }
+    }
+  }
+
   console.log('✅ Seeding completed successfully!');
   console.log(`- 1 Admin: ${admin.email}`);
   console.log(`- 1 Teacher: ${teacher.email}`);
@@ -375,6 +662,7 @@ async function main() {
   console.log(`- 1 Course: ${course.title} (${course.code})`);
   console.log(`- 6 Concepts created with prerequisite DAG`);
   console.log(`- 18 Resources created across Beginner, Intermediate, and Advanced difficulties`);
+  console.log(`- 10 Ended class sessions with attendance records`);
 }
 
 main()

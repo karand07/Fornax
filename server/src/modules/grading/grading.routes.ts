@@ -27,4 +27,20 @@ router.get(
   (req, res) => gradingController.getAiFeedback(req, res)
 );
 
+// Teacher: get submission detail
+router.get(
+  '/submissions/:id',
+  authMiddleware,
+  requireRole(Role.TEACHER, Role.ADMIN),
+  (req, res) => gradingController.getSubmission(req, res)
+);
+
+// Teacher: get submissions with SHORT answers for an assessment
+router.get(
+  '/assessments/:assessmentId/submissions',
+  authMiddleware,
+  requireRole(Role.TEACHER, Role.ADMIN),
+  (req, res) => gradingController.getAssessmentSubmissions(req, res)
+);
+
 export default router;

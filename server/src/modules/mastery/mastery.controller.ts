@@ -9,6 +9,11 @@ const updateMasterySchema = z.object({
 
 export class MasteryController {
   async getStudentMastery(req: Request, res: Response): Promise<void> {
+    const courseId = req.query.courseId as string | undefined;
+    if (courseId) {
+      return this.getStudentCourseMastery(req, res);
+    }
+
     try {
       const targetUserId = req.params.userId || req.user?.userId;
       if (!targetUserId) {
@@ -21,6 +26,42 @@ export class MasteryController {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to retrieve mastery scores';
       res.status(500).json({ error: msg });
+    }
+  }
+
+  async getStudentCourseMastery(req: Request, res: Response): Promise<void> {
+    const studentId = req.params.id || req.params.userId || req.user?.userId;
+    const courseId = req.query.courseId as string | undefined;
+
+    if (!studentId) {
+      res.status(400).json({ error: 'Student ID is required' });
+      return;
+    }
+
+    if (!courseId) {
+      res.status(400).json({ error: 'courseId query parameter is required' });
+      return;
+    }
+
+    const requesterId = req.user?.userId;
+    const requesterRole = req.user?.role;
+    if (!requesterId || !requesterRole) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
+
+    try {
+      const data = await masteryService.getCourseMasteryForStudent(
+        studentId,
+        courseId,
+        requesterId,
+        requesterRole
+      );
+      res.status(200).json(data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve student mastery';
+      const status = msg.startsWith('Unauthorized') ? 403 : msg.includes('not found') ? 404 : 400;
+      res.status(status).json({ error: msg });
     }
   }
 

@@ -5,8 +5,15 @@ import { LoginPage } from '@/pages/auth/LoginPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { StudentDashboard } from '@/pages/student/StudentDashboard';
 import { EnrollFacePage } from '@/pages/student/EnrollFacePage';
+import { MarkAttendancePage } from '@/pages/student/MarkAttendancePage';
+import { TakeAssessmentPage } from '@/pages/student/TakeAssessmentPage';
+import { AssessmentResultPage } from '@/pages/student/AssessmentResultPage';
 import { TeacherDashboard } from '@/pages/teacher/TeacherDashboard';
 import { LiveAttendancePage } from '@/pages/teacher/LiveAttendancePage';
+import { TeacherAssessmentsPage } from '@/pages/teacher/TeacherAssessmentsPage';
+import { AssessmentBuilderPage } from '@/pages/teacher/AssessmentBuilderPage';
+import { TeacherSubmissionsPage } from '@/pages/teacher/TeacherSubmissionsPage';
+import { DevGradeCardPage } from '@/pages/dev/DevGradeCardPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { RoleLayout } from '@/components/layout/RoleLayout';
 
@@ -87,6 +94,46 @@ export const AppRoutes: React.FC = () => {
         path="/student/face-enroll"
         element={<Navigate to="/student/enroll-face" replace />}
       />
+      <Route
+        path="/student/mark-attendance"
+        element={
+          <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+            <MarkAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/mark-attendance/:sessionId"
+        element={
+          <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+            <MarkAttendancePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/assessments/:assessmentId"
+        element={
+          <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+            <TakeAssessmentPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/assessments/:assessmentId/result"
+        element={
+          <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+            <AssessmentResultPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/assessments/:id/result"
+        element={
+          <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+            <AssessmentResultPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Teacher Portal */}
       <Route
@@ -113,6 +160,43 @@ export const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/teacher/courses/:courseId/assessments"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherAssessmentsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/assessments/:assessmentId"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <AssessmentBuilderPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/assessments/:id/submissions"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherSubmissionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/assessments/:assessmentId/submissions"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherSubmissionsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Dev Fixtures Showcase (Dev only) */}
+      {import.meta.env.DEV && (
+        <Route path="/dev/gradecard" element={<DevGradeCardPage />} />
+      )}
 
       {/* Admin Portal */}
       <Route
