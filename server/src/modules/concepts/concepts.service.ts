@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/prisma.js';
+import { generateCompletion } from '../../lib/llm.js';
 
 
 export class ConceptsService {
@@ -359,7 +360,9 @@ export class ConceptsService {
       isCorrect: boolean;
       selectedIndex: number;
       correctIndex: number;
+      selectedAnswer: string;
       correctAnswer: string;
+      options: string[];
       explanation: string;
       ratio: number;
     }> = [];
@@ -375,7 +378,9 @@ export class ConceptsService {
           isCorrect,
           selectedIndex: ans.selectedIndex,
           correctIndex: q.correctIndex,
-          correctAnswer: q.options[q.correctIndex] || 'Option ' + q.correctIndex,
+          selectedAnswer: q.options[ans.selectedIndex] || `Option ${ans.selectedIndex + 1}`,
+          correctAnswer: q.options[q.correctIndex] || `Option ${q.correctIndex + 1}`,
+          options: q.options,
           explanation: q.modelAnswer || (isCorrect ? 'Correct! Excellent grasp of this concept.' : 'Review this concept in your study materials.'),
           ratio: isCorrect ? 1.0 : 0.0,
         });
@@ -383,13 +388,22 @@ export class ConceptsService {
         // Fallback diagnostic grading (first option 0 is correct in fallback bank)
         const isCorrect = ans.selectedIndex === (ans.questionId.endsWith('2') && concept.title.toLowerCase().includes('transaction') ? 3 : 0);
         if (isCorrect) correctCount++;
+        const dummyOptions = [
+          'Foundational standard definition',
+          'Secondary variant with partial constraints',
+          'Alternative implementation model',
+          'Composite protocol specification',
+        ];
+        const correctIdx = ans.questionId.endsWith('2') && concept.title.toLowerCase().includes('transaction') ? 3 : 0;
         scoredResults.push({
           questionId: ans.questionId,
           prompt: `Conceptual practice question for ${concept.title}`,
           isCorrect,
           selectedIndex: ans.selectedIndex,
-          correctIndex: ans.questionId.endsWith('2') && concept.title.toLowerCase().includes('transaction') ? 3 : 0,
-          correctAnswer: isCorrect ? 'Your selected answer' : 'Foundational option',
+          correctIndex: correctIdx,
+          selectedAnswer: dummyOptions[ans.selectedIndex] || `Option ${ans.selectedIndex + 1}`,
+          correctAnswer: dummyOptions[correctIdx] || 'Foundational standard definition',
+          options: dummyOptions,
           explanation: isCorrect ? 'Correct! Strong understanding of foundational theory.' : 'Review this topic to strengthen your prerequisite foundation.',
           ratio: isCorrect ? 1.0 : 0.0,
         });
@@ -432,6 +446,93 @@ export class ConceptsService {
       newScore: score,
       delta: Math.round((score - currentScore) * 10000) / 10000,
       results: scoredResults,
+    };
+  }
+
+  /**
+   * Explain student misconception using Gemini LLM (or pedagogic fallback)
+   */
+  async explainMisconception(
+    conceptId: string,
+    params: {
+      questionPrompt: string;
+      options?: string[];
+      selectedAnswer: string;
+      correctAnswer: string;
+      generalExplanation?: string;
+    }
+  ) {
+    const concept = await prisma.concept.findUnique({
+      where: { id: conceptId },
+      include: {
+        prerequisites: {
+          include: { prerequisite: true },
+        },
+      },
+    });
+
+    const conceptTitle = concept?.title || 'Database Systems';
+    const prereqNames =
+      concept?.prerequisites.map((p) => p.prerequisite.title).join(', ') ||
+      'Foundation Principles';
+
+    let aiResponseText = '';
+    let usedLlm = false;
+
+    const systemPrompt = `You are an expert university computer science professor and adaptive AI tutor.
+A student answered a practice question incorrectly. Provide a pedagogical breakdown in valid JSON format with three exact keys:
+- "misconceptionDiagnosis": Explain why the student's selected answer was tempting, what exact cognitive trap or conflated rule caused it.
+- "corePrinciple": Explain the definitive rule or theorem that makes the correct answer true, linking it to foundational prerequisites (${prereqNames}).
+- "memoryRule": Provide a 1-sentence intuitive rule of thumb, mental model, or mnemonic to never confuse these again.
+Return ONLY valid JSON matching: {"misconceptionDiagnosis": "...", "corePrinciple": "...", "memoryRule": "..."}`;
+
+    const prompt = `Course Concept: ${conceptTitle}
+Prerequisites: ${prereqNames}
+Question: ${params.questionPrompt}
+${params.options && params.options.length > 0 ? `Available Options: ${params.options.join(' | ')}` : ''}
+Student's Selected Answer (Incorrect): ${params.selectedAnswer}
+Correct Answer: ${params.correctAnswer}
+Standard Explanation: ${params.generalExplanation || 'None'}`;
+
+    try {
+      aiResponseText = await generateCompletion(prompt, systemPrompt);
+      if (aiResponseText && !aiResponseText.includes('is not configured')) {
+        usedLlm = true;
+      }
+    } catch (err) {
+      console.warn('[AI Tutor] LLM call failed, using heuristic remediation:', err);
+    }
+
+    if (usedLlm) {
+      try {
+        const cleaned = aiResponseText.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim();
+        const parsed = JSON.parse(cleaned);
+        if (parsed.misconceptionDiagnosis && parsed.corePrinciple && parsed.memoryRule) {
+          return {
+            misconceptionDiagnosis: parsed.misconceptionDiagnosis,
+            corePrinciple: parsed.corePrinciple,
+            memoryRule: parsed.memoryRule,
+            source: 'gemini' as const,
+          };
+        }
+      } catch {
+        if (aiResponseText.length > 20) {
+          return {
+            misconceptionDiagnosis: `Selecting "${params.selectedAnswer}" is a frequent misconception in ${conceptTitle}.`,
+            corePrinciple: aiResponseText.slice(0, 350),
+            memoryRule: `Key Takeaway: In ${conceptTitle}, verify against "${params.correctAnswer}".`,
+            source: 'gemini' as const,
+          };
+        }
+      }
+    }
+
+    // Heuristic pedagogical fallback when LLM API key is unconfigured or in offline environment
+    return {
+      misconceptionDiagnosis: `You selected "${params.selectedAnswer}". Students often pick this because it resembles a related rule, but it applies to a different stage or constraint in ${conceptTitle} rather than addressing the core question condition.`,
+      corePrinciple: `The correct answer is "${params.correctAnswer}". In ${conceptTitle}, this principle is fundamental because it satisfies the formal definition and builds directly on ${prereqNames}. ${params.generalExplanation || ''}`.trim(),
+      memoryRule: `Rule of Thumb: For ${conceptTitle}, remember that "${params.correctAnswer}" is the definitive requirement, whereas "${params.selectedAnswer}" is either secondary or belongs to an adjacent normal form / isolation tier.`,
+      source: 'heuristic' as const,
     };
   }
 }

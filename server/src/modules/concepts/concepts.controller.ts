@@ -32,6 +32,14 @@ const submitPracticeSchema = z.object({
     .min(1, 'At least one answer must be submitted'),
 });
 
+const explainMisconceptionSchema = z.object({
+  questionPrompt: z.string().min(1, 'Question prompt is required'),
+  options: z.array(z.string()).optional(),
+  selectedAnswer: z.string().min(1, 'Selected answer is required'),
+  correctAnswer: z.string().min(1, 'Correct answer is required'),
+  generalExplanation: z.string().optional(),
+});
+
 export class ConceptsController {
   async getAllConcepts(req: Request, res: Response): Promise<void> {
     try {
@@ -159,6 +167,26 @@ export class ConceptsController {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit practice drill';
       res.status(400).json({ error: msg });
+    }
+  }
+
+  async explainMisconception(req: Request, res: Response): Promise<void> {
+    const parseResult = explainMisconceptionSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    try {
+      const result = await conceptsService.explainMisconception(
+        req.params.id,
+        parseResult.data
+      );
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate misconception explanation';
+      res.status(500).json({ error: msg });
     }
   }
 }

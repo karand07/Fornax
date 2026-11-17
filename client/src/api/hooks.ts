@@ -1398,7 +1398,9 @@ export interface PracticeResultItem {
   isCorrect: boolean;
   selectedIndex: number;
   correctIndex: number;
+  selectedAnswer?: string;
   correctAnswer: string;
+  options?: string[];
   explanation: string;
   ratio: number;
 }
@@ -1412,6 +1414,13 @@ export interface SubmitPracticeResponse {
   newScore: number;
   delta: number;
   results: PracticeResultItem[];
+}
+
+export interface ExplainMisconceptionResponse {
+  misconceptionDiagnosis: string;
+  corePrinciple: string;
+  memoryRule: string;
+  source: 'gemini' | 'heuristic';
 }
 
 export function useConceptPracticeQuestions(conceptId: string | null) {
@@ -1441,6 +1450,26 @@ export function useSubmitPractice() {
       queryClient.invalidateQueries({ queryKey: ['studentRecommendations'] });
       queryClient.invalidateQueries({ queryKey: ['courseAnalytics'] });
       queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+    },
+  });
+}
+
+export function useExplainMisconception() {
+  return useMutation<
+    ExplainMisconceptionResponse,
+    Error,
+    {
+      conceptId: string;
+      questionPrompt: string;
+      options?: string[];
+      selectedAnswer: string;
+      correctAnswer: string;
+      generalExplanation?: string;
+    }
+  >({
+    mutationFn: async ({ conceptId, ...data }) => {
+      const res = await api.post(`/concepts/${conceptId}/explain-misconception`, data);
+      return res.data;
     },
   });
 }

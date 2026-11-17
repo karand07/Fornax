@@ -10,6 +10,7 @@ router.get('/', authMiddleware, (req, res) => conceptsController.getAllConcepts(
 router.get('/:id', authMiddleware, (req, res) => conceptsController.getConceptById(req, res));
 router.get('/:id/practice', authMiddleware, (req, res) => conceptsController.getPracticeQuestions(req, res));
 router.post('/:id/practice', authMiddleware, (req, res) => conceptsController.submitPractice(req, res));
+router.post('/:id/explain-misconception', authMiddleware, (req, res) => conceptsController.explainMisconception(req, res));
 
 router.post(
   '/',

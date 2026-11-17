@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { useConceptPracticeQuestions, useSubmitPractice, SubmitPracticeResponse } from '@/api/hooks';
+import { useState } from 'react';
+import {
+  useConceptPracticeQuestions,
+  useSubmitPractice,
+  useExplainMisconception,
+  SubmitPracticeResponse,
+  ExplainMisconceptionResponse,
+  PracticeResultItem,
+} from '@/api/hooks';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +26,10 @@ import {
   ArrowRight,
   ArrowLeft,
   GraduationCap,
+  Bot,
+  Lightbulb,
+  BrainCircuit,
+  RefreshCw,
 } from 'lucide-react';
 
 interface AdaptivePracticeDialogProps {
@@ -36,11 +47,14 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
 }) => {
   const { data: practiceData, isLoading } = useConceptPracticeQuestions(isOpen && conceptId ? conceptId : null);
   const submitPracticeMutation = useSubmitPractice();
+  const explainMutation = useExplainMisconception();
 
   const questions = practiceData?.questions || [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [drillResult, setDrillResult] = useState<SubmitPracticeResponse | null>(null);
+  const [aiExplanations, setAiExplanations] = useState<Record<string, ExplainMisconceptionResponse>>({});
+  const [loadingQuestionId, setLoadingQuestionId] = useState<string | null>(null);
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
     setSelectedAnswers((prev) => ({
@@ -49,10 +63,37 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
     }));
   };
 
+  const handleExplain = async (res: PracticeResultItem) => {
+    if (!conceptId) return;
+    setLoadingQuestionId(res.questionId);
+    try {
+      const data = await explainMutation.mutateAsync({
+        conceptId,
+        questionPrompt: res.prompt,
+        options: res.options,
+        selectedAnswer:
+          res.selectedAnswer ||
+          (res.options ? res.options[res.selectedIndex] : `Option ${res.selectedIndex + 1}`),
+        correctAnswer: res.correctAnswer,
+        generalExplanation: res.explanation,
+      });
+      setAiExplanations((prev) => ({
+        ...prev,
+        [res.questionId]: data,
+      }));
+    } catch (err) {
+      console.error('Failed to get AI misconception explanation:', err);
+    } finally {
+      setLoadingQuestionId(null);
+    }
+  };
+
   const handleReset = () => {
     setCurrentIndex(0);
     setSelectedAnswers({});
     setDrillResult(null);
+    setAiExplanations({});
+    setLoadingQuestionId(null);
   };
 
   const handleClose = () => {
@@ -191,6 +232,76 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
                       <span className="font-medium text-slate-300">Explanation:</span>{' '}
                       {res.explanation}
                     </div>
+
+                    {/* AI Tutor Misconception Breakdown */}
+                    {aiExplanations[res.questionId] ? (
+                      <div className="p-3 rounded-lg border border-indigo-500/30 bg-indigo-950/30 space-y-2 mt-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-indigo-300 font-semibold text-[11px]">
+                            <Bot className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>AI Tutor Misconception Breakdown</span>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] py-0 px-1.5 border-indigo-500/40 text-indigo-300 bg-indigo-500/10 font-mono"
+                          >
+                            {aiExplanations[res.questionId].source === 'gemini'
+                              ? 'Gemini 1.5 Flash'
+                              : 'Adaptive Tutor Engine'}
+                          </Badge>
+                        </div>
+
+                        {/* Misconception Diagnosis */}
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-[11px] font-medium text-amber-300">
+                            <Lightbulb className="w-3 h-3 text-amber-400 shrink-0" />
+                            <span>Misconception Diagnosis:</span>
+                          </div>
+                          <p className="text-[11px] text-slate-300 pl-4 leading-relaxed">
+                            {aiExplanations[res.questionId].misconceptionDiagnosis}
+                          </p>
+                        </div>
+
+                        {/* Core Principle */}
+                        <div className="space-y-0.5 pt-1 border-t border-indigo-500/20">
+                          <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-300">
+                            <BrainCircuit className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span>Core Concept Principle:</span>
+                          </div>
+                          <p className="text-[11px] text-slate-300 pl-4 leading-relaxed">
+                            {aiExplanations[res.questionId].corePrinciple}
+                          </p>
+                        </div>
+
+                        {/* Memory Rule of Thumb */}
+                        <div className="pt-1 border-t border-indigo-500/20 text-[10px] text-indigo-200 font-mono bg-indigo-500/10 p-2 rounded border border-indigo-500/20">
+                          <span className="font-bold text-indigo-300">Rule of Thumb:</span>{' '}
+                          {aiExplanations[res.questionId].memoryRule}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="pt-1 flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={loadingQuestionId === res.questionId}
+                          onClick={() => handleExplain(res)}
+                          className="h-6 text-[10px] gap-1.5 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-2"
+                        >
+                          {loadingQuestionId === res.questionId ? (
+                            <>
+                              <RefreshCw className="w-3 h-3 animate-spin text-indigo-400" />
+                              <span>Consulting AI Tutor...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3 text-indigo-400" />
+                              <span>{res.isCorrect ? 'Ask AI: Deepen Concept' : 'Ask AI: Explain Misconception'}</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
