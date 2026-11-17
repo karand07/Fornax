@@ -1,5 +1,10 @@
 import { prisma } from '../../lib/prisma.js';
 import { generateCompletion } from '../../lib/llm.js';
+import {
+  TOPIC_QUESTIONS_BY_ID,
+  sampleVaryingQuestions,
+  getTopicQuestionsForConcept,
+} from '../adaptive/topic-questions.js';
 
 
 export class ConceptsService {
@@ -215,6 +220,7 @@ export class ConceptsService {
 
   /**
    * Adaptive Learning: Get Practice Questions for a Concept
+   * Dynamically samples varying, topic-specific questions across difficulty tiers.
    */
   async getPracticeQuestions(conceptId: string) {
     const concept = await prisma.concept.findUnique({
@@ -240,7 +246,6 @@ export class ConceptsService {
       throw new Error('Concept not found');
     }
 
-    const titleLower = concept.title.toLowerCase();
     const prereqTitle = concept.prerequisites[0]?.prerequisite?.title;
 
     // Collect questions and assign tiered difficulty (BEGINNER, INTERMEDIATE, ADVANCED)
@@ -255,89 +260,74 @@ export class ConceptsService {
       isPrerequisiteAnchor?: boolean;
     }> = [];
 
+    // 1. Sample fresh, varying topic-specific questions from our comprehensive question bank (1 per tier)
+    const sampledTopicQuestions = sampleVaryingQuestions(concept.title, 1);
+    for (const tq of sampledTopicQuestions) {
+      questions.push({
+        id: tq.id,
+        prompt: tq.prompt,
+        options: tq.options,
+        maxMarks: 5,
+        type: 'MCQ',
+        difficulty: tq.difficulty,
+      });
+    }
+
+    // 2. Include any existing teacher/course DB questions mapped to this concept
     concept.questions.forEach((q, idx) => {
       const diff: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' =
         idx === 0 ? 'BEGINNER' : idx === 1 ? 'INTERMEDIATE' : 'ADVANCED';
-      questions.push({
-        id: q.id,
-        prompt: q.prompt,
-        options: q.options,
-        maxMarks: q.maxMarks,
-        type: q.type,
-        difficulty: diff,
-      });
+      if (!questions.some((existing) => existing.difficulty === diff)) {
+        questions.push({
+          id: q.id,
+          prompt: q.prompt,
+          options: q.options,
+          maxMarks: q.maxMarks,
+          type: q.type,
+          difficulty: diff,
+        });
+      }
     });
 
-    const hasBeginner = questions.some((q) => q.difficulty === 'BEGINNER');
-    const hasIntermediate = questions.some((q) => q.difficulty === 'INTERMEDIATE');
-    const hasAdvanced = questions.some((q) => q.difficulty === 'ADVANCED');
-
-    // Supplement with domain-specific diagnostic questions for missing difficulty levels
-    if (!hasBeginner) {
-      questions.push({
-        id: `diag-${concept.id}-beg`,
-        prompt: `What is the foundational definition and primary requirement of "${concept.title}"?`,
-        options: [
-          'Ensuring structural integrity, consistent invariants, and domain constraints',
-          'Maximizing unindexed table scan throughput regardless of schema rules',
-          'Bypassing ACID transaction logs to save memory space',
-          'Eliminating foreign key constraints across relational tables',
-        ],
-        maxMarks: 5,
-        type: 'MCQ',
-        difficulty: 'BEGINNER',
-      });
+    // 3. Ensure all 3 difficulty tiers are populated with topic-specific questions
+    const tiers: Array<'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'> = [
+      'BEGINNER',
+      'INTERMEDIATE',
+      'ADVANCED',
+    ];
+    for (const tier of tiers) {
+      if (!questions.some((q) => q.difficulty === tier)) {
+        const fallbackPool = getTopicQuestionsForConcept(concept.title, tier);
+        const fallbackQ = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+        if (fallbackQ) {
+          questions.push({
+            id: fallbackQ.id,
+            prompt: fallbackQ.prompt,
+            options: fallbackQ.options,
+            maxMarks: 5,
+            type: 'MCQ',
+            difficulty: tier,
+          });
+        }
+      }
     }
 
-    if (!hasIntermediate) {
-      questions.push({
-        id: `diag-${concept.id}-int`,
-        prompt: `In practical schema design and query execution, how does "${concept.title}" impact relational operations?`,
-        options: [
-          'It enforces semantic consistency and eliminates anomalous redundancy',
-          'It completely removes the need for database recovery logging',
-          'It converts all queries into sequential disk scans',
-          'It forces every relational table to hold at most one row',
-        ],
-        maxMarks: 5,
-        type: 'MCQ',
-        difficulty: 'INTERMEDIATE',
-      });
-    }
-
-    if (!hasAdvanced) {
-      questions.push({
-        id: `diag-${concept.id}-adv`,
-        prompt: `Under high-concurrency workloads, what architectural trade-off is critical when implementing "${concept.title}"?`,
-        options: [
-          'Balancing strict formal isolation guarantees against lock contention and latency',
-          'Disabling all transaction commits to avoid disk writes',
-          'Converting all B+ trees into linear arrays in memory',
-          'Running every concurrent transaction without mutual exclusion',
-        ],
-        maxMarks: 5,
-        type: 'MCQ',
-        difficulty: 'ADVANCED',
-      });
-    }
-
-    // Prerequisite Anchor Question if concept has an upstream prerequisite
+    // 4. Prerequisite Anchor Question if concept has an upstream prerequisite
     if (prereqTitle) {
-      questions.push({
-        id: `diag-${concept.id}-prereq`,
-        prompt: `Foundation Check: Before applying "${concept.title}", how does its prerequisite "${prereqTitle}" establish baseline consistency?`,
-        options: [
-          `By validating core relational entities and functional bindings defined in ${prereqTitle}`,
-          'By skipping query optimizer validation entirely',
-          'By erasing secondary index files on disk',
-          'By allowing duplicate tuples without primary identification',
-        ],
-        maxMarks: 5,
-        type: 'MCQ',
-        difficulty: 'BEGINNER',
-        targetConcept: prereqTitle,
-        isPrerequisiteAnchor: true,
-      });
+      const prereqPool = getTopicQuestionsForConcept(prereqTitle, 'BEGINNER');
+      const prereqQ = prereqPool[Math.floor(Math.random() * prereqPool.length)];
+      if (prereqQ) {
+        questions.push({
+          id: prereqQ.id,
+          prompt: `Foundation Check (${prereqTitle}): ${prereqQ.prompt}`,
+          options: prereqQ.options,
+          maxMarks: 5,
+          type: 'MCQ',
+          difficulty: 'BEGINNER',
+          targetConcept: prereqTitle,
+          isPrerequisiteAnchor: true,
+        });
+      }
     }
 
     return {
@@ -400,6 +390,8 @@ export class ConceptsService {
       trajectory.push(diff);
 
       const q = questionMap.get(ans.questionId);
+      const tq = TOPIC_QUESTIONS_BY_ID.get(ans.questionId);
+
       if (q && q.correctIndex !== null) {
         const isCorrect = ans.selectedIndex === q.correctIndex;
         if (isCorrect) {
@@ -421,32 +413,46 @@ export class ConceptsService {
           ratio: isCorrect ? 1.0 : 0.0,
           difficulty: diff,
         });
-      } else {
-        // Fallback diagnostic grading (first option 0 is correct in fallback bank)
-        const isCorrect = ans.selectedIndex === (ans.questionId.endsWith('2') && concept.title.toLowerCase().includes('transaction') ? 3 : 0);
+      } else if (tq) {
+        const isCorrect = ans.selectedIndex === tq.correctIndex;
         if (isCorrect) {
           correctCount++;
           if (difficultyRank[diff] >= difficultyRank[peakDifficulty]) {
             peakDifficulty = diff;
           }
         }
-        const dummyOptions = [
-          'Foundational standard definition',
-          'Secondary variant with partial constraints',
-          'Alternative implementation model',
-          'Composite protocol specification',
-        ];
-        const correctIdx = ans.questionId.endsWith('2') && concept.title.toLowerCase().includes('transaction') ? 3 : 0;
+        scoredResults.push({
+          questionId: tq.id,
+          prompt: tq.prompt,
+          isCorrect,
+          selectedIndex: ans.selectedIndex,
+          correctIndex: tq.correctIndex,
+          selectedAnswer: tq.options[ans.selectedIndex] || `Option ${ans.selectedIndex + 1}`,
+          correctAnswer: tq.options[tq.correctIndex] || `Option ${tq.correctIndex + 1}`,
+          options: tq.options,
+          explanation: tq.explanation,
+          ratio: isCorrect ? 1.0 : 0.0,
+          difficulty: diff,
+        });
+      } else {
+        // Fallback safety if unrecognized ID
+        const isCorrect = ans.selectedIndex === 0;
+        if (isCorrect) {
+          correctCount++;
+          if (difficultyRank[diff] >= difficultyRank[peakDifficulty]) {
+            peakDifficulty = diff;
+          }
+        }
         scoredResults.push({
           questionId: ans.questionId,
           prompt: `Conceptual practice question for ${concept.title}`,
           isCorrect,
           selectedIndex: ans.selectedIndex,
-          correctIndex: correctIdx,
-          selectedAnswer: dummyOptions[ans.selectedIndex] || `Option ${ans.selectedIndex + 1}`,
-          correctAnswer: dummyOptions[correctIdx] || 'Foundational standard definition',
-          options: dummyOptions,
-          explanation: isCorrect ? 'Correct! Strong understanding of foundational theory.' : 'Review this topic to strengthen your prerequisite foundation.',
+          correctIndex: 0,
+          selectedAnswer: `Option ${ans.selectedIndex + 1}`,
+          correctAnswer: 'Option 1',
+          options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+          explanation: isCorrect ? 'Correct! Strong understanding of foundational theory.' : 'Review this topic to strengthen your foundation.',
           ratio: isCorrect ? 1.0 : 0.0,
           difficulty: diff,
         });

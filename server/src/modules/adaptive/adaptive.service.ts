@@ -5,6 +5,10 @@ import { attendanceService } from '../attendance/attendance.service.js';
 import { generateCompletion } from '../../lib/llm.js';
 import { Role } from '@prisma/client';
 import crypto from 'crypto';
+import {
+  getTopicQuestionsForConcept,
+  sampleVaryingQuestions,
+} from './topic-questions.js';
 
 export interface GeneratedQuizQuestion {
   id: string;
@@ -164,42 +168,69 @@ Generate 3 distinct multiple-choice questions focusing on common misunderstandin
       console.warn('[Adaptive Quiz] Gemini generation call failed, falling back to course question bank:', err);
     }
 
-    // 4. Fallback / Augment from verified course DB questions & rich diagnostic banks
+    // 4. Fallback / Augment from verified course DB questions & rich topic-specific question banks
     if (!usedLlm || generatedQuestions.length < 3) {
       const fallbackList: StoredQuizQuestion[] = [];
 
       for (let i = 0; i < targetConcepts.length && fallbackList.length < 3; i++) {
         const tc = targetConcepts[i];
         const dbConcept = course.concepts.find((c) => c.id === tc.conceptId);
-        const dbQ = dbConcept?.questions[0];
+        const dbQ = dbConcept?.questions[i % (dbConcept.questions.length || 1)];
 
-        if (dbQ && dbQ.options.length >= 2 && dbQ.correctIndex !== null) {
+        const diff: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' =
+          fallbackList.length === 0
+            ? 'BEGINNER'
+            : fallbackList.length === 1
+            ? 'INTERMEDIATE'
+            : 'ADVANCED';
+
+        // Sample topic-specific question matching this concept and difficulty tier
+        const topicPool = getTopicQuestionsForConcept(tc.name, diff);
+        const chosenTopicQ =
+          topicPool.length > 0
+            ? topicPool[Math.floor(Math.random() * topicPool.length)]
+            : null;
+
+        if (chosenTopicQ) {
           fallbackList.push({
-            id: `${quizId}-q-${fallbackList.length + 1}`,
+            id: `${quizId}-q-${fallbackList.length + 1}-${chosenTopicQ.id}`,
+            conceptId: tc.conceptId,
+            conceptTitle: tc.name,
+            prompt: chosenTopicQ.prompt,
+            options: chosenTopicQ.options,
+            correctIndex: chosenTopicQ.correctIndex,
+            difficulty: diff,
+            explanation: chosenTopicQ.explanation,
+          });
+        } else if (dbQ && dbQ.options.length >= 2 && dbQ.correctIndex !== null) {
+          fallbackList.push({
+            id: `${quizId}-q-${fallbackList.length + 1}-${dbQ.id}`,
             conceptId: tc.conceptId,
             conceptTitle: tc.name,
             prompt: dbQ.prompt,
             options: dbQ.options,
             correctIndex: dbQ.correctIndex,
-            difficulty: fallbackList.length === 0 ? 'BEGINNER' : fallbackList.length === 1 ? 'INTERMEDIATE' : 'ADVANCED',
+            difficulty: diff,
             explanation: dbQ.modelAnswer || 'Correct! Foundational rule validated.',
           });
         } else {
-          // Domain diagnostic question
+          // Last resort fallback from general topic sampler
+          const defaultPool = sampleVaryingQuestions(tc.name, 1);
+          const defQ = defaultPool[0];
           fallbackList.push({
             id: `${quizId}-q-${fallbackList.length + 1}`,
             conceptId: tc.conceptId,
             conceptTitle: tc.name,
-            prompt: `In relational database design, which property is fundamental to the correct application of "${tc.name}"?`,
-            options: [
+            prompt: defQ?.prompt || `What core architectural principle defines the correct operation of "${tc.name}"?`,
+            options: defQ?.options || [
               'Preserving integrity constraints, non-redundant dependencies, and valid keys',
               'Bypassing query planning to write unvalidated records directly to disk',
               'Disabling transaction isolation to maximize concurrent throughput',
               'Allowing duplicate rows without unique primary keys',
             ],
-            correctIndex: 0,
-            difficulty: fallbackList.length === 0 ? 'BEGINNER' : fallbackList.length === 1 ? 'INTERMEDIATE' : 'ADVANCED',
-            explanation: `Ensuring structural integrity and avoiding redundant anomalies is the definitive requirement for ${tc.name}.`,
+            correctIndex: defQ ? defQ.correctIndex : 0,
+            difficulty: diff,
+            explanation: defQ?.explanation || `Ensuring structural integrity and avoiding redundant anomalies is the definitive requirement for ${tc.name}.`,
           });
         }
       }
