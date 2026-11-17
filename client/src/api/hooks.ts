@@ -69,6 +69,7 @@ export interface Course {
   description?: string;
   teacher?: { id: string; firstName: string; lastName: string; email: string };
   concepts?: Concept[];
+  sessions?: ClassSessionDetails[];
   _count?: { enrollments: number; sessions: number; assessments: number; concepts?: number };
 }
 

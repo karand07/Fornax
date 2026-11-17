@@ -17,11 +17,21 @@ export interface UserAccountProfile {
 }
 
 export interface StudentUnifiedProfile {
-  student: { id: string; name: string };
-  course: { id: string; title: string };
+  student: { id: string; name: string; email?: string };
+  course: { id: string; code?: string; title: string };
   attendance: any;
   concepts: any[];
   avgMastery: number | null;
+  mastery?: {
+    average: number | null;
+    concepts: {
+      id: string;
+      name: string;
+      score: number;
+      attempts: number;
+      prerequisiteId: string | null;
+    }[];
+  };
   assessments: {
     assessmentId: string;
     title: string;
@@ -30,6 +40,14 @@ export interface StudentUnifiedProfile {
     max: number;
     percentage: number | null;
     pendingCount: number;
+  }[];
+  assessmentHistory?: {
+    assessmentId: string;
+    title: string;
+    date: string;
+    score: number;
+    max: number;
+    percentage: number;
   }[];
   assessmentAvg: number | null;
   risk: RiskResult;
@@ -124,7 +142,7 @@ export class ProfileService {
       },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        course: { select: { id: true, title: true, teacherId: true } },
+        course: { select: { id: true, code: true, title: true, teacherId: true } },
       },
     });
 
@@ -275,19 +293,47 @@ export class ProfileService {
     // 9. Risk calculation
     const risk = computeRisk({ attendanceRate: attendance.rate, avgMastery });
 
+    const mappedConcepts = concepts.map((c) => ({
+      id: c.conceptId,
+      name: c.name,
+      score: c.score,
+      attempts: c.attempts,
+      prerequisiteId: c.prerequisiteId,
+    }));
+
+    const mappedHistory = assessmentItems.map((a) => ({
+      assessmentId: a.assessmentId,
+      title: a.title,
+      date: a.submittedAt instanceof Date ? a.submittedAt.toISOString() : String(a.submittedAt),
+      score: a.awarded,
+      max: a.max,
+      percentage: a.percentage ?? 0,
+    }));
+
     return {
       student: {
         id: enrollment.user.id,
         name: `${enrollment.user.firstName} ${enrollment.user.lastName}`.trim(),
+        email: enrollment.user.email,
       },
       course: {
         id: enrollment.course.id,
+        code: enrollment.course.code,
         title: enrollment.course.title,
       },
-      attendance,
+      attendance: {
+        ...attendance,
+        attended: attendance.present,
+        total: attendance.totalSessions,
+      },
       concepts,
       avgMastery,
+      mastery: {
+        average: avgMastery,
+        concepts: mappedConcepts,
+      },
       assessments: assessmentItems,
+      assessmentHistory: mappedHistory,
       assessmentAvg,
       risk,
       recommendations,

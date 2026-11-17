@@ -23,6 +23,7 @@ import {
   Eye,
   RefreshCw,
   CheckCircle2,
+  CheckSquare,
 } from 'lucide-react';
 
 export const TeacherSubmissionsPage: React.FC = () => {
@@ -208,15 +209,28 @@ export const TeacherSubmissionsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedSubId(sub.id)}
-                    className="gap-1.5 border-slate-700 text-slate-300 hover:text-white text-xs"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>View GradeCard</span>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedSubId(sub.id)}
+                      className="gap-1.5 border-slate-700 text-slate-300 hover:text-white text-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View GradeCard</span>
+                    </Button>
+
+                    <Link to={`/teacher/review/${sub.id}`}>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>Full Review</span>
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             );
