@@ -296,9 +296,13 @@ export class ProfileService {
     const mappedConcepts = concepts.map((c) => ({
       id: c.conceptId,
       name: c.name,
+      description: (c as any).description ?? null,
+      order: (c as any).order ?? 0,
       score: c.score,
       attempts: c.attempts,
       prerequisiteId: c.prerequisiteId,
+      prerequisiteName: (c as any).prerequisiteName ?? null,
+      prerequisites: (c as any).prerequisites ?? (c.prerequisiteId ? [{ id: c.prerequisiteId, name: (c as any).prerequisiteName || '' }] : []),
     }));
 
     const mappedHistory = assessmentItems.map((a) => ({

@@ -31,6 +31,8 @@ import { MasteryRadar } from '@/components/profile/MasteryRadar';
 import { TrendChart } from '@/components/profile/TrendChart';
 import { RecommendationCard } from '@/components/profile/RecommendationCard';
 import { AdaptivePracticeDialog } from '@/components/profile/AdaptivePracticeDialog';
+import { ConceptSkillTree } from '@/components/profile/ConceptSkillTree';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatPercent } from '@/lib/mastery-ui';
 import {
   CalendarCheck,
@@ -43,6 +45,8 @@ import {
   ShieldCheck,
   AlertCircle,
   RefreshCw,
+  Network,
+  Sparkles,
 } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
@@ -441,27 +445,61 @@ export const StudentDashboard: React.FC = () => {
             </Card>
           </div>
 
-          {/* Middle Row: Concept Mastery Radar & Assessment Trend Chart (with independent skeletons/errors) */}
+          {/* Middle Row: Concept Progression (Skill Tree vs Radar & Trend View) */}
           {profileLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Skeleton className="h-80 w-full rounded-xl" />
-              <Skeleton className="h-80 w-full rounded-xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-9 w-64 rounded-lg" />
+              <Skeleton className="h-96 w-full rounded-xl" />
             </div>
           ) : profileError ? (
             <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-center text-xs text-destructive">
               Unable to load concept analytics.
             </div>
           ) : profile ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <MasteryRadar
-                concepts={profile.mastery.concepts}
-                average={profile.mastery.average}
-              />
-              <TrendChart
-                history={profile.assessmentHistory}
-                assessmentAvg={profile.assessmentAvg}
-              />
-            </div>
+            <Tabs defaultValue="skill-tree" className="w-full space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <TabsList className="bg-slate-900 border border-slate-800 p-1">
+                  <TabsTrigger
+                    value="skill-tree"
+                    className="text-xs gap-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium"
+                  >
+                    <Network className="w-3.5 h-3.5" />
+                    Adaptive Skill Tree
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="charts"
+                    className="text-xs gap-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Mastery Radar & Quiz Trends
+                  </TabsTrigger>
+                </TabsList>
+
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  Explore prerequisite pathways and multi-axis performance analytics
+                </p>
+              </div>
+
+              <TabsContent value="skill-tree" className="m-0 focus-visible:outline-none">
+                <ConceptSkillTree
+                  concepts={profile.mastery.concepts}
+                  onStartPractice={(id, title) => setPracticeConcept({ id, title })}
+                />
+              </TabsContent>
+
+              <TabsContent value="charts" className="m-0 focus-visible:outline-none">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <MasteryRadar
+                    concepts={profile.mastery.concepts}
+                    average={profile.mastery.average}
+                  />
+                  <TrendChart
+                    history={profile.assessmentHistory}
+                    assessmentAvg={profile.assessmentAvg}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           ) : null}
 
           {/* Bottom Row: Targeted Recommendations Card */}

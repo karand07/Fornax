@@ -18,6 +18,10 @@ export interface ConceptMasteryItem {
   score: number;
   attempts: number;
   prerequisiteId?: string | null;
+  prerequisiteName?: string | null;
+  prerequisites?: { id: string; name: string }[];
+  order?: number;
+  description?: string | null;
 }
 
 export interface MasteryRadarProps {
