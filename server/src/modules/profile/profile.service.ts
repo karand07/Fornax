@@ -17,11 +17,22 @@ export interface UserAccountProfile {
 }
 
 export interface StudentUnifiedProfile {
-  student: { id: string; name: string };
-  course: { id: string; title: string };
+  student: { id: string; name: string; email?: string };
+  course: { id: string; title: string; code?: string };
   attendance: any;
   concepts: any[];
   avgMastery: number | null;
+  mastery?: {
+    average: number | null;
+    concepts: {
+      id: string;
+      conceptId: string;
+      name: string;
+      score: number;
+      attempts: number;
+      prerequisiteId: string | null;
+    }[];
+  };
   assessments: {
     assessmentId: string;
     title: string;
@@ -30,6 +41,14 @@ export interface StudentUnifiedProfile {
     max: number;
     percentage: number | null;
     pendingCount: number;
+  }[];
+  assessmentHistory?: {
+    assessmentId: string;
+    title: string;
+    date: string;
+    score: number;
+    max: number;
+    percentage: number;
   }[];
   assessmentAvg: number | null;
   risk: RiskResult;
@@ -279,15 +298,40 @@ export class ProfileService {
       student: {
         id: enrollment.user.id,
         name: `${enrollment.user.firstName} ${enrollment.user.lastName}`.trim(),
+        email: enrollment.user.email,
       },
       course: {
         id: enrollment.course.id,
         title: enrollment.course.title,
+        code: enrollment.course.title.split(' ')[0] || enrollment.course.id,
       },
-      attendance,
+      attendance: {
+        ...attendance,
+        attended: attendance.present,
+        total: attendance.totalSessions,
+      },
       concepts,
       avgMastery,
+      mastery: {
+        average: avgMastery,
+        concepts: concepts.map((c: any) => ({
+          id: c.conceptId || c.id,
+          conceptId: c.conceptId || c.id,
+          name: c.name,
+          score: c.score,
+          attempts: c.attempts,
+          prerequisiteId: c.prerequisiteId,
+        })),
+      },
       assessments: assessmentItems,
+      assessmentHistory: assessmentItems.map((a) => ({
+        assessmentId: a.assessmentId,
+        title: a.title,
+        date: typeof a.submittedAt === 'string' ? a.submittedAt : (a.submittedAt?.toISOString ? a.submittedAt.toISOString() : String(a.submittedAt)),
+        score: a.awarded,
+        max: a.max,
+        percentage: a.percentage ?? 0,
+      })),
       assessmentAvg,
       risk,
       recommendations,
