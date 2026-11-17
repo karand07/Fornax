@@ -15,6 +15,7 @@ import {
   Layers,
   ChevronRight,
   ShieldCheck,
+  BookOpen,
 } from 'lucide-react';
 import { masteryBand, formatPercent } from '../../lib/mastery-ui';
 import type { ConceptMasteryItem } from './MasteryRadar';
@@ -22,6 +23,7 @@ import type { ConceptMasteryItem } from './MasteryRadar';
 export interface ConceptSkillTreeProps {
   concepts: ConceptMasteryItem[];
   onStartPractice?: (conceptId: string, conceptTitle: string) => void;
+  onViewNotes?: (conceptId: string, conceptTitle: string) => void;
   className?: string;
 }
 
@@ -40,6 +42,7 @@ interface EnrichedConceptNode extends ConceptMasteryItem {
 export function ConceptSkillTree({
   concepts,
   onStartPractice,
+  onViewNotes,
   className = '',
 }: ConceptSkillTreeProps) {
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null);
@@ -622,16 +625,42 @@ export function ConceptSkillTree({
                           Practice Anyway
                         </Button>
                       </div>
+
+                      {onViewNotes && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs gap-1.5 border-slate-700 text-slate-200 hover:bg-slate-800"
+                          onClick={() => onViewNotes(selectedNode.id, selectedNode.name)}
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                          View High-Yield Short Notes
+                        </Button>
+                      )}
                     </div>
                   ) : (
-                    <Button
-                      size="sm"
-                      className="w-full text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm"
-                      onClick={() => onStartPractice?.(selectedNode.id, selectedNode.name)}
-                    >
-                      <Dumbbell className="w-3.5 h-3.5" />
-                      Start Adaptive Practice Drill
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        size="sm"
+                        className="w-full text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm"
+                        onClick={() => onStartPractice?.(selectedNode.id, selectedNode.name)}
+                      >
+                        <Dumbbell className="w-3.5 h-3.5" />
+                        Start Adaptive Practice Drill
+                      </Button>
+
+                      {onViewNotes && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs gap-1.5 border-slate-700 text-slate-200 hover:bg-slate-800"
+                          onClick={() => onViewNotes(selectedNode.id, selectedNode.name)}
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                          View High-Yield Short Notes
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

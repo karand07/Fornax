@@ -7,6 +7,11 @@ const generateQuizSchema = z.object({
   courseId: z.string().uuid('Valid course ID is required'),
 });
 
+const generateNotesSchema = z.object({
+  courseId: z.string().uuid('Valid course ID is required'),
+  conceptId: z.string().uuid().optional(),
+});
+
 const submitQuizSchema = z.object({
   courseId: z.string().uuid('Valid course ID is required'),
   quizId: z.string().min(1, 'Quiz ID is required'),
@@ -90,6 +95,45 @@ export class AdaptiveController {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit adaptive quiz';
       const status = (err as any).statusCode || 400;
+      res.status(status).json({ error: msg });
+    }
+  }
+
+  async generateStudyNotes(req: Request, res: Response): Promise<void> {
+    const studentId = req.params.id;
+    const courseId = typeof req.query.courseId === 'string' ? req.query.courseId : req.body?.courseId;
+    const conceptId = typeof req.query.conceptId === 'string' ? req.query.conceptId : req.body?.conceptId;
+
+    const parseResult = generateNotesSchema.safeParse({ courseId, conceptId: conceptId || undefined });
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    const requesterId = req.user?.userId;
+    const requesterRole = (req.user?.role as Role) || Role.STUDENT;
+
+    if (!requesterId) {
+      res.status(401).json({ error: 'Unauthorized: Authentication required' });
+      return;
+    }
+
+    if (requesterId !== studentId && requesterRole !== Role.TEACHER && requesterRole !== Role.ADMIN) {
+      res.status(403).json({ error: 'Unauthorized: You can only access study notes for yourself' });
+      return;
+    }
+
+    try {
+      const notes = await adaptiveService.generateStudyNotes(
+        studentId,
+        parseResult.data.courseId,
+        parseResult.data.conceptId
+      );
+      res.status(200).json(notes);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate study notes';
+      const status = (err as any).statusCode || 500;
       res.status(status).json({ error: msg });
     }
   }

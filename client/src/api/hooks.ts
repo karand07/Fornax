@@ -1592,4 +1592,49 @@ export function useSubmitAdaptiveQuiz() {
   });
 }
 
+export interface StudyResourceItem {
+  id: string;
+  title: string;
+  type: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  url: string;
+}
+
+export interface GeneratedStudyNotesResponse {
+  conceptId: string;
+  conceptTitle: string;
+  currentMastery: number;
+  difficultyBand: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  prerequisites: string | null;
+  recommendedMaterials: StudyResourceItem[];
+  shortNotes: {
+    summary: string;
+    keyFormulas: string[];
+    commonPitfalls: string[];
+    ruleOfThumb: string;
+    quickCheckQuestion: {
+      prompt: string;
+      answer: string;
+    };
+  };
+  markdownText: string;
+  source: 'gemini' | 'heuristic';
+}
+
+export function useGenerateStudyNotes() {
+  return useMutation<
+    GeneratedStudyNotesResponse,
+    Error,
+    { studentId: string; courseId: string; conceptId?: string }
+  >({
+    mutationFn: async ({ studentId, courseId, conceptId }) => {
+      const res = await api.post(`/students/${studentId}/study-notes`, {
+        courseId,
+        conceptId,
+      });
+      return res.data;
+    },
+  });
+}
+
 

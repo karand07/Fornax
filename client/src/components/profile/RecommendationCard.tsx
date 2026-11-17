@@ -1,4 +1,4 @@
-import { Sparkles, CheckCircle2, ArrowRight, HelpCircle, Dumbbell } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, HelpCircle, Dumbbell, BookOpen } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -11,6 +11,7 @@ export interface RecommendationCardProps {
   notAssessed?: { id: string; name: string }[];
   className?: string;
   onStartPractice?: (conceptId: string, conceptTitle: string) => void;
+  onViewNotes?: (conceptId: string, conceptTitle: string) => void;
 }
 
 export function RecommendationCard({
@@ -18,6 +19,7 @@ export function RecommendationCard({
   notAssessed = [],
   className = '',
   onStartPractice,
+  onViewNotes,
 }: RecommendationCardProps) {
   if (recommendations.length === 0) {
     return (
@@ -115,9 +117,20 @@ export function RecommendationCard({
                 )}
               </div>
 
-              {/* Action / Adaptive Practice */}
-              {onStartPractice && (
-                <div className="pt-2 flex justify-end border-t border-border/40">
+              {/* Actions: Notes & Adaptive Practice */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-border/40">
+                {onViewNotes && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs h-7 gap-1.5 text-slate-300 hover:text-white hover:bg-slate-800"
+                    onClick={() => onViewNotes(rec.conceptId, rec.conceptName)}
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                    Short Notes
+                  </Button>
+                )}
+                {onStartPractice && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -127,8 +140,8 @@ export function RecommendationCard({
                     <Dumbbell className="w-3.5 h-3.5" />
                     Start Practice Drill
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           );
         })}

@@ -31,4 +31,9 @@ router.post('/:id/adaptive-quiz/submit', authMiddleware, (req, res) =>
   adaptiveController.submitAdaptiveQuiz(req, res)
 );
 
+// POST /api/students/:id/study-notes (Personalized study notes & curated materials)
+router.post('/:id/study-notes', authMiddleware, (req, res) =>
+  adaptiveController.generateStudyNotes(req, res)
+);
+
 export default router;

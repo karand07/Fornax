@@ -32,6 +32,7 @@ import { TrendChart } from '@/components/profile/TrendChart';
 import { RecommendationCard } from '@/components/profile/RecommendationCard';
 import { AdaptivePracticeDialog } from '@/components/profile/AdaptivePracticeDialog';
 import { AdaptiveQuizModal } from '@/components/profile/AdaptiveQuizModal';
+import { StudyNotesDialog } from '@/components/profile/StudyNotesDialog';
 import { ConceptSkillTree } from '@/components/profile/ConceptSkillTree';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatPercent } from '@/lib/mastery-ui';
@@ -57,6 +58,7 @@ export const StudentDashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [practiceConcept, setPracticeConcept] = useState<{ id: string; title: string } | null>(null);
   const [isAdaptiveQuizOpen, setIsAdaptiveQuizOpen] = useState(false);
+  const [notesConcept, setNotesConcept] = useState<{ id?: string; title?: string } | null>(null);
 
   // Courses
   const { data: enrolledCourses, isLoading: enrolledLoading } = useMyEnrolledCourses();
@@ -507,6 +509,7 @@ export const StudentDashboard: React.FC = () => {
                 <ConceptSkillTree
                   concepts={profile.mastery.concepts}
                   onStartPractice={(id, title) => setPracticeConcept({ id, title })}
+                  onViewNotes={(id, title) => setNotesConcept({ id, title })}
                 />
               </TabsContent>
 
@@ -535,6 +538,9 @@ export const StudentDashboard: React.FC = () => {
               onStartPractice={(conceptId, conceptTitle) =>
                 setPracticeConcept({ id: conceptId, title: conceptTitle })
               }
+              onViewNotes={(conceptId, conceptTitle) =>
+                setNotesConcept({ id: conceptId, title: conceptTitle })
+              }
             />
           ) : null}
 
@@ -553,6 +559,16 @@ export const StudentDashboard: React.FC = () => {
             courseId={selectedCourseId}
             courseTitle={selectedCourse?.title}
             onClose={() => setIsAdaptiveQuizOpen(false)}
+          />
+
+          {/* Personalized High-Yield Study Notes Dialog */}
+          <StudyNotesDialog
+            isOpen={Boolean(notesConcept)}
+            studentId={user?.id || ''}
+            courseId={selectedCourseId}
+            conceptId={notesConcept?.id || null}
+            conceptTitle={notesConcept?.title}
+            onClose={() => setNotesConcept(null)}
           />
         </div>
       )}
