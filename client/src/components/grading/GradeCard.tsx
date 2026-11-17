@@ -35,6 +35,8 @@ export interface BaseGradeView {
   autoMarks?: number;
   finalMarks?: number;
   totalMarks?: number;
+  overrideNote?: string | null;
+  reviewed?: boolean;
 }
 
 export interface StudentGradeView extends BaseGradeView {
@@ -47,6 +49,7 @@ export interface TeacherGradeView extends BaseGradeView {
   modelVersion?: string | null;
   needsReview?: boolean;
   overriddenBy?: string | null;
+  reviewedBy?: string | null;
   notes?: string | null;
 }
 
@@ -127,6 +130,17 @@ export const GradeCard: React.FC<GradeCardProps> = ({
               </Badge>
             )}
 
+            {/* Reviewed by teacher Badge */}
+            {!isOverridden && (grade.reviewed || (isTeacher && teacherGrade?.reviewedBy)) && (
+              <Badge
+                variant="outline"
+                className="gap-1 border-emerald-500/40 bg-emerald-950/40 text-emerald-300 font-medium text-xs py-0.5 px-2.5"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                <span>Reviewed by your teacher</span>
+              </Badge>
+            )}
+
             {/* Teacher Needs Review Badge */}
             {needsReview && (
               <Badge
@@ -155,8 +169,13 @@ export const GradeCard: React.FC<GradeCardProps> = ({
 
         {/* Overridden Explanatory text */}
         {isOverridden && (
-          <div className="text-xs text-blue-300/90 font-medium bg-blue-950/20 border border-blue-500/20 p-2 rounded-md">
-            AI suggested {autoMarks}, your teacher set {finalMarks}
+          <div className="text-xs text-blue-300/90 font-medium bg-blue-950/20 border border-blue-500/20 p-2.5 rounded-md space-y-1">
+            <div>AI suggested {autoMarks}, your teacher set {finalMarks}</div>
+            {grade.overrideNote && (
+              <div className="text-[11px] text-blue-200/80 italic">
+                Teacher note: &ldquo;{grade.overrideNote}&rdquo;
+              </div>
+            )}
           </div>
         )}
       </CardHeader>

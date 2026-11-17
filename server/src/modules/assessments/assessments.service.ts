@@ -3,6 +3,8 @@ import { Role, QuestionType } from '@prisma/client';
 import { masteryService } from '../mastery/mastery.service.js';
 import { computeMastery, GradedItem } from '../../lib/mastery.js';
 import { getConfidenceLevel } from '../grading/grading.constants.js';
+import { processAndStoreScan, deleteStoredScan } from '../../lib/scan.js';
+import { processHandwrittenSubmissions } from '../grading/transcribe.js';
 
 export interface McqQuestionInput {
   type: 'MCQ';
@@ -15,7 +17,7 @@ export interface McqQuestionInput {
 }
 
 export interface ShortQuestionInput {
-  type: 'SHORT';
+  type: 'SHORT' | 'HANDWRITTEN';
   conceptId: string;
   prompt: string;
   maxMarks: number;
@@ -165,7 +167,7 @@ export class AssessmentsService {
       });
     }
 
-    if (data.type === 'SHORT') {
+    if (data.type === 'SHORT' || data.type === 'HANDWRITTEN') {
       const sumMarks = data.rubric.reduce((sum, r) => sum + r.marks, 0);
       if (Math.abs(sumMarks - data.maxMarks) > 0.001) {
         throw new Error(
@@ -178,7 +180,7 @@ export class AssessmentsService {
           data: {
             assessmentId,
             conceptId: data.conceptId,
-            type: QuestionType.SHORT,
+            type: data.type === 'HANDWRITTEN' ? QuestionType.HANDWRITTEN : QuestionType.SHORT,
             prompt: data.prompt,
             maxMarks: data.maxMarks,
             modelAnswer: data.modelAnswer,
@@ -250,7 +252,7 @@ export class AssessmentsService {
       });
     }
 
-    if (data.type === 'SHORT') {
+    if (data.type === 'SHORT' || data.type === 'HANDWRITTEN') {
       const sumMarks = data.rubric.reduce((sum, r) => sum + r.marks, 0);
       if (Math.abs(sumMarks - data.maxMarks) > 0.001) {
         throw new Error(
@@ -273,7 +275,7 @@ export class AssessmentsService {
           where: { id: questionId },
           data: {
             conceptId: data.conceptId,
-            type: QuestionType.SHORT,
+            type: data.type === 'HANDWRITTEN' ? QuestionType.HANDWRITTEN : QuestionType.SHORT,
             prompt: data.prompt,
             maxMarks: data.maxMarks,
             modelAnswer: data.modelAnswer,
@@ -416,7 +418,8 @@ export class AssessmentsService {
   async submitAssessment(
     assessmentId: string,
     studentId: string,
-    answers: { questionId: string; selectedIndex?: number; answerText?: string }[]
+    answers: { questionId: string; selectedIndex?: number; answerText?: string }[],
+    scanFiles?: Map<string, Express.Multer.File>
   ) {
     const assessment = await prisma.assessment.findUnique({
       where: { id: assessmentId },
@@ -467,6 +470,21 @@ export class AssessmentsService {
     const questionMap = new Map(assessment.questions.map((q) => [q.id, q]));
     const seenQuestionIds = new Set<string>();
 
+    // Validate scans: each scan must correspond to a HANDWRITTEN question of this assessment
+    if (scanFiles && scanFiles.size > 0) {
+      for (const [qId] of scanFiles.entries()) {
+        const q = questionMap.get(qId);
+        if (!q) {
+          throw new Error(`Question ${qId} does not belong to this assessment`);
+        }
+        if (q.type !== QuestionType.HANDWRITTEN) {
+          const err = new Error(`Scans can only be submitted for HANDWRITTEN questions (question ${qId} is ${q.type})`);
+          (err as any).statusCode = 400;
+          throw err;
+        }
+      }
+    }
+
     for (const a of answers) {
       if (seenQuestionIds.has(a.questionId)) {
         throw new Error(`Duplicate answer for question ID: ${a.questionId}`);
@@ -483,86 +501,149 @@ export class AssessmentsService {
           throw new Error(`Selected option index out of range for question ${q.id}`);
         }
       }
+
+      if (q.type === QuestionType.HANDWRITTEN) {
+        if (a.answerText && a.answerText.trim().length > 0 && scanFiles?.has(a.questionId)) {
+          const err = new Error(`Question ${a.questionId} cannot carry both text and a scan`);
+          (err as any).statusCode = 400;
+          throw err;
+        }
+      }
+    }
+
+    // Process and store scans BEFORE transaction
+    const storedScans = new Map<string, { relPath: string; base64: string; mediaType: 'image/jpeg' }>();
+    if (scanFiles && scanFiles.size > 0) {
+      for (const [qId, file] of scanFiles.entries()) {
+        const stored = await processAndStoreScan(file.buffer);
+        storedScans.set(qId, stored);
+      }
     }
 
     const answerMap = new Map(answers.map((a) => [a.questionId, a]));
+    const handwrittenSubIds: string[] = [];
 
-    return prisma.$transaction(async (tx) => {
-      let autoGraded = 0;
-      let pendingGrading = 0;
-      let mcqScore = 0;
-      let mcqMax = 0;
-      let submissionCount = 0;
-      const gradedConceptIds = new Set<string>();
+    let txResult;
+    try {
+      txResult = await prisma.$transaction(async (tx) => {
+        let autoGraded = 0;
+        let pendingGrading = 0;
+        let mcqScore = 0;
+        let mcqMax = 0;
+        let submissionCount = 0;
+        const gradedConceptIds = new Set<string>();
 
-      for (const q of assessment.questions) {
-        const ans = answerMap.get(q.id);
+        for (const q of assessment.questions) {
+          const ans = answerMap.get(q.id);
 
-        if (q.type === QuestionType.MCQ) {
-          mcqMax += q.maxMarks;
-          const isAnswered = ans !== undefined && ans.selectedIndex !== undefined;
-          const selectedIndex = isAnswered ? ans.selectedIndex! : null;
-          const isCorrect = isAnswered && selectedIndex === q.correctIndex;
-          const marks = isCorrect ? q.maxMarks : 0;
-          mcqScore += marks;
-          autoGraded++;
-          submissionCount++;
-          gradedConceptIds.add(q.conceptId);
-
-          const sub = await tx.submission.create({
-            data: {
-              assessmentId,
-              questionId: q.id,
-              userId: studentId,
-              selectedIndex,
-              score: marks,
-              submittedAt: new Date(),
-              gradedAt: new Date(),
-            },
-          });
-
-          await tx.grade.create({
-            data: {
-              submissionId: sub.id,
-              totalMarks: marks,
-              confidence: 1.0,
-              needsReview: false,
-              graderType: 'AUTO',
-              summary: q.modelAnswer ?? null,
-              missingPoints: [],
-            },
-          });
-        } else if (q.type === QuestionType.SHORT) {
-          if (ans && ans.answerText && ans.answerText.trim().length > 0) {
-            pendingGrading++;
+          if (q.type === QuestionType.MCQ) {
+            mcqMax += q.maxMarks;
+            const isAnswered = ans !== undefined && ans.selectedIndex !== undefined;
+            const selectedIndex = isAnswered ? ans.selectedIndex! : null;
+            const isCorrect = isAnswered && selectedIndex === q.correctIndex;
+            const marks = isCorrect ? q.maxMarks : 0;
+            mcqScore += marks;
+            autoGraded++;
             submissionCount++;
-            await tx.submission.create({
+            gradedConceptIds.add(q.conceptId);
+
+            const sub = await tx.submission.create({
               data: {
                 assessmentId,
                 questionId: q.id,
                 userId: studentId,
-                answerText: ans.answerText.trim(),
+                selectedIndex,
+                score: marks,
                 submittedAt: new Date(),
+                gradedAt: new Date(),
               },
             });
+
+            await tx.grade.create({
+              data: {
+                submissionId: sub.id,
+                totalMarks: marks,
+                confidence: 1.0,
+                needsReview: false,
+                graderType: 'AUTO',
+                summary: q.modelAnswer ?? null,
+                missingPoints: [],
+              },
+            });
+          } else if (q.type === QuestionType.SHORT) {
+            if (ans && ans.answerText && ans.answerText.trim().length > 0) {
+              pendingGrading++;
+              submissionCount++;
+              await tx.submission.create({
+                data: {
+                  assessmentId,
+                  questionId: q.id,
+                  userId: studentId,
+                  answerText: ans.answerText.trim(),
+                  submittedAt: new Date(),
+                },
+              });
+            }
+            // Questions left unanswered are skipped for SHORT
+          } else if (q.type === QuestionType.HANDWRITTEN) {
+            if (storedScans.has(q.id)) {
+              const scan = storedScans.get(q.id)!;
+              pendingGrading++;
+              submissionCount++;
+              const sub = await tx.submission.create({
+                data: {
+                  assessmentId,
+                  questionId: q.id,
+                  userId: studentId,
+                  scanPath: scan.relPath,
+                  ocrStatus: null,
+                  submittedAt: new Date(),
+                },
+              });
+              handwrittenSubIds.push(sub.id);
+            }
+            // Questions left without scan are skipped for HANDWRITTEN
           }
-          // Questions left unanswered are skipped for SHORT
         }
-      }
 
-      // Recompute mastery for distinct conceptIds among newly graded questions
-      for (const conceptId of gradedConceptIds) {
-        await masteryService.recomputeMastery(studentId, conceptId, tx);
-      }
+        // Recompute mastery for distinct conceptIds among newly graded questions
+        for (const conceptId of gradedConceptIds) {
+          await masteryService.recomputeMastery(studentId, conceptId, tx);
+        }
 
-      return {
-        submissionCount,
-        autoGraded,
-        pendingGrading,
-        mcqScore,
-        mcqMax,
-      };
-    });
+        return {
+          submissionCount,
+          autoGraded,
+          pendingGrading,
+          mcqScore,
+          mcqMax,
+        };
+      });
+    } catch (err) {
+      // Rollback: delete stored scan files
+      for (const scan of storedScans.values()) {
+        await deleteStoredScan(scan.relPath);
+      }
+      throw err;
+    }
+
+    // AFTER commit: run processHandwrittenSubmissions with GRADING_CONCURRENCY
+    const handwrittenReceived = handwrittenSubIds.length;
+    let handwrittenNeedReview = 0;
+    if (handwrittenSubIds.length > 0) {
+      try {
+        const procResult = await processHandwrittenSubmissions(handwrittenSubIds);
+        handwrittenNeedReview = procResult.needReview;
+      } catch (err) {
+        console.error('Error in post-submit processHandwrittenSubmissions:', err);
+      }
+    }
+
+    return {
+      ...txResult,
+      handwrittenReceived,
+      handwrittenNeedReview,
+    };
   }
 
   async getMyResult(assessmentId: string, studentId: string) {
@@ -638,6 +719,10 @@ export class AssessmentsService {
           maxMarks: q.maxMarks,
           options: q.options,
           studentAnswer: sub?.selectedIndex ?? null,
+          submissionId: sub?.id ?? null,
+          scanPath: sub?.scanPath ?? null,
+          ocrStatus: sub?.ocrStatus ?? null,
+          ocrOriginal: sub?.ocrOriginal ?? null,
           correctIndex: q.correctIndex,
           explanation: q.modelAnswer ?? null,
           marksObtained: marksObtained ?? 0,
@@ -679,14 +764,17 @@ export class AssessmentsService {
           };
         });
 
-        const overriddenBy = extraData.overriddenBy ?? null;
+        const overriddenBy = grade.overriddenBy ?? extraData.overriddenBy ?? null;
+        const reviewedBy = grade.reviewedBy ?? null;
+        const overrideNote = grade.overrideNote ?? null;
         const autoMarks = grade.totalMarks;
         const finalMarks = grade.finalMarks ?? grade.totalMarks;
         const overridden = Boolean(
           overriddenBy !== null ||
           (grade.finalMarks !== null && grade.finalMarks !== undefined && grade.finalMarks !== grade.totalMarks)
         );
-        const provisional = Boolean(grade.needsReview && overriddenBy === null && !overridden);
+        const provisional = Boolean(grade.needsReview && overriddenBy === null && !overridden && reviewedBy === null);
+        const reviewed = Boolean(reviewedBy !== null && !overridden);
         const summary = (typeof extraData.summary === 'string' ? extraData.summary : grade.summary) ?? null;
         const missingPoints = Array.isArray(grade.missingPoints) && grade.missingPoints.length > 0
           ? grade.missingPoints
@@ -700,7 +788,9 @@ export class AssessmentsService {
           summary,
           confidenceLevel: getConfidenceLevel(grade.confidence),
           provisional,
+          reviewed,
           overridden,
+          overrideNote,
           autoMarks,
           finalMarks,
         };
@@ -714,6 +804,10 @@ export class AssessmentsService {
         type: q.type,
         maxMarks: q.maxMarks,
         studentAnswer: sub?.answerText ?? null,
+        submissionId: sub?.id ?? null,
+        scanPath: sub?.scanPath ?? null,
+        ocrStatus: sub?.ocrStatus ?? null,
+        ocrOriginal: sub?.ocrOriginal ?? null,
         marksObtained,
         status: isGraded ? ('GRADED' as const) : ('PENDING' as const),
         grade: shortGradeInfo,

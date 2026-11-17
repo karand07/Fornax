@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { assessmentsController } from './assessments.controller.js';
 import { authMiddleware } from '../../middleware/auth.js';
 import { requireRole } from '../../middleware/role.js';
+import { upload } from '../../middleware/upload.js';
 import { Role } from '@prisma/client';
 
 const router = Router();
@@ -35,6 +36,7 @@ router.post(
   '/:id/submit',
   authMiddleware,
   requireRole(Role.STUDENT),
+  upload.any(),
   (req, res) => assessmentsController.submitAssessment(req, res)
 );
 

@@ -18,7 +18,9 @@ import {
   Library,
   ChevronRight,
   ScanFace,
+  CheckSquare,
 } from 'lucide-react';
+import { useReviewQueue } from '@/api/hooks';
 
 interface NavItem {
   label: string;
@@ -31,6 +33,13 @@ export const RoleSidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isTeacherOrAdmin = user?.role === 'TEACHER' || user?.role === 'ADMIN';
+  const { data: reviewQueueData } = useReviewQueue(
+    { status: 'pending' },
+    isTeacherOrAdmin
+  );
+  const pendingCount = reviewQueueData?.total ?? 0;
 
   if (!user) return null;
 
@@ -50,6 +59,12 @@ export const RoleSidebar: React.FC = () => {
     { label: 'Course Management', href: '/teacher?tab=courses', icon: Library },
     { label: 'Curriculum & Concepts', href: '/teacher?tab=curriculum', icon: Layers, badge: 'Prereqs' },
     { label: 'Assessments & Grading', href: '/teacher?tab=grading', icon: FileCheck2 },
+    {
+      label: 'Review',
+      href: '/teacher/courses/all/review',
+      icon: CheckSquare,
+      badge: pendingCount > 0 ? `${pendingCount}` : undefined,
+    },
   ];
 
   const adminNav: NavItem[] = [

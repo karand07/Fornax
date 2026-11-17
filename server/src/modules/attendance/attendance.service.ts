@@ -1,9 +1,11 @@
 import { prisma } from '../../lib/prisma.js';
+import { computeAttendanceRate } from '../../lib/attendance.js';
 import { isFaceMatch, euclidean } from '../../lib/face.js';
 import { generateRotatingHMAC, verifyRotatingCode, isValid } from '../../lib/token.js';
 import { evaluateAttendanceIntegrity } from './attendance.rule.js';
 import { Role, AttendanceStatus } from '@prisma/client';
 import { Candidate, Match, matchPhoto, mergePhotoMatches, classify } from '../../lib/match.js';
+import { writeAudit } from '../../lib/audit.js';
 import crypto from 'crypto';
 
 export class AttendanceService {
@@ -329,7 +331,7 @@ export class AttendanceService {
     const totalSessions = endedSessions.length;
 
     // Rate rule, document it in a code comment: rate = present / totalSessions, where "present" = status PRESENT. FLAGGED counts as not present until a teacher approves it. totalSessions = 0 gives rate null.
-    const rate = totalSessions === 0 ? null : present / totalSessions;
+    const rate = computeAttendanceRate(present, totalSessions);
 
     return {
       totalSessions,
@@ -580,19 +582,33 @@ export class AttendanceService {
       throw new Error('Unauthorized: You do not own this course');
     }
 
-    // TODO: Day 13 - Write an audit entry for teacher attendance review
+    const beforeState = { status: record.status, reviewedBy: record.reviewedBy };
+    const afterState = { status, reviewedBy: teacherId };
 
-    return prisma.attendanceRecord.update({
-      where: { id: recordId },
-      data: {
-        status,
-        reviewedBy: teacherId,
-      },
-      include: {
-        user: {
-          select: { id: true, firstName: true, lastName: true, email: true },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.attendanceRecord.update({
+        where: { id: recordId },
+        data: {
+          status,
+          reviewedBy: teacherId,
         },
-      },
+        include: {
+          user: {
+            select: { id: true, firstName: true, lastName: true, email: true },
+          },
+        },
+      });
+
+      await writeAudit(tx, {
+        actorId: teacherId,
+        action: 'ATTENDANCE_REVIEW',
+        entityType: 'AttendanceRecord',
+        entityId: recordId,
+        before: beforeState,
+        after: afterState,
+      });
+
+      return updated;
     });
   }
   async processClassPhoto(

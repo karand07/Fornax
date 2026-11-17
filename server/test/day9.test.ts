@@ -297,7 +297,9 @@ describe('Day 9: Server Tests', () => {
   describe('2.2 Teacher GET /api/grading/submissions/:id', () => {
     it('returns raw confidence, modelVersion, needsReview, overriddenBy, finalMarks, and criteria with descriptions', async () => {
       const originalSubmissionFindUnique = prisma.submission.findUnique;
+      const originalSubmissionFindMany = prisma.submission.findMany;
 
+      (prisma.submission.findMany as any) = async () => [];
       (prisma.submission.findUnique as any) = async () => ({
         id: 'sub-teacher-view',
         assessmentId: 'a1',
@@ -363,6 +365,7 @@ describe('Day 9: Server Tests', () => {
         assert.equal(res.grade.notes, 'Strong understanding');
       } finally {
         prisma.submission.findUnique = originalSubmissionFindUnique;
+        prisma.submission.findMany = originalSubmissionFindMany;
       }
     });
   });

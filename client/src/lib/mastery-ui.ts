@@ -11,6 +11,16 @@ export interface MasteryBand {
   badgeVariant: 'destructive' | 'secondary' | 'success' | 'default';
 }
 
+export const MASTERY_STRONG = 0.7;
+export const MASTERY_WEAK = 0.4;
+export const PREREQ_OK = 0.6;
+export const RISK_WEIGHTS = { attendance: 0.4, mastery: 0.6 };
+export const RISK_AT_RISK = 0.5;
+export const RISK_WATCH = 0.35;
+export const MAX_RECOMMENDATIONS = 3;
+export const MAX_RESOURCES_PER_REC = 3;
+export const MIN_ASSESSED = 2;
+
 /**
  * Mastery band thresholds:
  * - Weak: < 0.4
@@ -18,7 +28,7 @@ export interface MasteryBand {
  * - Strong: >= 0.7
  */
 export function masteryBand(score: number): MasteryBand {
-  if (score < 0.4) {
+  if (score < MASTERY_WEAK) {
     return {
       band: 'weak',
       label: 'Weak',
@@ -30,7 +40,7 @@ export function masteryBand(score: number): MasteryBand {
       badgeVariant: 'destructive',
     };
   }
-  if (score < 0.7) {
+  if (score < MASTERY_STRONG) {
     return {
       band: 'developing',
       label: 'Developing',

@@ -4,6 +4,7 @@ import {
   useCourse,
   useCourseAssessments,
   useCreateAssessment,
+  useReviewQueue,
   AssessmentListItem,
 } from '@/api/hooks';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -29,6 +30,8 @@ import {
   Clock,
   Sparkles,
   ExternalLink,
+  CheckSquare,
+  BarChart3,
 } from 'lucide-react';
 
 export const TeacherAssessmentsPage: React.FC = () => {
@@ -37,6 +40,8 @@ export const TeacherAssessmentsPage: React.FC = () => {
 
   const { data: course, isLoading: courseLoading } = useCourse(courseId || '');
   const { data: assessments, isLoading: assessmentsLoading } = useCourseAssessments(courseId || '');
+  const { data: reviewQueue } = useReviewQueue({ courseId: courseId || undefined, status: 'pending' });
+  const pendingCount = reviewQueue?.total ?? 0;
   const createMutation = useCreateAssessment(courseId || '');
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -85,14 +90,34 @@ export const TeacherAssessmentsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Create Assessment Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 shadow-lg shadow-indigo-600/20">
-              <Plus className="w-4 h-4" />
-              New Assessment
+        <div className="flex items-center gap-2">
+          <Link to={`/teacher/courses/${courseId}/analytics`}>
+            <Button variant="outline" className="border-slate-800 text-slate-300 hover:text-white gap-2">
+              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              <span>Analytics</span>
             </Button>
-          </DialogTrigger>
+          </Link>
+
+          <Link to={`/teacher/courses/${courseId}/review`}>
+            <Button variant="outline" className="border-slate-800 text-slate-300 hover:text-white gap-2">
+              <CheckSquare className="w-4 h-4 text-indigo-400" />
+              <span>Review Queue</span>
+              {pendingCount > 0 && (
+                <Badge variant="default" className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.2">
+                  {pendingCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
+
+          {/* Create Assessment Dialog */}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 shadow-lg shadow-indigo-600/20">
+                <Plus className="w-4 h-4" />
+                New Assessment
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -147,6 +172,7 @@ export const TeacherAssessmentsPage: React.FC = () => {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Assessment List */}

@@ -30,13 +30,13 @@ const mcqSchema = z
     path: ['correctIndex'],
   });
 
-const shortSchema = z
+const shortOrHandwrittenSchema = z
   .object({
-    type: z.literal('SHORT'),
+    type: z.enum(['SHORT', 'HANDWRITTEN']),
     conceptId: z.string().uuid('Valid concept ID is required'),
     prompt: z.string().min(1, 'Prompt is required'),
     maxMarks: z.number().gt(0, 'maxMarks must be > 0').lte(100, 'maxMarks must be <= 100'),
-    modelAnswer: z.string().min(1, 'Model answer is required for SHORT questions'),
+    modelAnswer: z.string().min(1, 'Model answer is required for SHORT and HANDWRITTEN questions'),
     rubric: z
       .array(
         z.object({
@@ -58,7 +58,7 @@ const shortSchema = z
     }
   );
 
-const questionSchema: z.ZodType<QuestionInput> = z.union([mcqSchema, shortSchema]);
+const questionSchema: z.ZodType<QuestionInput> = z.union([mcqSchema, shortOrHandwrittenSchema]);
 
 const submitAssessmentSchema = z.object({
   answers: z.array(
@@ -138,11 +138,6 @@ export class AssessmentsController {
       return;
     }
 
-    if (req.body?.type === 'HANDWRITTEN') {
-      res.status(400).json({ error: 'Handwritten questions arrive on Day 10' });
-      return;
-    }
-
     const parseResult = questionSchema.safeParse(req.body);
     if (!parseResult.success) {
       const error = parseResult.error.errors.map((e) => e.message).join(', ');
@@ -184,11 +179,6 @@ export class AssessmentsController {
     const questionId = req.params.id;
     if (!questionId) {
       res.status(400).json({ error: 'Question ID parameter is required' });
-      return;
-    }
-
-    if (req.body?.type === 'HANDWRITTEN') {
-      res.status(400).json({ error: 'Handwritten questions arrive on Day 10' });
       return;
     }
 
@@ -318,24 +308,73 @@ export class AssessmentsController {
       return;
     }
 
-    const parseResult = submitAssessmentSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      const error = parseResult.error.errors.map((e) => e.message).join(', ');
-      res.status(400).json({ error });
-      return;
-    }
-
     const studentId = req.user?.userId;
     if (!studentId) {
       res.status(401).json({ error: 'Unauthorized: User not authenticated' });
       return;
     }
 
+    let payloadData = req.body;
+    if (req.body && typeof req.body.payload === 'string') {
+      try {
+        payloadData = JSON.parse(req.body.payload);
+      } catch {
+        res.status(400).json({ error: 'Invalid JSON payload' });
+        return;
+      }
+    }
+
+    const parseResult = submitAssessmentSchema.safeParse(payloadData);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    const files = (req.files as Express.Multer.File[]) || [];
+    const scanFiles = new Map<string, Express.Multer.File>();
+
+    for (const file of files) {
+      if (!file.fieldname.startsWith('scan:')) {
+        res.status(400).json({ error: `Invalid file fieldname: ${file.fieldname}. Must start with 'scan:'` });
+        return;
+      }
+      const questionId = file.fieldname.slice('scan:'.length);
+      if (!questionId) {
+        res.status(400).json({ error: `Missing question ID in file fieldname: ${file.fieldname}` });
+        return;
+      }
+      if (scanFiles.has(questionId)) {
+        res.status(400).json({ error: `At most one file per question is allowed (duplicate for question ${questionId})` });
+        return;
+      }
+      scanFiles.set(questionId, file);
+    }
+
+    // Validation: an answer entry must not carry both text and a scan
+    const answers = [...parseResult.data.answers];
+    for (const ans of answers) {
+      if (ans.answerText && ans.answerText.trim().length > 0 && scanFiles.has(ans.questionId)) {
+        res.status(400).json({
+          error: `Question ${ans.questionId} cannot carry both text and a scan`,
+        });
+        return;
+      }
+    }
+
+    // Ensure questions with a scan are present in answers
+    for (const [qId] of scanFiles.entries()) {
+      if (!answers.some((a) => a.questionId === qId)) {
+        answers.push({ questionId: qId });
+      }
+    }
+
     try {
       const result = await assessmentsService.submitAssessment(
         assessmentId,
         studentId,
-        parseResult.data.answers
+        answers,
+        scanFiles
       );
       res.status(200).json(result);
     } catch (err: unknown) {

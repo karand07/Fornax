@@ -1,8 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Check, Info, Clock, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  CheckCircle2,
+  XCircle,
+  Check,
+  Info,
+  Clock,
+  HelpCircle,
+  FileImage,
+  Loader2,
+  AlertTriangle,
+} from 'lucide-react';
 import { AssessmentQuestionResultItem } from '@/api/hooks';
+import api from '@/api/axios';
 
 export interface QuestionResultCardProps {
   index: number;
@@ -16,6 +35,7 @@ export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
   renderGrade,
 }) => {
   const isMCQ = question.type === 'MCQ';
+  const isHandwritten = question.type === 'HANDWRITTEN';
   const isGraded = question.status === 'GRADED';
   const studentHasAnswered =
     question.studentAnswer !== null && question.studentAnswer !== undefined && question.studentAnswer !== '';
@@ -23,6 +43,47 @@ export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
   const marksDisplay = isGraded
     ? `${question.marksObtained ?? 0} / ${question.maxMarks}`
     : `— / ${question.maxMarks}`;
+
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+  const [scanBlobUrl, setScanBlobUrl] = useState<string | null>(null);
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  const handleOpenScan = async () => {
+    if (!question.submissionId) return;
+    setIsScanModalOpen(true);
+    if (!scanBlobUrl) {
+      setScanLoading(true);
+      setScanError(null);
+      try {
+        const res = await api.get(`/submissions/${question.submissionId}/scan`, {
+          responseType: 'blob',
+        });
+        const url = URL.createObjectURL(res.data);
+        setScanBlobUrl(url);
+      } catch (err: any) {
+        setScanError(err.response?.data?.error || 'Failed to load scan image.');
+      } finally {
+        setScanLoading(false);
+      }
+    }
+  };
+
+  const handleCloseScan = () => {
+    setIsScanModalOpen(false);
+    if (scanBlobUrl) {
+      URL.revokeObjectURL(scanBlobUrl);
+      setScanBlobUrl(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (scanBlobUrl) {
+        URL.revokeObjectURL(scanBlobUrl);
+      }
+    };
+  }, [scanBlobUrl]);
 
   return (
     <Card className="border border-slate-800 bg-slate-900/60 shadow-sm transition-colors hover:border-slate-700/80">
@@ -165,34 +226,80 @@ export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
           </div>
         )}
 
-        {/* SHORT Questions View */}
+        {/* SHORT & HANDWRITTEN Questions View */}
         {!isMCQ && (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            {/* Handwritten-specific OCR status banners */}
+            {isHandwritten && question.ocrStatus === 'UNREADABLE' && (
+              <Alert variant="destructive" className="border-amber-500/40 bg-amber-950/20 text-amber-300">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <AlertTitle className="font-semibold text-xs">Handwriting Unreadable</AlertTitle>
+                <AlertDescription className="text-xs text-amber-300/90 mt-1">
+                  Your handwriting could not be read clearly. Your teacher will review your scan directly.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {isHandwritten && question.ocrStatus === 'FAILED' && (
+              <Alert variant="destructive" className="border-rose-500/40 bg-rose-950/20 text-rose-300">
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <AlertTitle className="font-semibold text-xs">Transcription Failed</AlertTitle>
+                <AlertDescription className="text-xs text-rose-300/90 mt-1">
+                  Transcription could not be completed. Your teacher will review your scan directly.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Answer Display */}
             <div className="space-y-1.5">
-              <div className="text-xs font-semibold text-slate-400">
-                Your Submitted Answer:
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-xs font-semibold text-slate-400">
+                  {isHandwritten ? 'AI Transcript of Your Handwriting:' : 'Your Submitted Answer:'}
+                </div>
+                {isHandwritten && question.submissionId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenScan}
+                    className="h-7 text-xs gap-1.5 border-slate-700 hover:border-indigo-500 text-slate-300 hover:text-white"
+                  >
+                    <FileImage className="w-3.5 h-3.5 text-indigo-400" />
+                    View my scan
+                  </Button>
+                )}
               </div>
+
               <blockquote className="border-l-2 border-indigo-500/60 bg-slate-950/60 p-3 rounded-r-md text-xs md:text-sm text-slate-200 font-mono whitespace-pre-wrap leading-relaxed">
                 {typeof question.studentAnswer === 'string' && question.studentAnswer.trim().length > 0
                   ? `"${question.studentAnswer}"`
+                  : isHandwritten
+                  ? 'No transcribed text available.'
                   : 'No answer submitted'}
               </blockquote>
+
+              {isHandwritten && (
+                <p className="text-[11px] text-slate-400 italic">
+                  Transcribed from your handwriting. Your teacher can review and adjust.
+                </p>
+              )}
             </div>
 
-            {question.status === 'PENDING' && (
-              <div className="flex items-center gap-2 pt-1">
-                <Badge
-                  variant="secondary"
-                  className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-400 font-medium px-2.5 py-0.5"
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  Pending grading
-                </Badge>
-                <span className="text-xs text-slate-400">
-                  Your response is waiting for grading. Marks will update once evaluated.
-                </span>
-              </div>
-            )}
+            {/* Pending grading indicator */}
+            {question.status === 'PENDING' &&
+              (!isHandwritten || (question.ocrStatus !== 'UNREADABLE' && question.ocrStatus !== 'FAILED')) && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Badge
+                    variant="secondary"
+                    className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-400 font-medium px-2.5 py-0.5"
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    Pending grading
+                  </Badge>
+                  <span className="text-xs text-slate-400">
+                    Your response is waiting for grading. Marks will update once evaluated.
+                  </span>
+                </div>
+              )}
 
             {/* Slot for Day 9 GradeCard */}
             {renderGrade && (
@@ -202,6 +309,38 @@ export const QuestionResultCard: React.FC<QuestionResultCardProps> = ({
             )}
           </div>
         )}
+
+        {/* Modal for viewing handwritten scan */}
+        <Dialog open={isScanModalOpen} onOpenChange={(open) => !open && handleCloseScan()}>
+          <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-sm font-semibold">
+                <FileImage className="w-4 h-4 text-indigo-400" />
+                Your Submitted Handwritten Scan — Question {index + 1}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-auto p-4 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center min-h-[300px]">
+              {scanLoading && (
+                <div className="flex flex-col items-center gap-2 text-xs text-slate-400">
+                  <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                  <span>Loading original scan image...</span>
+                </div>
+              )}
+              {scanError && (
+                <div className="text-xs text-rose-400 text-center p-4">
+                  {scanError}
+                </div>
+              )}
+              {scanBlobUrl && !scanLoading && (
+                <img
+                  src={scanBlobUrl}
+                  alt="Handwritten answer scan"
+                  className="max-h-[70vh] max-w-full object-contain rounded shadow-lg"
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

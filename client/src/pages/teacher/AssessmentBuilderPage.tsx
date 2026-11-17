@@ -54,7 +54,7 @@ export const AssessmentBuilderPage: React.FC = () => {
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   // Form State
-  const [type, setType] = useState<'MCQ' | 'SHORT'>('MCQ');
+  const [type, setType] = useState<'MCQ' | 'SHORT' | 'HANDWRITTEN'>('MCQ');
   const [conceptId, setConceptId] = useState<string>('');
   const [prompt, setPrompt] = useState<string>('');
   const [maxMarks, setMaxMarks] = useState<number>(1);
@@ -93,7 +93,7 @@ export const AssessmentBuilderPage: React.FC = () => {
   // Open Edit Dialog
   const handleOpenEdit = (q: Question) => {
     setEditingQuestionId(q.id);
-    setType(q.type === 'MCQ' ? 'MCQ' : 'SHORT');
+    setType(q.type);
     setConceptId(q.conceptId);
     setPrompt(q.prompt);
     setMaxMarks(q.maxMarks);
@@ -161,7 +161,7 @@ export const AssessmentBuilderPage: React.FC = () => {
   // Calculate rubric total
   const rubricTotal = rubric.reduce((sum, r) => sum + (Number(r.marks) || 0), 0);
   const isRubricSumValid =
-    type !== 'SHORT' || Math.abs(rubricTotal - Number(maxMarks)) < 0.001;
+    type === 'MCQ' || Math.abs(rubricTotal - Number(maxMarks)) < 0.001;
 
   // Save Question
   const handleSaveQuestion = async (e: React.FormEvent) => {
@@ -204,9 +204,9 @@ export const AssessmentBuilderPage: React.FC = () => {
         setFormError('Invalid correct option selected.');
         return;
       }
-    } else if (type === 'SHORT') {
+    } else if (type === 'SHORT' || type === 'HANDWRITTEN') {
       if (!modelAnswer.trim()) {
-        setFormError('Model answer is required for SHORT questions.');
+        setFormError('Model answer is required for SHORT and HANDWRITTEN questions.');
         return;
       }
       if (rubric.length < 1 || rubric.length > 8) {
@@ -518,8 +518,8 @@ export const AssessmentBuilderPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* SHORT Rubrics Display */}
-                  {q.type === 'SHORT' && (
+                  {/* SHORT / HANDWRITTEN Rubrics Display */}
+                  {(q.type === 'SHORT' || q.type === 'HANDWRITTEN') && (
                     <div className="space-y-2 mt-2">
                       <div className="text-xs font-semibold text-slate-400">
                         Grading Rubric Criteria:
@@ -607,12 +607,14 @@ export const AssessmentBuilderPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    disabled
-                    title="Handwritten questions arrive on Day 10"
-                    className="py-2 px-3 text-xs font-medium rounded-md border bg-slate-900/40 border-slate-800/50 text-slate-600 cursor-not-allowed text-center"
+                    onClick={() => setType('HANDWRITTEN')}
+                    className={`py-2 px-3 text-xs font-medium rounded-md border text-center transition-all ${
+                      type === 'HANDWRITTEN'
+                        ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
                   >
                     Handwritten
-                    <span className="block text-[9px] text-slate-600">Coming soon</span>
                   </button>
                 </div>
               </div>
@@ -736,8 +738,8 @@ export const AssessmentBuilderPage: React.FC = () => {
               </div>
             )}
 
-            {/* SHORT Question Specific Fields */}
-            {type === 'SHORT' && (
+            {/* SHORT / HANDWRITTEN Question Specific Fields */}
+            {(type === 'SHORT' || type === 'HANDWRITTEN') && (
               <div className="space-y-3 border-t border-slate-800 pt-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-300 block">

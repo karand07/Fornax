@@ -1,0 +1,9 @@
+export const MASTERY_STRONG = 0.7;
+export const MASTERY_WEAK = 0.4;
+export const PREREQ_OK = 0.6;
+export const RISK_WEIGHTS = { attendance: 0.4, mastery: 0.6 };
+export const RISK_AT_RISK = 0.5; // strictly greater
+export const RISK_WATCH = 0.35; // strictly greater
+export const MAX_RECOMMENDATIONS = 3;
+export const MAX_RESOURCES_PER_REC = 3;
+export const MIN_ASSESSED = 2;

@@ -17,6 +17,7 @@ import resourcesRouter from './modules/resources/resources.routes.js';
 import faceRouter from './modules/face/face.routes.js';
 import questionsRouter from './modules/assessments/questions.routes.js';
 import studentsRouter from './modules/students/students.routes.js';
+import submissionsRouter from './modules/submissions/submissions.routes.js';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/face', faceRouter);
 app.use('/api/questions', questionsRouter);
 app.use('/api/students', studentsRouter);
+app.use('/api/submissions', submissionsRouter);
 
 // Error Handling Middleware
 app.use(errorHandler);

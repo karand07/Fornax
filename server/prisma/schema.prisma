@@ -170,6 +170,11 @@ model Submission {
   feedback      String?
   selectedIndex Int?
   answerText    String?
+  scanPath      String?
+  ocrOriginal   String?
+  ocrStatus     String?   // "OK" | "PARTIAL" | "UNREADABLE" | "FAILED"
+  ocrEditedBy   String?
+  ocrEditedAt   DateTime?
   submittedAt   DateTime  @default(now())
   gradedAt      DateTime?
   createdAt     DateTime  @default(now())
@@ -194,10 +199,29 @@ model Grade {
   graderType    String     @default("AUTO") // "AUTO" | "LLM" | "MANUAL"
   summary       String?
   missingPoints String[]   @default([])
+  gradedAt      DateTime?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  overriddenBy  String?
+  overrideNote  String?
+  overriddenAt  DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
   submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
 }
 
 model Mastery {

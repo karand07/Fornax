@@ -3,6 +3,9 @@ export const CONFIDENCE_THRESHOLDS = {
   MEDIUM: 0.6,
 } as const;
 
+export const LLM_MODEL = 'claude-3-5-sonnet-20241022';
+export const PROMPT_VERSION = 'grade-v1';
+
 export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export function getConfidenceLevel(confidence: number): ConfidenceLevel {

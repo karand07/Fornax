@@ -11,6 +11,11 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   CLIENT_URL: z.string().default('http://localhost:5173'),
   TRUST_PROXY: z.string().optional().default(''),
+  SCAN_DIR: z.string().default('./storage/scans'),
+  MAX_SCAN_MB: z.preprocess(
+    (val) => (val === undefined || val === '' ? 5 : Number(val)),
+    z.number().positive().default(5)
+  ),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

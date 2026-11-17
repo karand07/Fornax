@@ -37,13 +37,20 @@ async function main() {
     },
   });
 
-  // 3. 5 Students (including student@fornax.edu for backward compatibility)
+  // 3. 12 Students (plus student@fornax.edu for backward compatibility)
   const studentData = [
     { email: 'student1@fornax.edu', firstName: 'Alex', lastName: 'Rivera' },
     { email: 'student2@fornax.edu', firstName: 'Samantha', lastName: 'Chen' },
     { email: 'student3@fornax.edu', firstName: 'Marcus', lastName: 'Johnson' },
     { email: 'student4@fornax.edu', firstName: 'Elena', lastName: 'Rostova' },
     { email: 'student5@fornax.edu', firstName: 'David', lastName: 'Kim' },
+    { email: 'student6@fornax.edu', firstName: 'Maya', lastName: 'Patel' },
+    { email: 'student7@fornax.edu', firstName: 'Liam', lastName: "O'Connor" },
+    { email: 'student8@fornax.edu', firstName: 'Zoe', lastName: 'Washington' },
+    { email: 'student9@fornax.edu', firstName: 'Carlos', lastName: 'Mendez' },
+    { email: 'student10@fornax.edu', firstName: 'Priya', lastName: 'Sharma' },
+    { email: 'student11@fornax.edu', firstName: 'Lucas', lastName: 'Silva' },
+    { email: 'student12@fornax.edu', firstName: 'Aisha', lastName: 'Al-Mansoor' },
     // Also include student@fornax.edu as default student demo login
     { email: 'student@fornax.edu', firstName: 'Alex', lastName: 'Rivera' },
   ];
@@ -255,29 +262,7 @@ async function main() {
       order: 6,
       description:
         'Slotted page architectures, buffer pool replacement (LRU/Clock), clustered vs unclustered B+ Tree indexes, and LSM Trees.',
-      resources: [
-        {
-          title: 'How Databases Store Data on Disk: Pages, Slotted Tuples, and Heap Files',
-          description: 'Understand 8KB page formats, header layouts, and buffer cache dirty page flush mechanics.',
-          type: ResourceType.ARTICLE,
-          difficulty: ResourceDifficulty.BEGINNER,
-          url: 'https://fornax.edu/resources/db/storage-pages-intro',
-        },
-        {
-          title: 'B+ Tree Index Internals: Node Splitting, Merging, and Range Scans',
-          description: 'Visual simulation of B+ tree node splits, redistribution, root expansion, and bidirectional leaf pointers.',
-          type: ResourceType.VIDEO,
-          difficulty: ResourceDifficulty.INTERMEDIATE,
-          url: 'https://fornax.edu/resources/db/bplus-tree-internals',
-        },
-        {
-          title: 'High-Performance Index Benchmarking & LSM Compaction',
-          description: 'Advanced benchmark comparing B+ trees vs Log-Structured Merge (LSM) Trees under heavy write workloads.',
-          type: ResourceType.EXERCISE,
-          difficulty: ResourceDifficulty.ADVANCED,
-          url: 'https://fornax.edu/resources/db/lsm-vs-btree-benchmarks',
-        },
-      ],
+      resources: [],
     },
   ];
 
@@ -311,7 +296,14 @@ async function main() {
 
     createdConcepts[cData.order] = concept.id;
 
-    // Seed 3 resources per concept at different difficulties
+    // For Concept 6 ("Storage Engines, B+ Trees & Indexing"), ensure 0 resources (for empty state testing)
+    if (cData.order === 6) {
+      await prisma.resource.deleteMany({
+        where: { conceptId: concept.id },
+      });
+    }
+
+    // Seed resources per concept at different difficulties
     for (const rData of cData.resources) {
       const existingResource = await prisma.resource.findFirst({
         where: { conceptId: concept.id, title: rData.title },
@@ -545,7 +537,7 @@ async function main() {
 
   const q = fullAssessment.questions;
 
-    // Pre-create submissions and grades for 3 of the 5 demo students
+    // Pre-create submissions and grades for students
     // Student 1 (Alex Rivera): Strong student (6/6 MCQs correct)
     await assessmentsService.submitAssessment(fullAssessment!.id, students[0].id, [
       { questionId: q[0].id, selectedIndex: 0 },
@@ -582,76 +574,268 @@ async function main() {
       { questionId: q[7].id, answerText: '3NF is easier to achieve while preserving dependencies.' },
     ]);
 
-  // 9. Seed 10 ended class sessions and attendance records for CS301
-  const existingSessions = await prisma.classSession.findMany({
+    // Student 4 (Elena Rostova): Strong student (5/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[3].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 2 }, // correct
+      { questionId: q[2].id, selectedIndex: 1 }, // correct
+      { questionId: q[3].id, selectedIndex: 1 }, // correct
+      { questionId: q[4].id, selectedIndex: 1 }, // correct
+      { questionId: q[5].id, selectedIndex: 0 }, // wrong
+      { questionId: q[6].id, answerText: 'Decompose relations to eliminate non-full dependency on composite keys.' },
+      { questionId: q[7].id, answerText: '3NF guarantees dependency preservation while BCNF may lose some dependencies.' },
+    ]);
+
+    // Student 5 (David Kim): Mixed student (4/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[4].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 2 }, // correct
+      { questionId: q[2].id, selectedIndex: 1 }, // correct
+      { questionId: q[3].id, selectedIndex: 0 }, // wrong
+      { questionId: q[4].id, selectedIndex: 0 }, // wrong
+      { questionId: q[5].id, selectedIndex: 3 }, // correct
+      { questionId: q[6].id, answerText: 'Split tables with composite keys.' },
+      { questionId: q[7].id, answerText: '3NF preserves FDs.' },
+    ]);
+
+    // Student 6 (Maya Patel): Strong student (5/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[5].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 2 }, // correct
+      { questionId: q[2].id, selectedIndex: 1 }, // correct
+      { questionId: q[3].id, selectedIndex: 1 }, // correct
+      { questionId: q[4].id, selectedIndex: 1 }, // correct
+      { questionId: q[5].id, selectedIndex: 0 }, // wrong
+      { questionId: q[6].id, answerText: 'Ensure all non-key columns depend on the primary key completely.' },
+      { questionId: q[7].id, answerText: '3NF maintains all dependencies.' },
+    ]);
+
+    // Student 7 (Liam O'Connor): High attendance, weak mastery (1/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[6].id, [
+      { questionId: q[0].id, selectedIndex: 1 }, // wrong
+      { questionId: q[1].id, selectedIndex: 0 }, // wrong
+      { questionId: q[2].id, selectedIndex: 0 }, // wrong
+      { questionId: q[3].id, selectedIndex: 0 }, // wrong
+      { questionId: q[4].id, selectedIndex: 1 }, // correct
+      { questionId: q[5].id, selectedIndex: 0 }, // wrong
+      { questionId: q[6].id, answerText: 'Not sure about 2NF decomposition.' },
+      { questionId: q[7].id, answerText: 'Normal forms simplify tables.' },
+    ]);
+
+    // Student 8 (Zoe Washington): Low attendance, strong mastery (6/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[7].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 2 }, // correct
+      { questionId: q[2].id, selectedIndex: 1 }, // correct
+      { questionId: q[3].id, selectedIndex: 1 }, // correct
+      { questionId: q[4].id, selectedIndex: 1 }, // correct
+      { questionId: q[5].id, selectedIndex: 3 }, // correct
+      { questionId: q[6].id, answerText: 'Extract partially dependent attributes into a new table where the subset is primary key.' },
+      { questionId: q[7].id, answerText: '3NF allows prime attribute determinants, guaranteeing dependency preservation.' },
+    ]);
+
+    // Student 9 (Carlos Mendez): Mixed student (3/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[8].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 0 }, // wrong
+      { questionId: q[2].id, selectedIndex: 1 }, // correct
+      { questionId: q[3].id, selectedIndex: 0 }, // wrong
+      { questionId: q[4].id, selectedIndex: 1 }, // correct
+      { questionId: q[5].id, selectedIndex: 0 }, // wrong
+      { questionId: q[6].id, answerText: 'Normalize tables step by step.' },
+      { questionId: q[7].id, answerText: '3NF is standard for transactions.' },
+    ]);
+
+    // Student 10 (Priya Sharma): Weak student (2/6 MCQs correct)
+    await assessmentsService.submitAssessment(fullAssessment!.id, students[9].id, [
+      { questionId: q[0].id, selectedIndex: 0 }, // correct
+      { questionId: q[1].id, selectedIndex: 0 }, // wrong
+      { questionId: q[2].id, selectedIndex: 0 }, // wrong
+      { questionId: q[3].id, selectedIndex: 0 }, // wrong
+      { questionId: q[4].id, selectedIndex: 1 }, // correct
+      { questionId: q[5].id, selectedIndex: 0 }, // wrong
+      { questionId: q[6].id, answerText: 'Separate composite columns.' },
+      { questionId: q[7].id, answerText: 'BCNF is harder to satisfy.' },
+    ]);
+
+    // Student 11 (Lucas Silva): NO submissions (0 assessments -> INSUFFICIENT_DATA)
+    // Student 12 (Aisha Al-Mansoor): NO submissions (attendance only -> OK)
+
+    // Student alias (student@fornax.edu)
+    const defaultStudent = students.find((s) => s.email === 'student@fornax.edu');
+    if (defaultStudent) {
+      const existing = await prisma.submission.findFirst({
+        where: { assessmentId: fullAssessment.id, userId: defaultStudent.id },
+      });
+      if (!existing) {
+        await assessmentsService.submitAssessment(fullAssessment.id, defaultStudent.id, [
+          { questionId: q[0].id, selectedIndex: 0 }, // correct
+          { questionId: q[1].id, selectedIndex: 0 }, // wrong
+          { questionId: q[2].id, selectedIndex: 1 }, // correct
+          { questionId: q[3].id, selectedIndex: 0 }, // wrong
+          { questionId: q[4].id, selectedIndex: 1 }, // correct
+          { questionId: q[5].id, selectedIndex: 0 }, // wrong
+          { questionId: q[6].id, answerText: 'Decompose relations into smaller tables.' },
+          { questionId: q[7].id, answerText: 'BCNF is stricter than 3NF.' },
+        ]);
+      }
+    }
+
+    // 8b. Seed assessment for Concept 4 (SQL Execution & Query Optimization) with exactly 1 assessed student
+    let optAssessment = await prisma.assessment.findFirst({
+      where: { courseId: course.id, title: 'Query Optimization Assessment' },
+      include: { questions: true },
+    });
+
+    if (!optAssessment) {
+      const createdOpt = await assessmentsService.createAssessment(
+        course.id,
+        'Query Optimization Assessment',
+        teacher.id,
+        Role.TEACHER
+      );
+
+      await assessmentsService.addQuestion(
+        createdOpt.id,
+        {
+          type: 'MCQ',
+          conceptId: createdConcepts[4],
+          prompt: 'Which query optimizer component estimates the I/O and CPU cost of candidate execution plans?',
+          maxMarks: 5,
+          options: ['Cost Model Estimator', 'Catalog Manager', 'Query Lexer', 'WAL Log Writer'],
+          correctIndex: 0,
+          modelAnswer: 'The Cost Model Estimator calculates estimated disk pages and tuple processing costs.',
+        },
+        teacher.id,
+        Role.TEACHER
+      );
+
+      await assessmentsService.addQuestion(
+        createdOpt.id,
+        {
+          type: 'MCQ',
+          conceptId: createdConcepts[4],
+          prompt: 'What plan operator is chosen for equality lookups when a unique B+ Tree index exists?',
+          maxMarks: 5,
+          options: ['Sequential Table Scan', 'Index Scan', 'Hash Aggregate', 'Nested Loop Anti-Join'],
+          correctIndex: 1,
+          modelAnswer: 'An Index Scan directly traverses the B+ tree for point lookups.',
+        },
+        teacher.id,
+        Role.TEACHER
+      );
+
+      optAssessment = await assessmentsService.publishAssessment(
+        createdOpt.id,
+        teacher.id,
+        Role.TEACHER
+      ) as any;
+    }
+
+    // Only Student 1 submits Query Optimization Assessment (so Concept 4 has exactly 1 assessed student)
+    if (optAssessment && optAssessment.questions && optAssessment.questions.length >= 2) {
+      const optSub = await prisma.submission.findFirst({
+        where: { assessmentId: optAssessment.id, userId: students[0].id },
+      });
+      if (!optSub) {
+        await assessmentsService.submitAssessment(optAssessment.id, students[0].id, [
+          { questionId: optAssessment.questions[0].id, selectedIndex: 0 }, // correct
+          { questionId: optAssessment.questions[1].id, selectedIndex: 0 }, // wrong -> 1/2 correct (50%)
+        ]);
+      }
+    }
+
+  // 9. Seed 8 ended class sessions and attendance records for CS301
+  await prisma.attendanceRecord.deleteMany({
+    where: { session: { courseId: course.id } },
+  });
+  await prisma.classSession.deleteMany({
     where: { courseId: course.id },
   });
 
-  if (existingSessions.length === 0) {
-    const sessionTitles = [
-      'Lecture 1: Introduction to Relational Databases',
-      'Lecture 2: Entity-Relationship Models & ERD',
-      'Lecture 3: Relational Algebra Operators',
-      'Lecture 4: SQL DDL, DML, and Integrity Constraints',
-      'Lecture 5: Functional Dependencies & Boyce-Codd Normal Form',
-      'Lecture 6: Multivalued Dependencies & 4NF',
-      'Lecture 7: Buffer Pool Management & Storage Engine',
-      'Lecture 8: B+ Tree Indexing & Search Keys',
-      'Lecture 9: Query Parsing, Optimization & Plan Selection',
-      'Lecture 10: ACID Properties & Concurrency Control',
-    ];
+  const sessionTitles = [
+    'Lecture 1: Introduction to Relational Databases',
+    'Lecture 2: Entity-Relationship Models & ERD',
+    'Lecture 3: Relational Algebra Operators',
+    'Lecture 4: SQL DDL, DML, and Integrity Constraints',
+    'Lecture 5: Functional Dependencies & Boyce-Codd Normal Form',
+    'Lecture 6: Multivalued Dependencies & 4NF',
+    'Lecture 7: Buffer Pool Management & Storage Engine',
+    'Lecture 8: B+ Tree Indexing & Search Keys',
+  ];
 
-    const now = Date.now();
-    for (let i = 0; i < sessionTitles.length; i++) {
-      const daysAgo = 10 - i;
-      const sessionDate = new Date(now - daysAgo * 24 * 60 * 60 * 1000);
-      const windowEndsAt = new Date(sessionDate.getTime() + 60 * 60 * 1000); // 1 hour after start
+  const now = Date.now();
+  for (let i = 0; i < sessionTitles.length; i++) {
+    const daysAgo = 8 - i;
+    const sessionDate = new Date(now - daysAgo * 24 * 60 * 60 * 1000);
+    const windowEndsAt = new Date(sessionDate.getTime() + 60 * 60 * 1000); // 1 hour after start
 
-      const session = await prisma.classSession.create({
+    const session = await prisma.classSession.create({
+      data: {
+        courseId: course.id,
+        title: sessionTitles[i],
+        sessionDate,
+        windowEndsAt,
+        isActive: false, // Ended session
+      },
+    });
+
+    // Seed attendance for demo students:
+    // student1@fornax.edu: 8/8 present -> rate 1.0 (OK)
+    // student2@fornax.edu: 2/8 present (sessions 0, 1) -> rate 0.25 (AT_RISK)
+    // student3@fornax.edu: 4/8 present (sessions 0..3) -> rate 0.50 (WATCH)
+    // student4@fornax.edu: 7/8 present
+    // student5@fornax.edu: 6/8 present
+    // student@fornax.edu: 6/8 present (sessions 0..5, session 5 flagged)
+    // Seed attendance for 12 students across 8 sessions:
+    for (const student of students) {
+      // student11 has 0 attendance records (unassessed attendance & mastery -> INSUFFICIENT_DATA)
+      if (student.email === 'student11@fornax.edu') {
+        continue;
+      }
+
+      let isPresent = false;
+      let isFlagged = false;
+
+      if (student.email === 'student1@fornax.edu' || student.email === 'student6@fornax.edu' || student.email === 'student7@fornax.edu') {
+        isPresent = true; // 8/8
+      } else if (student.email === 'student4@fornax.edu' || student.email === 'student12@fornax.edu') {
+        isPresent = i < 7; // 7/8
+      } else if (student.email === 'student5@fornax.edu' || student.email === 'student@fornax.edu') {
+        isPresent = i < 6; // 6/8
+        if (student.email === 'student@fornax.edu' && i === 5) isFlagged = true;
+      } else if (student.email === 'student3@fornax.edu' || student.email === 'student9@fornax.edu') {
+        isPresent = i < 4; // 4/8
+      } else if (student.email === 'student10@fornax.edu') {
+        isPresent = i < 3; // 3/8
+      } else if (student.email === 'student2@fornax.edu') {
+        isPresent = i < 2; // 2/8
+      } else if (student.email === 'student8@fornax.edu') {
+        isPresent = i < 1; // 1/8
+      }
+
+      const status: 'PRESENT' | 'FLAGGED' | 'ABSENT' = isFlagged
+        ? 'FLAGGED'
+        : isPresent
+        ? 'PRESENT'
+        : 'ABSENT';
+
+      const integrityScore = status === 'PRESENT' ? 1.0 : status === 'FLAGGED' ? 0.7 : 0.0;
+
+      await prisma.attendanceRecord.create({
         data: {
-          courseId: course.id,
-          title: sessionTitles[i],
-          sessionDate,
-          windowEndsAt,
-          isActive: false, // Ended session
+          sessionId: session.id,
+          userId: student.id,
+          status,
+          verifiedBy: status === 'FLAGGED' ? 'FACE' : 'QR',
+          integrityScore,
+          timestamp: sessionDate,
+          method: 'SELF',
+          codeValid: true,
+          networkOk: status !== 'FLAGGED',
+          livenessPassed: true,
         },
       });
-
-      // Seed attendance for demo students
-      for (const student of students) {
-        let status: 'PRESENT' | 'FLAGGED' | 'ABSENT' = 'PRESENT';
-        let integrityScore = 1.0;
-
-        if (i === 7) {
-          // Lecture 8: FLAGGED for teacher review
-          status = 'FLAGGED';
-          integrityScore = 0.68;
-        } else if (i === 8) {
-          // Lecture 9: ABSENT
-          status = 'ABSENT';
-          integrityScore = 0.0;
-        } else if (i === 9) {
-          // Lecture 10: Skip creating record for student3 and student@fornax.edu so it counts as absent with no record
-          if (student.email === 'student3@fornax.edu' || student.email === 'student@fornax.edu') {
-            continue;
-          }
-        }
-
-        await prisma.attendanceRecord.create({
-          data: {
-            sessionId: session.id,
-            userId: student.id,
-            status,
-            verifiedBy: status === 'FLAGGED' ? 'FACE' : 'QR',
-            integrityScore,
-            timestamp: sessionDate,
-            method: 'SELF',
-            codeValid: true,
-            networkOk: status !== 'FLAGGED',
-            livenessPassed: true,
-          },
-        });
-      }
     }
   }
 
@@ -660,9 +844,9 @@ async function main() {
   console.log(`- 1 Teacher: ${teacher.email}`);
   console.log(`- ${students.length} Students enrolled`);
   console.log(`- 1 Course: ${course.title} (${course.code})`);
-  console.log(`- 6 Concepts created with prerequisite DAG`);
-  console.log(`- 18 Resources created across Beginner, Intermediate, and Advanced difficulties`);
-  console.log(`- 10 Ended class sessions with attendance records`);
+  console.log(`- 6 Concepts created with prerequisite DAG (Concept 6 has 0 resources)`);
+  console.log(`- 15 Resources created across Concepts 1-5`);
+  console.log(`- 8 Ended class sessions with attendance records (producing OK, AT_RISK, WATCH)`);
 }
 
 main()

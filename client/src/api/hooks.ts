@@ -174,6 +174,23 @@ export function useCourse(id: string) {
   });
 }
 
+export function useCourseEnrollments(courseId?: string) {
+  return useQuery<
+    Array<{
+      id: string;
+      userId: string;
+      user: { id: string; firstName: string; lastName: string; email: string };
+    }>
+  >({
+    queryKey: ['courseEnrollments', courseId],
+    queryFn: async () => {
+      const res = await api.get(`/courses/${courseId}/enrollments`);
+      return res.data;
+    },
+    enabled: Boolean(courseId),
+  });
+}
+
 export function useCreateCourse() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -687,6 +704,10 @@ export interface AssessmentQuestionResultItem {
   explanation?: string | null;
   marksObtained: number | null;
   status: 'GRADED' | 'PENDING';
+  submissionId?: string | null;
+  scanPath?: string | null;
+  ocrStatus?: 'OK' | 'PARTIAL' | 'UNREADABLE' | 'FAILED' | null;
+  ocrOriginal?: string | null;
   grade?: {
     marks: number;
     confidence: number;
@@ -710,6 +731,8 @@ export interface SubmitAssessmentResult {
   pendingGrading: number;
   mcqScore: number;
   mcqMax: number;
+  handwrittenReceived?: number;
+  handwrittenNeedReview?: number;
 }
 
 export interface ConceptMasteryItem {
@@ -835,8 +858,13 @@ export function usePublishAssessment(assessmentId: string, courseId?: string) {
 export function useSubmitAssessment(assessmentId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { answers: { questionId: string; selectedIndex?: number; answerText?: string }[] }) => {
-      const res = await api.post(`/assessments/${assessmentId}/submit`, payload);
+    mutationFn: async (
+      payload: FormData | { answers: { questionId: string; selectedIndex?: number; answerText?: string }[] }
+    ) => {
+      const res = await api.post(`/assessments/${assessmentId}/submit`, payload, {
+        timeout: 90000,
+        headers: payload instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      });
       return res.data as SubmitAssessmentResult;
     },
     onSuccess: () => {
@@ -934,6 +962,8 @@ export interface TeacherSubmissionListItem {
 export interface TeacherSubmissionDetail {
   id: string;
   assessmentId: string;
+  courseId?: string;
+  course?: { id: string; code: string; title: string };
   questionId: string;
   userId: string;
   student: {
@@ -947,8 +977,24 @@ export interface TeacherSubmissionDetail {
     prompt: string;
     maxMarks: number;
     type: string;
+    modelAnswer?: string | null;
+    rubrics?: Array<{ id: string; description: string; marks: number }>;
   };
   answerText?: string | null;
+  scanAvailable?: boolean;
+  scanPath?: string | null;
+  ocrStatus?: string | null;
+  ocrOriginal?: string | null;
+  ocrEdited?: boolean;
+  ocrEditedAt?: string | null;
+  ocrEditedBy?: string | null;
+  gradeStale?: boolean;
+  queue?: {
+    prevId: string | null;
+    nextId: string | null;
+    current: number;
+    total: number;
+  };
   grade: {
     autoMarks: number;
     totalMarks: number;
@@ -959,6 +1005,12 @@ export interface TeacherSubmissionDetail {
     needsReview: boolean;
     overriddenBy: string | null;
     overridden: boolean;
+    overriderName?: string | null;
+    overriddenAt?: string | null;
+    overrideNote?: string | null;
+    reviewedBy?: string | null;
+    reviewerName?: string | null;
+    reviewedAt?: string | null;
     provisional: boolean;
     summary: string | null;
     missingPoints: string[];
@@ -974,6 +1026,151 @@ export interface TeacherSubmissionDetail {
   } | null;
   submittedAt: string;
   gradedAt?: string | null;
+}
+
+// Day 10b Review Queue, Audit & Teacher Actions Types & Hooks
+export interface ReviewQueueItem {
+  submissionId: string;
+  studentName: string;
+  assessmentTitle: string;
+  questionPrompt: string;
+  type: string;
+  maxMarks: number;
+  marks: number | null;
+  confidence: number | null;
+  reasons: string[];
+  submittedAt: string;
+}
+
+export interface ReviewQueueResponse {
+  items: ReviewQueueItem[];
+  total: number;
+}
+
+export interface AuditLogItem {
+  id: string;
+  actorId: string;
+  actorName: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  before: any;
+  after: any;
+  createdAt: string;
+}
+
+export function useReviewQueue(
+  params: {
+    courseId?: string;
+    assessmentId?: string;
+    status?: 'pending' | 'done';
+    limit?: number;
+    offset?: number;
+  },
+  enabled: boolean = true
+) {
+  return useQuery<ReviewQueueResponse>({
+    queryKey: ['reviewQueue', params],
+    queryFn: async () => {
+      const searchParams = new URLSearchParams();
+      if (params.courseId) searchParams.set('courseId', params.courseId);
+      if (params.assessmentId) searchParams.set('assessmentId', params.assessmentId);
+      if (params.status) searchParams.set('status', params.status);
+      if (params.limit !== undefined) searchParams.set('limit', String(params.limit));
+      if (params.offset !== undefined) searchParams.set('offset', String(params.offset));
+
+      const res = await api.get(`/grading/review-queue?${searchParams.toString()}`);
+      return res.data;
+    },
+    enabled,
+  });
+}
+
+export function useAuditLogs(entityType: string, entityId: string) {
+  return useQuery<AuditLogItem[]>({
+    queryKey: ['auditLogs', entityType, entityId],
+    queryFn: async () => {
+      const res = await api.get(`/grading/audit?entityType=${entityType}&entityId=${entityId}`);
+      return res.data;
+    },
+    enabled: Boolean(entityType && entityId),
+  });
+}
+
+export function useUpdateOcr() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ submissionId, text }: { submissionId: string; text: string }) => {
+      const res = await api.patch(`/grading/submissions/${submissionId}/ocr`, { text });
+      return res.data;
+    },
+    onSuccess: (_, { submissionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['submissionDetail', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Submission', submissionId] });
+    },
+  });
+}
+
+export function useRegradeSubmission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ submissionId, force }: { submissionId: string; force?: boolean }) => {
+      const res = await api.post(`/grading/submissions/${submissionId}/regrade`, { force });
+      return res.data;
+    },
+    onSuccess: (_, { submissionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['submissionDetail', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Submission', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Grade'] });
+    },
+  });
+}
+
+export function useApproveGrade() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (submissionId: string) => {
+      const res = await api.post(`/grading/submissions/${submissionId}/approve`);
+      return res.data;
+    },
+    onSuccess: (_, submissionId) => {
+      queryClient.invalidateQueries({ queryKey: ['submissionDetail', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Submission', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Grade'] });
+    },
+  });
+}
+
+export function useOverrideGrade() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      submissionId,
+      finalMarks,
+      note,
+    }: {
+      submissionId: string;
+      finalMarks: number;
+      note: string;
+    }) => {
+      const res = await api.post(`/grading/submissions/${submissionId}/override`, {
+        finalMarks,
+        note,
+      });
+      return res.data;
+    },
+    onSuccess: (_, { submissionId }) => {
+      queryClient.invalidateQueries({ queryKey: ['submissionDetail', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['reviewQueue'] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Submission', submissionId] });
+      queryClient.invalidateQueries({ queryKey: ['auditLogs', 'Grade'] });
+    },
+  });
 }
 
 export function useAssessmentSubmissions(assessmentId: string) {
@@ -997,4 +1194,182 @@ export function useSubmissionDetail(submissionId: string | null) {
     enabled: Boolean(submissionId),
   });
 }
+
+export type RiskLevel = 'OK' | 'WATCH' | 'AT_RISK' | 'INSUFFICIENT_DATA';
+export type RiskFactor = 'LOW_ATTENDANCE' | 'LOW_MASTERY';
+
+export interface RiskInfo {
+  level: RiskLevel;
+  factors: RiskFactor[];
+  score?: number; // teacher only
+  usedWeights?: { attendance: number; mastery: number }; // teacher only
+}
+
+export interface RecommendationResource {
+  id: string;
+  conceptId: string;
+  title: string;
+  type: string;
+  difficulty: 1 | 2 | 3;
+  url: string;
+}
+
+export interface RecommendationItem {
+  conceptId: string;
+  conceptName: string;
+  mastery: number;
+  reasonCode: 'WEAK_CONCEPT' | 'WEAK_PREREQUISITE';
+  reason: string;
+  dependents: { id: string; name: string; mastery: number }[];
+  resources: RecommendationResource[];
+}
+
+export interface StudentProfileResponse {
+  student: { id: string; name: string; email: string };
+  course: { id: string; code: string; title: string };
+  risk: RiskInfo;
+  attendance: { attended: number; total: number; rate: number };
+  mastery: {
+    average: number;
+    concepts: {
+      id: string;
+      name: string;
+      score: number;
+      attempts: number;
+      prerequisiteId: string | null;
+    }[];
+  };
+  recommendations: RecommendationItem[];
+  notAssessed: { id: string; name: string }[];
+  assessmentHistory: {
+    assessmentId: string;
+    title: string;
+    date: string;
+    score: number;
+    max: number;
+    percentage: number;
+  }[];
+  assessmentAvg: number | null;
+}
+
+export interface StudentRecommendationsResponse {
+  recommendations: RecommendationItem[];
+  notAssessed: { id: string; name: string }[];
+}
+
+export function useStudentProfile(
+  studentId: string | null | undefined,
+  courseId: string | null | undefined
+) {
+  return useQuery<StudentProfileResponse>({
+    queryKey: ['studentProfile', studentId, courseId],
+    queryFn: async () => {
+      const res = await api.get(`/students/${studentId}/profile`, {
+        params: { courseId },
+      });
+      return res.data;
+    },
+    enabled: Boolean(studentId && courseId),
+  });
+}
+
+export function useStudentRecommendations(
+  studentId: string | null | undefined,
+  courseId: string | null | undefined
+) {
+  return useQuery<StudentRecommendationsResponse>({
+    queryKey: ['studentRecommendations', studentId, courseId],
+    queryFn: async () => {
+      const res = await api.get(`/students/${studentId}/recommendations`, {
+        params: { courseId },
+      });
+      return res.data;
+    },
+    enabled: Boolean(studentId && courseId),
+  });
+}
+
+export interface AnalyticsCell {
+  conceptId: string;
+  score: number | null;
+  attempts: number;
+  band: 'weak' | 'developing' | 'strong' | 'unassessed';
+}
+
+export interface AnalyticsRow {
+  studentId: string;
+  name: string;
+  cells: AnalyticsCell[];
+  avgMastery: number | null;
+  attendanceRate: number | null;
+  risk: RiskInfo;
+}
+
+export interface CourseAnalyticsResponse {
+  concepts: { id: string; name: string; prerequisiteName: string | null }[];
+  rows: AnalyticsRow[];
+  classStats: {
+    conceptId: string;
+    name: string;
+    average: number | null;
+    assessedCount: number;
+    weakCount: number;
+    strongCount: number;
+    unassessedCount: number;
+  }[];
+  weakestConcepts: {
+    conceptId: string;
+    name: string;
+    average: number;
+    assessedCount: number;
+  }[];
+  atRisk: {
+    studentId: string;
+    name: string;
+    level: 'AT_RISK' | 'WATCH';
+    score: number;
+    factors: RiskFactor[];
+    weakestConcepts: string[];
+  }[];
+  coverage: {
+    studentsTotal: number;
+    studentsWithAnyAssessment: number;
+    conceptsWithNoData: string[];
+  };
+  sessions: {
+    id: string;
+    date: string;
+    present: number;
+    flagged: number;
+    absent: number;
+  }[];
+  generatedAt: string;
+}
+
+export function useCourseAnalytics(courseId: string | undefined | null) {
+  return useQuery<CourseAnalyticsResponse>({
+    queryKey: ['courseAnalytics', courseId],
+    queryFn: async () => {
+      const res = await api.get(`/courses/${courseId}/analytics`);
+      return res.data;
+    },
+    enabled: Boolean(courseId),
+  });
+}
+
+export async function downloadCourseAnalyticsCsv(courseId: string): Promise<void> {
+  const res = await api.get(`/courses/${courseId}/analytics/export.csv`, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `analytics-${courseId}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
 

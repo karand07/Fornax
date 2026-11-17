@@ -13,6 +13,10 @@ import { LiveAttendancePage } from '@/pages/teacher/LiveAttendancePage';
 import { TeacherAssessmentsPage } from '@/pages/teacher/TeacherAssessmentsPage';
 import { AssessmentBuilderPage } from '@/pages/teacher/AssessmentBuilderPage';
 import { TeacherSubmissionsPage } from '@/pages/teacher/TeacherSubmissionsPage';
+import { TeacherReviewQueuePage } from '@/pages/teacher/TeacherReviewQueuePage';
+import { TeacherReviewSubmissionPage } from '@/pages/teacher/TeacherReviewSubmissionPage';
+import { TeacherStudentProfilePage } from '@/pages/teacher/TeacherStudentProfilePage';
+import { TeacherAnalyticsPage } from '@/pages/teacher/TeacherAnalyticsPage';
 import { DevGradeCardPage } from '@/pages/dev/DevGradeCardPage';
 import { AdminDashboard } from '@/pages/admin/AdminDashboard';
 import { RoleLayout } from '@/components/layout/RoleLayout';
@@ -189,6 +193,62 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
             <TeacherSubmissionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/courses/:courseId/review"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherReviewQueuePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/courses/:id/review"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherReviewQueuePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/review/:submissionId"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherReviewSubmissionPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/courses/:id/analytics"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherAnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/courses/:courseId/analytics"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherAnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/courses/:id/students/:studentId"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherStudentProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/courses/:courseId/students/:studentId"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherStudentProfilePage />
           </ProtectedRoute>
         }
       />
