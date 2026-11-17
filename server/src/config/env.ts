@@ -1,7 +1,14 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { z } from 'zod';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 const envSchema = z.object({
   PORT: z.string().default('5000').transform((val) => parseInt(val, 10)),
@@ -9,6 +16,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
+  GEMINI_API_KEY: z.string().optional().default(''),
+  GEMINI_MODEL: z.string().optional().default('gemini-1.5-flash'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
   TRUST_PROXY: z.string().optional().default(''),
   SCAN_DIR: z.string().default('./storage/scans'),
