@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/auth-context';
 import {
@@ -30,6 +30,7 @@ import { RiskBadge } from '@/components/profile/RiskBadge';
 import { MasteryRadar } from '@/components/profile/MasteryRadar';
 import { TrendChart } from '@/components/profile/TrendChart';
 import { RecommendationCard } from '@/components/profile/RecommendationCard';
+import { AdaptivePracticeDialog } from '@/components/profile/AdaptivePracticeDialog';
 import { formatPercent } from '@/lib/mastery-ui';
 import {
   CalendarCheck,
@@ -48,6 +49,7 @@ export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [practiceConcept, setPracticeConcept] = useState<{ id: string; title: string } | null>(null);
 
   // Courses
   const { data: enrolledCourses, isLoading: enrolledLoading } = useMyEnrolledCourses();
@@ -469,8 +471,19 @@ export const StudentDashboard: React.FC = () => {
             <RecommendationCard
               recommendations={profile.recommendations}
               notAssessed={profile.notAssessed}
+              onStartPractice={(conceptId, conceptTitle) =>
+                setPracticeConcept({ id: conceptId, title: conceptTitle })
+              }
             />
           ) : null}
+
+          {/* Interactive Adaptive Practice Drill Dialog */}
+          <AdaptivePracticeDialog
+            isOpen={Boolean(practiceConcept)}
+            conceptId={practiceConcept?.id || null}
+            conceptTitle={practiceConcept?.title}
+            onClose={() => setPracticeConcept(null)}
+          />
         </div>
       )}
     </div>

@@ -1373,4 +1373,72 @@ export async function downloadCourseAnalyticsCsv(courseId: string): Promise<void
   window.URL.revokeObjectURL(url);
 }
 
+// Adaptive Learning: Practice Drills
+export interface PracticeQuestion {
+  id: string;
+  prompt: string;
+  options: string[];
+  maxMarks: number;
+  type: string;
+}
+
+export interface PracticeQuestionsResponse {
+  conceptId: string;
+  conceptTitle: string;
+  questions: PracticeQuestion[];
+}
+
+export interface PracticeResultItem {
+  questionId: string;
+  prompt: string;
+  isCorrect: boolean;
+  selectedIndex: number;
+  correctIndex: number;
+  correctAnswer: string;
+  explanation: string;
+  ratio: number;
+}
+
+export interface SubmitPracticeResponse {
+  conceptId: string;
+  conceptTitle: string;
+  totalQuestions: number;
+  correctCount: number;
+  previousScore: number;
+  newScore: number;
+  delta: number;
+  results: PracticeResultItem[];
+}
+
+export function useConceptPracticeQuestions(conceptId: string | null) {
+  return useQuery<PracticeQuestionsResponse>({
+    queryKey: ['conceptPractice', conceptId],
+    queryFn: async () => {
+      const res = await api.get(`/concepts/${conceptId}/practice`);
+      return res.data;
+    },
+    enabled: Boolean(conceptId),
+  });
+}
+
+export function useSubmitPractice() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SubmitPracticeResponse,
+    Error,
+    { conceptId: string; answers: Array<{ questionId: string; selectedIndex: number }> }
+  >({
+    mutationFn: async ({ conceptId, answers }) => {
+      const res = await api.post(`/concepts/${conceptId}/practice`, { answers });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['studentRecommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['courseAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+    },
+  });
+}
+
 

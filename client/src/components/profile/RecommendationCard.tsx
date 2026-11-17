@@ -1,6 +1,7 @@
-import { Sparkles, CheckCircle2, ArrowRight, HelpCircle } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, HelpCircle, Dumbbell } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { ResourceLink } from './ResourceLink';
 import { masteryBand, formatPercent } from '../../lib/mastery-ui';
 import type { RecommendationItem } from '../../api/hooks';
@@ -9,12 +10,14 @@ export interface RecommendationCardProps {
   recommendations: RecommendationItem[];
   notAssessed?: { id: string; name: string }[];
   className?: string;
+  onStartPractice?: (conceptId: string, conceptTitle: string) => void;
 }
 
 export function RecommendationCard({
   recommendations,
   notAssessed = [],
   className = '',
+  onStartPractice,
 }: RecommendationCardProps) {
   if (recommendations.length === 0) {
     return (
@@ -111,6 +114,21 @@ export function RecommendationCard({
                   </div>
                 )}
               </div>
+
+              {/* Action / Adaptive Practice */}
+              {onStartPractice && (
+                <div className="pt-2 flex justify-end border-t border-border/40">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 gap-1.5 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-medium"
+                    onClick={() => onStartPractice(rec.conceptId, rec.conceptName)}
+                  >
+                    <Dumbbell className="w-3.5 h-3.5" />
+                    Start Practice Drill
+                  </Button>
+                </div>
+              )}
             </div>
           );
         })}
