@@ -220,6 +220,9 @@ export class ConceptsService {
     const concept = await prisma.concept.findUnique({
       where: { id: conceptId },
       include: {
+        prerequisites: {
+          include: { prerequisite: true },
+        },
         questions: {
           where: { type: 'MCQ' },
           select: {
@@ -229,7 +232,6 @@ export class ConceptsService {
             maxMarks: true,
             type: true,
           },
-          take: 3,
         },
       },
     });
@@ -238,95 +240,115 @@ export class ConceptsService {
       throw new Error('Concept not found');
     }
 
-    if (concept.questions.length > 0) {
-      return {
-        conceptId: concept.id,
-        conceptTitle: concept.title,
-        questions: concept.questions.map((q) => ({
-          id: q.id,
-          prompt: q.prompt,
-          options: q.options,
-          maxMarks: q.maxMarks,
-          type: q.type,
-        })),
-      };
-    }
-
-    // Diagnostic fallback questions if no MCQ questions are authored yet
     const titleLower = concept.title.toLowerCase();
-    let fallbackQuestions: Array<{
+    const prereqTitle = concept.prerequisites[0]?.prerequisite?.title;
+
+    // Collect questions and assign tiered difficulty (BEGINNER, INTERMEDIATE, ADVANCED)
+    const questions: Array<{
       id: string;
       prompt: string;
       options: string[];
       maxMarks: number;
       type: string;
+      difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+      targetConcept?: string;
+      isPrerequisiteAnchor?: boolean;
     }> = [];
 
-    if (titleLower.includes('transaction') || titleLower.includes('concurrency')) {
-      fallbackQuestions = [
-        {
-          id: `diag-${concept.id}-1`,
-          prompt: 'Which ACID property guarantees that all operations within a transaction either completely succeed or roll back with no partial effects?',
-          options: ['Atomicity', 'Consistency', 'Isolation', 'Durability'],
-          maxMarks: 5,
-          type: 'MCQ',
-        },
-        {
-          id: `diag-${concept.id}-2`,
-          prompt: 'Which transaction isolation level provides complete protection against dirty reads, non-repeatable reads, and phantom reads?',
-          options: ['Read Uncommitted', 'Read Committed', 'Repeatable Read', 'Serializable'],
-          maxMarks: 5,
-          type: 'MCQ',
-        },
-      ];
-    } else if (titleLower.includes('storage') || titleLower.includes('index') || titleLower.includes('tree')) {
-      fallbackQuestions = [
-        {
-          id: `diag-${concept.id}-1`,
-          prompt: 'Why are B+ trees widely preferred over binary search trees for disk-based database indexes?',
-          options: [
-            'High node fan-out keeps tree height small and dramatically reduces disk seek latency',
-            'They require zero disk storage overhead compared to raw tables',
-            'They guarantee O(1) constant-time search performance',
-            'They do not require rebalancing during row insertions',
-          ],
-          maxMarks: 5,
-          type: 'MCQ',
-        },
-        {
-          id: `diag-${concept.id}-2`,
-          prompt: 'In a clustered index on a relational database table, how are the actual data rows stored on disk?',
-          options: [
-            'Physically sorted in the order of the clustered index search key',
-            'Stored as an unordered heap file in insertion sequence',
-            'Organized strictly into hash buckets based on primary key modulo',
-            'Scattered randomly across unallocated filesystem blocks',
-          ],
-          maxMarks: 5,
-          type: 'MCQ',
-        },
-      ];
-    } else {
-      fallbackQuestions = [
-        {
-          id: `diag-${concept.id}-1`,
-          prompt: `What is the primary architectural purpose of the concept "${concept.title}" in relational database systems?`,
-          options: [
-            'Providing foundational theoretical guarantees and structural integrity',
-            'Bypassing query planning to write directly to raw hardware disk blocks',
-            'Disabling schema validation to maximize unvalidated insert throughput',
-            'Replacing all secondary indexes with linear memory scans',
-          ],
-          maxMarks: 5,
-          type: 'MCQ',
-        },
-      ];
+    concept.questions.forEach((q, idx) => {
+      const diff: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' =
+        idx === 0 ? 'BEGINNER' : idx === 1 ? 'INTERMEDIATE' : 'ADVANCED';
+      questions.push({
+        id: q.id,
+        prompt: q.prompt,
+        options: q.options,
+        maxMarks: q.maxMarks,
+        type: q.type,
+        difficulty: diff,
+      });
+    });
+
+    const hasBeginner = questions.some((q) => q.difficulty === 'BEGINNER');
+    const hasIntermediate = questions.some((q) => q.difficulty === 'INTERMEDIATE');
+    const hasAdvanced = questions.some((q) => q.difficulty === 'ADVANCED');
+
+    // Supplement with domain-specific diagnostic questions for missing difficulty levels
+    if (!hasBeginner) {
+      questions.push({
+        id: `diag-${concept.id}-beg`,
+        prompt: `What is the foundational definition and primary requirement of "${concept.title}"?`,
+        options: [
+          'Ensuring structural integrity, consistent invariants, and domain constraints',
+          'Maximizing unindexed table scan throughput regardless of schema rules',
+          'Bypassing ACID transaction logs to save memory space',
+          'Eliminating foreign key constraints across relational tables',
+        ],
+        maxMarks: 5,
+        type: 'MCQ',
+        difficulty: 'BEGINNER',
+      });
+    }
+
+    if (!hasIntermediate) {
+      questions.push({
+        id: `diag-${concept.id}-int`,
+        prompt: `In practical schema design and query execution, how does "${concept.title}" impact relational operations?`,
+        options: [
+          'It enforces semantic consistency and eliminates anomalous redundancy',
+          'It completely removes the need for database recovery logging',
+          'It converts all queries into sequential disk scans',
+          'It forces every relational table to hold at most one row',
+        ],
+        maxMarks: 5,
+        type: 'MCQ',
+        difficulty: 'INTERMEDIATE',
+      });
+    }
+
+    if (!hasAdvanced) {
+      questions.push({
+        id: `diag-${concept.id}-adv`,
+        prompt: `Under high-concurrency workloads, what architectural trade-off is critical when implementing "${concept.title}"?`,
+        options: [
+          'Balancing strict formal isolation guarantees against lock contention and latency',
+          'Disabling all transaction commits to avoid disk writes',
+          'Converting all B+ trees into linear arrays in memory',
+          'Running every concurrent transaction without mutual exclusion',
+        ],
+        maxMarks: 5,
+        type: 'MCQ',
+        difficulty: 'ADVANCED',
+      });
+    }
+
+    // Prerequisite Anchor Question if concept has an upstream prerequisite
+    if (prereqTitle) {
+      questions.push({
+        id: `diag-${concept.id}-prereq`,
+        prompt: `Foundation Check: Before applying "${concept.title}", how does its prerequisite "${prereqTitle}" establish baseline consistency?`,
+        options: [
+          `By validating core relational entities and functional bindings defined in ${prereqTitle}`,
+          'By skipping query optimizer validation entirely',
+          'By erasing secondary index files on disk',
+          'By allowing duplicate tuples without primary identification',
+        ],
+        maxMarks: 5,
+        type: 'MCQ',
+        difficulty: 'BEGINNER',
+        targetConcept: prereqTitle,
+        isPrerequisiteAnchor: true,
+      });
     }
 
     return {
       conceptId: concept.id,
       conceptTitle: concept.title,
-      questions: fallbackQuestions,
+      adaptiveConfig: {
+        startingDifficulty: 'BEGINNER' as const,
+        targetQuestions: 3,
+        difficultyTiers: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'],
+      },
+      questions,
     };
   }
 
@@ -336,7 +358,7 @@ export class ConceptsService {
   async submitPractice(
     conceptId: string,
     userId: string,
-    answers: Array<{ questionId: string; selectedIndex: number }>
+    answers: Array<{ questionId: string; selectedIndex: number; difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' }>
   ) {
     const concept = await prisma.concept.findUnique({
       where: { id: conceptId },
@@ -354,6 +376,10 @@ export class ConceptsService {
     const questionMap = new Map(dbQuestions.map((q) => [q.id, q]));
 
     let correctCount = 0;
+    const difficultyRank: Record<string, number> = { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 3 };
+    let peakDifficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' = 'BEGINNER';
+    const trajectory: string[] = [];
+
     const scoredResults: Array<{
       questionId: string;
       prompt: string;
@@ -365,13 +391,23 @@ export class ConceptsService {
       options: string[];
       explanation: string;
       ratio: number;
+      difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
     }> = [];
 
-    for (const ans of answers) {
+    for (let i = 0; i < answers.length; i++) {
+      const ans = answers[i];
+      const diff = ans.difficulty || (i === 0 ? 'BEGINNER' : i === 1 ? 'INTERMEDIATE' : 'ADVANCED');
+      trajectory.push(diff);
+
       const q = questionMap.get(ans.questionId);
       if (q && q.correctIndex !== null) {
         const isCorrect = ans.selectedIndex === q.correctIndex;
-        if (isCorrect) correctCount++;
+        if (isCorrect) {
+          correctCount++;
+          if (difficultyRank[diff] >= difficultyRank[peakDifficulty]) {
+            peakDifficulty = diff;
+          }
+        }
         scoredResults.push({
           questionId: q.id,
           prompt: q.prompt,
@@ -383,11 +419,17 @@ export class ConceptsService {
           options: q.options,
           explanation: q.modelAnswer || (isCorrect ? 'Correct! Excellent grasp of this concept.' : 'Review this concept in your study materials.'),
           ratio: isCorrect ? 1.0 : 0.0,
+          difficulty: diff,
         });
       } else {
         // Fallback diagnostic grading (first option 0 is correct in fallback bank)
         const isCorrect = ans.selectedIndex === (ans.questionId.endsWith('2') && concept.title.toLowerCase().includes('transaction') ? 3 : 0);
-        if (isCorrect) correctCount++;
+        if (isCorrect) {
+          correctCount++;
+          if (difficultyRank[diff] >= difficultyRank[peakDifficulty]) {
+            peakDifficulty = diff;
+          }
+        }
         const dummyOptions = [
           'Foundational standard definition',
           'Secondary variant with partial constraints',
@@ -406,6 +448,7 @@ export class ConceptsService {
           options: dummyOptions,
           explanation: isCorrect ? 'Correct! Strong understanding of foundational theory.' : 'Review this topic to strengthen your prerequisite foundation.',
           ratio: isCorrect ? 1.0 : 0.0,
+          difficulty: diff,
         });
       }
     }
@@ -445,6 +488,8 @@ export class ConceptsService {
       previousScore: currentScore,
       newScore: score,
       delta: Math.round((score - currentScore) * 10000) / 10000,
+      peakDifficultyAchieved: peakDifficulty,
+      trajectory,
       results: scoredResults,
     };
   }

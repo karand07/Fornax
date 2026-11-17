@@ -27,6 +27,7 @@ const submitPracticeSchema = z.object({
       z.object({
         questionId: z.string().min(1, 'Question ID is required'),
         selectedIndex: z.number().int().min(0, 'Selected index must be non-negative'),
+        difficulty: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']).optional(),
       })
     )
     .min(1, 'At least one answer must be submitted'),

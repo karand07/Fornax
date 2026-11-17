@@ -107,6 +107,7 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
     const formattedAnswers = questions.map((q) => ({
       questionId: q.id,
       selectedIndex: selectedAnswers[q.id] ?? 0,
+      difficulty: q.difficulty || 'BEGINNER',
     }));
 
     const result = await submitPracticeMutation.mutateAsync({
@@ -190,6 +191,29 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Adaptive Trajectory Summary */}
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-300">
+                    <span className="text-slate-400">Peak Challenge Level:</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] py-0 px-2 font-mono ${
+                        drillResult.peakDifficultyAchieved === 'ADVANCED'
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : drillResult.peakDifficultyAchieved === 'INTERMEDIATE'
+                          ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+                          : 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                      }`}
+                    >
+                      {drillResult.peakDifficultyAchieved === 'ADVANCED'
+                        ? '⚡ Level 3: Advanced Challenge'
+                        : drillResult.peakDifficultyAchieved === 'INTERMEDIATE'
+                        ? '📈 Level 2: Application'
+                        : '🛡️ Level 1: Foundation'}
+                    </Badge>
+                  </div>
+                </div>
               </div>
 
               {/* Per-Question Explanations */}
@@ -207,9 +231,19 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-medium text-slate-200">
-                        {idx + 1}. {res.prompt}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <span className="font-medium text-slate-200">
+                          {idx + 1}. {res.prompt}
+                        </span>
+                        {res.difficulty && (
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] py-0 px-1.5 border-slate-700 text-slate-400 font-mono"
+                          >
+                            {res.difficulty}
+                          </Badge>
+                        )}
+                      </div>
                       {res.isCorrect ? (
                         <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold shrink-0">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Correct
@@ -321,12 +355,30 @@ export const AdaptivePracticeDialog: React.FC<AdaptivePracticeDialogProps> = ({
           ) : currentQ ? (
             /* Active Question View */
             <div className="space-y-4 py-2">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Tier:</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] font-mono px-2 py-0.5 ${
+                        currentQ.difficulty === 'ADVANCED'
+                          ? 'border-amber-500/40 text-amber-300 bg-amber-500/10'
+                          : currentQ.difficulty === 'INTERMEDIATE'
+                          ? 'border-indigo-500/40 text-indigo-300 bg-indigo-500/10'
+                          : 'border-blue-500/40 text-blue-300 bg-blue-500/10'
+                      }`}
+                    >
+                      {currentQ.difficulty === 'ADVANCED'
+                        ? '⚡ Level 3: Advanced Challenge'
+                        : currentQ.difficulty === 'INTERMEDIATE'
+                        ? '📈 Level 2: Application'
+                        : '🛡️ Level 1: Foundation'}
+                    </Badge>
+                  </div>
                   <span>
-                    Question {currentIndex + 1} of {questions.length}
+                    Question {currentIndex + 1} of {questions.length} ({progressPercent}%)
                   </span>
-                  <span>{progressPercent}% Complete</span>
                 </div>
                 <Progress value={progressPercent} className="h-1.5 bg-slate-800" />
               </div>

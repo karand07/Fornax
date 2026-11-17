@@ -1384,11 +1384,19 @@ export interface PracticeQuestion {
   options: string[];
   maxMarks: number;
   type: string;
+  difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  targetConcept?: string;
+  isPrerequisiteAnchor?: boolean;
 }
 
 export interface PracticeQuestionsResponse {
   conceptId: string;
   conceptTitle: string;
+  adaptiveConfig?: {
+    startingDifficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    targetQuestions: number;
+    difficultyTiers: string[];
+  };
   questions: PracticeQuestion[];
 }
 
@@ -1403,6 +1411,7 @@ export interface PracticeResultItem {
   options?: string[];
   explanation: string;
   ratio: number;
+  difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 }
 
 export interface SubmitPracticeResponse {
@@ -1413,6 +1422,8 @@ export interface SubmitPracticeResponse {
   previousScore: number;
   newScore: number;
   delta: number;
+  peakDifficultyAchieved?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  trajectory?: string[];
   results: PracticeResultItem[];
 }
 
@@ -1439,7 +1450,14 @@ export function useSubmitPractice() {
   return useMutation<
     SubmitPracticeResponse,
     Error,
-    { conceptId: string; answers: Array<{ questionId: string; selectedIndex: number }> }
+    {
+      conceptId: string;
+      answers: Array<{
+        questionId: string;
+        selectedIndex: number;
+        difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+      }>;
+    }
   >({
     mutationFn: async ({ conceptId, answers }) => {
       const res = await api.post(`/concepts/${conceptId}/practice`, { answers });
