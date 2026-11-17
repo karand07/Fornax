@@ -1492,4 +1492,104 @@ export function useExplainMisconception() {
   });
 }
 
+export interface AdaptiveQuizQuestion {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  prompt: string;
+  options: string[];
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+}
+
+export interface GenerateAdaptiveQuizResponse {
+  quizId: string;
+  quizTitle: string;
+  targetConcepts: Array<{ id: string; name: string; score: number }>;
+  estimatedTimeMinutes: number;
+  questions: AdaptiveQuizQuestion[];
+  source: 'gemini' | 'course-bank';
+}
+
+export interface AdaptiveQuizResultItem {
+  questionId: string;
+  conceptId: string;
+  conceptTitle: string;
+  prompt: string;
+  isCorrect: boolean;
+  selectedIndex: number;
+  correctIndex: number;
+  selectedAnswer: string;
+  correctAnswer: string;
+  options: string[];
+  explanation: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+}
+
+export interface SubmitAdaptiveQuizResponse {
+  quizTitle: string;
+  totalQuestions: number;
+  correctCount: number;
+  accuracyPercentage: number;
+  conceptUpdates: Array<{
+    conceptId: string;
+    conceptTitle: string;
+    previousScore: number;
+    newScore: number;
+    delta: number;
+  }>;
+  newAvgMastery: number | null;
+  riskLevel: 'OK' | 'WATCH' | 'AT_RISK' | 'INSUFFICIENT_DATA';
+  results: AdaptiveQuizResultItem[];
+}
+
+export function useGenerateAdaptiveQuiz() {
+  return useMutation<
+    GenerateAdaptiveQuizResponse,
+    Error,
+    { studentId: string; courseId: string }
+  >({
+    mutationFn: async ({ studentId, courseId }) => {
+      const res = await api.post(
+        `/students/${studentId}/adaptive-quiz/generate?courseId=${courseId}`,
+        { courseId }
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useSubmitAdaptiveQuiz() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SubmitAdaptiveQuizResponse,
+    Error,
+    {
+      studentId: string;
+      courseId: string;
+      quizId: string;
+      answers: Array<{
+        questionId: string;
+        conceptId: string;
+        selectedIndex: number;
+        difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+      }>;
+    }
+  >({
+    mutationFn: async ({ studentId, courseId, quizId, answers }) => {
+      const res = await api.post(`/students/${studentId}/adaptive-quiz/submit`, {
+        courseId,
+        quizId,
+        answers,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['studentRecommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['courseAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+    },
+  });
+}
+
 

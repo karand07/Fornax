@@ -31,6 +31,7 @@ import { MasteryRadar } from '@/components/profile/MasteryRadar';
 import { TrendChart } from '@/components/profile/TrendChart';
 import { RecommendationCard } from '@/components/profile/RecommendationCard';
 import { AdaptivePracticeDialog } from '@/components/profile/AdaptivePracticeDialog';
+import { AdaptiveQuizModal } from '@/components/profile/AdaptiveQuizModal';
 import { ConceptSkillTree } from '@/components/profile/ConceptSkillTree';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatPercent } from '@/lib/mastery-ui';
@@ -47,6 +48,7 @@ import {
   RefreshCw,
   Network,
   Sparkles,
+  BrainCircuit,
 } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
@@ -54,6 +56,7 @@ export const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [practiceConcept, setPracticeConcept] = useState<{ id: string; title: string } | null>(null);
+  const [isAdaptiveQuizOpen, setIsAdaptiveQuizOpen] = useState(false);
 
   // Courses
   const { data: enrolledCourses, isLoading: enrolledLoading } = useMyEnrolledCourses();
@@ -176,22 +179,33 @@ export const StudentDashboard: React.FC = () => {
           </div>
         </div>
 
-        {courses.length > 1 && (
-          <div className="w-full sm:w-64">
-            <Select value={selectedCourseId} onValueChange={handleCourseChange}>
-              <SelectTrigger className="w-full text-xs">
-                <SelectValue placeholder="Switch Course" />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map((c) => (
-                  <SelectItem key={c.id} value={c.id} className="text-xs">
-                    {c.code} - {c.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <Button
+            size="sm"
+            onClick={() => setIsAdaptiveQuizOpen(true)}
+            className="text-xs h-8 gap-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-sm font-medium"
+          >
+            <BrainCircuit className="w-3.5 h-3.5 text-indigo-200" />
+            <span>AI Dynamic Challenge</span>
+          </Button>
+
+          {courses.length > 1 && (
+            <div className="w-full sm:w-64">
+              <Select value={selectedCourseId} onValueChange={handleCourseChange}>
+                <SelectTrigger className="w-full text-xs">
+                  <SelectValue placeholder="Switch Course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="text-xs">
+                      {c.code} - {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </div>
 
       {coursesLoading ? (
@@ -358,6 +372,15 @@ export const StudentDashboard: React.FC = () => {
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Status is updated automatically after every graded quiz and class attendance review.
                     </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsAdaptiveQuizOpen(true)}
+                      className="w-full text-xs h-8 gap-1.5 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10 font-medium"
+                    >
+                      <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+                      Take AI Performance Booster
+                    </Button>
                   </div>
                 ) : null}
               </CardContent>
@@ -521,6 +544,15 @@ export const StudentDashboard: React.FC = () => {
             conceptId={practiceConcept?.id || null}
             conceptTitle={practiceConcept?.title}
             onClose={() => setPracticeConcept(null)}
+          />
+
+          {/* Autonomous AI Adaptive Challenge Quiz Modal */}
+          <AdaptiveQuizModal
+            isOpen={isAdaptiveQuizOpen}
+            studentId={user?.id || ''}
+            courseId={selectedCourseId}
+            courseTitle={selectedCourse?.title}
+            onClose={() => setIsAdaptiveQuizOpen(false)}
           />
         </div>
       )}
