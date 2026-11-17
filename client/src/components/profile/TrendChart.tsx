@@ -75,8 +75,8 @@ export function TrendChart({ history, assessmentAvg, className = '' }: TrendChar
       </CardHeader>
       <CardContent className="space-y-4">
         {canRenderChart ? (
-          <div className="w-full h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-[220px] min-h-[220px] min-w-0">
+            <ResponsiveContainer width="100%" height={220} minWidth={0}>
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis

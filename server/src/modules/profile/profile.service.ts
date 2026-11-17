@@ -18,7 +18,7 @@ export interface UserAccountProfile {
 
 export interface StudentUnifiedProfile {
   student: { id: string; name: string; email?: string };
-  course: { id: string; title: string; code?: string };
+  course: { id: string; code?: string; title: string };
   attendance: any;
   concepts: any[];
   avgMastery: number | null;
@@ -26,7 +26,7 @@ export interface StudentUnifiedProfile {
     average: number | null;
     concepts: {
       id: string;
-      conceptId: string;
+      conceptId?: string;
       name: string;
       score: number;
       attempts: number;
@@ -143,7 +143,7 @@ export class ProfileService {
       },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        course: { select: { id: true, title: true, teacherId: true } },
+        course: { select: { id: true, code: true, title: true, teacherId: true } },
       },
     });
 
@@ -294,6 +294,24 @@ export class ProfileService {
     // 9. Risk calculation
     const risk = computeRisk({ attendanceRate: attendance.rate, avgMastery });
 
+    const mappedConcepts = concepts.map((c: any) => ({
+      id: c.conceptId || c.id,
+      conceptId: c.conceptId || c.id,
+      name: c.name,
+      score: c.score,
+      attempts: c.attempts,
+      prerequisiteId: c.prerequisiteId,
+    }));
+
+    const mappedHistory = assessmentItems.map((a) => ({
+      assessmentId: a.assessmentId,
+      title: a.title,
+      date: typeof a.submittedAt === 'string' ? a.submittedAt : (a.submittedAt?.toISOString ? a.submittedAt.toISOString() : String(a.submittedAt)),
+      score: a.awarded,
+      max: a.max,
+      percentage: a.percentage ?? 0,
+    }));
+
     return {
       student: {
         id: enrollment.user.id,
@@ -302,8 +320,8 @@ export class ProfileService {
       },
       course: {
         id: enrollment.course.id,
+        code: enrollment.course.code || enrollment.course.title.split(' ')[0] || enrollment.course.id,
         title: enrollment.course.title,
-        code: enrollment.course.title.split(' ')[0] || enrollment.course.id,
       },
       attendance: {
         ...attendance,
@@ -314,24 +332,10 @@ export class ProfileService {
       avgMastery,
       mastery: {
         average: avgMastery,
-        concepts: concepts.map((c: any) => ({
-          id: c.conceptId || c.id,
-          conceptId: c.conceptId || c.id,
-          name: c.name,
-          score: c.score,
-          attempts: c.attempts,
-          prerequisiteId: c.prerequisiteId,
-        })),
+        concepts: mappedConcepts,
       },
       assessments: assessmentItems,
-      assessmentHistory: assessmentItems.map((a) => ({
-        assessmentId: a.assessmentId,
-        title: a.title,
-        date: typeof a.submittedAt === 'string' ? a.submittedAt : (a.submittedAt?.toISOString ? a.submittedAt.toISOString() : String(a.submittedAt)),
-        score: a.awarded,
-        max: a.max,
-        percentage: a.percentage ?? 0,
-      })),
+      assessmentHistory: mappedHistory,
       assessmentAvg,
       risk,
       recommendations,

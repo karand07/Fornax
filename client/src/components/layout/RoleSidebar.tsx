@@ -14,11 +14,11 @@ import {
   Shield,
   Layers,
   Users,
-  FileCheck2,
   Library,
   ChevronRight,
   ScanFace,
   CheckSquare,
+  BarChart3,
 } from 'lucide-react';
 import { useReviewQueue } from '@/api/hooks';
 
@@ -54,13 +54,12 @@ export const RoleSidebar: React.FC = () => {
   ];
 
   const teacherNav: NavItem[] = [
-    { label: 'Faculty Overview', href: '/teacher', icon: LayoutDashboard },
+    { label: 'Dashboard', href: '/teacher', icon: LayoutDashboard },
     { label: 'Live Attendance', href: '/teacher/live-attendance', icon: QrCode, badge: 'Live' },
-    { label: 'Course Management', href: '/teacher?tab=courses', icon: Library },
+    { label: 'Course Analytics', href: '/teacher/analytics', icon: BarChart3 },
     { label: 'Curriculum & Concepts', href: '/teacher?tab=curriculum', icon: Layers, badge: 'Prereqs' },
-    { label: 'Assessments & Grading', href: '/teacher?tab=grading', icon: FileCheck2 },
     {
-      label: 'Review',
+      label: 'Review Queue',
       href: '/teacher/courses/all/review',
       icon: CheckSquare,
       badge: pendingCount > 0 ? `${pendingCount}` : undefined,

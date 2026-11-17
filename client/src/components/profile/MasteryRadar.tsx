@@ -77,8 +77,8 @@ export function MasteryRadar({ concepts, average, className = '' }: MasteryRadar
 
         {/* Radar Chart (if >= 3 concepts) or Fallback List */}
         {canRenderRadar ? (
-          <div className="w-full h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-[280px] min-h-[280px] min-w-0">
+            <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
                 <PolarGrid stroke="#334155" strokeDasharray="3 3" />
                 <PolarAngleAxis

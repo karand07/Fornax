@@ -245,7 +245,7 @@ export const LiveAttendancePage: React.FC = () => {
             className="text-xs text-slate-400 hover:text-slate-200 gap-1.5 mb-2 -ml-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Faculty Portal
+            Back to Dashboard
           </Button>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight">

@@ -7,10 +7,12 @@ import {
   AlertCircle,
   GraduationCap,
   Users,
+  Library,
 } from 'lucide-react';
 import {
   useCourseAnalytics,
   useCourse,
+  useCourses,
   downloadCourseAnalyticsCsv,
 } from '../../api/hooks';
 import { Button } from '../../components/ui/button';
@@ -18,6 +20,13 @@ import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { SummaryStrip } from '../../components/analytics/SummaryStrip';
 import { Heatmap } from '../../components/analytics/Heatmap';
 import { WeakestConcepts } from '../../components/analytics/WeakestConcepts';
@@ -31,7 +40,9 @@ export const TeacherAnalyticsPage = () => {
   }>();
   const navigate = useNavigate();
 
-  const courseId = courseIdParam || courseIdParamAlt || '';
+  const { data: courses, isLoading: coursesLoading } = useCourses();
+  const routeCourseId = courseIdParam || courseIdParamAlt;
+  const courseId = routeCourseId || (courses && courses.length > 0 ? courses[0].id : '');
 
   const {
     data: analytics,
@@ -90,6 +101,8 @@ export const TeacherAnalyticsPage = () => {
     return sum / assessedRows.length;
   }, [analytics]);
 
+  const isLoading = coursesLoading || (Boolean(courseId) && analyticsLoading);
+
   return (
     <div className="space-y-6 pb-20 max-w-7xl mx-auto">
       {/* Toast Alert */}
@@ -115,11 +128,11 @@ export const TeacherAnalyticsPage = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(-1)}
-            className="gap-1.5"
+            onClick={() => navigate('/teacher')}
+            className="gap-1.5 border-slate-700 text-slate-300 hover:text-white"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            Dashboard
           </Button>
           <div>
             <div className="flex items-center gap-2">
@@ -138,8 +151,29 @@ export const TeacherAnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Controls & Course Switcher */}
         <div className="flex items-center gap-2.5 flex-wrap">
+          {courses && courses.length > 1 && (
+            <div className="flex items-center gap-2">
+              <Library className="w-4 h-4 text-muted-foreground shrink-0" />
+              <Select
+                value={courseId}
+                onValueChange={(newId) => navigate(`/teacher/courses/${newId}/analytics`)}
+              >
+                <SelectTrigger className="w-52 h-8 text-xs bg-background">
+                  <SelectValue placeholder="Switch course..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="text-xs">
+                      {c.code} — {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {analytics?.generatedAt && (
             <span className="text-xs text-muted-foreground font-mono hidden md:inline">
               Updated: {new Date(analytics.generatedAt).toLocaleTimeString()}
@@ -161,7 +195,7 @@ export const TeacherAnalyticsPage = () => {
             variant="default"
             size="sm"
             onClick={handleExportCsv}
-            disabled={isExporting || analyticsLoading}
+            disabled={isExporting || analyticsLoading || !courseId}
             className="text-xs gap-1.5 bg-primary text-primary-foreground"
           >
             <Download className="w-3.5 h-3.5" />
@@ -170,7 +204,7 @@ export const TeacherAnalyticsPage = () => {
         </div>
       </div>
 
-      {analyticsLoading ? (
+      {isLoading ? (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Skeleton className="h-24 w-full rounded-xl" />
@@ -184,6 +218,23 @@ export const TeacherAnalyticsPage = () => {
             <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         </div>
+      ) : !courseId ? (
+        <Card className="p-12 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+            <Library className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-foreground">No Courses Found</h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              You do not have any courses created yet. Please create a course from the dashboard first.
+            </p>
+          </div>
+          <Link to="/teacher">
+            <Button variant="outline" size="sm" className="text-xs">
+              Back to Dashboard
+            </Button>
+          </Link>
+        </Card>
       ) : analyticsError || !analytics ? (
         <Card className="border-destructive/40 bg-destructive/10 p-8 text-center space-y-3">
           <AlertCircle className="w-8 h-8 text-destructive mx-auto" />
