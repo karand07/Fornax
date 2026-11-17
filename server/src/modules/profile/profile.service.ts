@@ -26,6 +26,7 @@ export interface StudentUnifiedProfile {
     average: number | null;
     concepts: {
       id: string;
+      conceptId?: string;
       name: string;
       score: number;
       attempts: number;
@@ -293,8 +294,9 @@ export class ProfileService {
     // 9. Risk calculation
     const risk = computeRisk({ attendanceRate: attendance.rate, avgMastery });
 
-    const mappedConcepts = concepts.map((c) => ({
-      id: c.conceptId,
+    const mappedConcepts = concepts.map((c: any) => ({
+      id: c.conceptId || c.id,
+      conceptId: c.conceptId || c.id,
       name: c.name,
       description: (c as any).description ?? null,
       order: (c as any).order ?? 0,
@@ -308,7 +310,7 @@ export class ProfileService {
     const mappedHistory = assessmentItems.map((a) => ({
       assessmentId: a.assessmentId,
       title: a.title,
-      date: a.submittedAt instanceof Date ? a.submittedAt.toISOString() : String(a.submittedAt),
+      date: typeof a.submittedAt === 'string' ? a.submittedAt : (a.submittedAt?.toISOString ? a.submittedAt.toISOString() : String(a.submittedAt)),
       score: a.awarded,
       max: a.max,
       percentage: a.percentage ?? 0,
@@ -322,7 +324,7 @@ export class ProfileService {
       },
       course: {
         id: enrollment.course.id,
-        code: enrollment.course.code,
+        code: enrollment.course.code || enrollment.course.title.split(' ')[0] || enrollment.course.id,
         title: enrollment.course.title,
       },
       attendance: {

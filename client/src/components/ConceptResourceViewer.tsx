@@ -25,10 +25,16 @@ import {
   GitBranch,
 } from 'lucide-react';
 
-export const ConceptResourceViewer: React.FC = () => {
+interface ConceptResourceViewerProps {
+  courseId?: string;
+}
+
+export const ConceptResourceViewer: React.FC<ConceptResourceViewerProps> = ({ courseId }) => {
   const { user } = useAuth();
   const { data: courses } = useCourses();
-  const dbCourse = courses?.find((c) => c.title.toLowerCase().includes('database')) || courses?.[0];
+  const dbCourse = (courseId && courses?.find((c) => c.id === courseId)) ||
+    courses?.find((c) => c.title.toLowerCase().includes('database')) ||
+    courses?.[0];
   const { data: courseDetails } = useCourse(dbCourse?.id || '');
 
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null);

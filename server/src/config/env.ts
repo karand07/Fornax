@@ -17,7 +17,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   GEMINI_API_KEY: z.string().optional().default(''),
-  GEMINI_MODEL: z.string().optional().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().optional().default('gemini-3.1-flash-lite'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
   TRUST_PROXY: z.string().optional().default(''),
   SCAN_DIR: z.string().default('./storage/scans'),

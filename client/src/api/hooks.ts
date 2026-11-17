@@ -1377,6 +1377,41 @@ export async function downloadCourseAnalyticsCsv(courseId: string): Promise<void
   window.URL.revokeObjectURL(url);
 }
 
+// User Account Profile Hooks (GET /api/profile & PATCH /api/profile)
+export interface UserAccountProfile {
+  id: string;
+  email: string;
+  role: 'STUDENT' | 'TEACHER' | 'ADMIN';
+  firstName: string;
+  lastName: string;
+  createdAt: string;
+  hasFaceEnrolled: boolean;
+}
+
+export function useUserProfile() {
+  return useQuery<UserAccountProfile>({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const res = await api.get('/profile');
+      return res.data;
+    },
+  });
+}
+
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { firstName?: string; lastName?: string }) => {
+      const res = await api.patch('/profile', data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['studentProfile'] });
+    },
+  });
+}
+
 // Adaptive Learning: Practice Drills
 export interface PracticeQuestion {
   id: string;

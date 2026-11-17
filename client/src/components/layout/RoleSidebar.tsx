@@ -88,10 +88,16 @@ export const RoleSidebar: React.FC = () => {
 
   const isActive = (href: string) => {
     const [path, search] = href.split('?');
-    if (search) {
-      return location.pathname === path && location.search.includes(search);
+    if (location.pathname !== path) return false;
+    const currentParams = new URLSearchParams(location.search);
+    const targetParams = new URLSearchParams(search || '');
+    const targetTab = targetParams.get('tab');
+    const currentTab = currentParams.get('tab');
+
+    if (targetTab) {
+      return currentTab === targetTab;
     }
-    return location.pathname === path && (!location.search || location.search === '?tab=overview');
+    return !currentTab || currentTab === 'overview';
   };
 
   return (
