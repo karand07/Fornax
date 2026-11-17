@@ -142,6 +142,77 @@ export function useCurrentUser() {
   });
 }
 
+export function useAllUsers() {
+  return useQuery<Array<User & { createdAt?: string; faceDescriptor?: string | null }>>({
+    queryKey: ['allUsers'],
+    queryFn: async () => {
+      const res = await api.get('/auth/users');
+      return res.data;
+    },
+  });
+}
+
+export function useAdminCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      role: 'STUDENT' | 'TEACHER' | 'ADMIN';
+    }) => {
+      const res = await api.post('/auth/register', data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['systemOverview'] });
+    },
+  });
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: 'STUDENT' | 'TEACHER' | 'ADMIN' }) => {
+      const res = await api.patch(`/auth/users/${userId}/role`, { role });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['systemOverview'] });
+    },
+  });
+}
+
+export function useResetUserFace() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await api.post(`/auth/users/${userId}/reset-face`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await api.delete(`/auth/users/${userId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['systemOverview'] });
+    },
+  });
+}
+
 // Courses Hooks
 export function useCourses() {
   return useQuery<Course[]>({

@@ -69,7 +69,7 @@ export const RoleSidebar: React.FC = () => {
 
   const adminNav: NavItem[] = [
     { label: 'System Telemetry', href: '/admin', icon: LayoutDashboard },
-    { label: 'User Directory', href: '/admin?tab=users', icon: Users, badge: '5 Students' },
+    { label: 'User Directory', href: '/admin?tab=users', icon: Users },
     { label: 'Course Catalog', href: '/admin?tab=courses', icon: Library },
     { label: 'Platform Security', href: '/admin?tab=security', icon: Shield },
   ];
@@ -91,6 +91,9 @@ export const RoleSidebar: React.FC = () => {
     const [path, search] = href.split('?');
     if (search) {
       return location.pathname === path && location.search.includes(search);
+    }
+    if (path === '/admin') {
+      return location.pathname === '/admin' && (!location.search || location.search === '?tab=telemetry');
     }
     return location.pathname === path && (!location.search || location.search === '?tab=overview');
   };
