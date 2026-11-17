@@ -250,34 +250,88 @@ export const StudyNotesDialog: React.FC<StudyNotesDialogProps> = ({
 
               {/* 5. Recommended Study Materials */}
               {notesData.recommendedMaterials.length > 0 && (
-                <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Suggested Study Materials for Your Level ({notesData.difficultyBand})</span>
+                <div className="space-y-2.5 pt-2.5 border-t border-slate-800">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Suggested Study Materials for Your Level ({notesData.difficultyBand})</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {notesData.recommendedMaterials.length} curated resources
+                    </span>
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {notesData.recommendedMaterials.map((res) => (
-                      <a
-                        key={res.id}
-                        href={res.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2.5 rounded-lg border border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/60 transition-all flex items-center justify-between text-xs gap-2 group"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {getResourceIcon(res.type)}
-                          <div className="min-w-0">
-                            <p className="font-medium text-slate-200 truncate group-hover:text-indigo-300">
-                              {res.title}
-                            </p>
-                            <span className="text-[10px] text-slate-500 uppercase font-mono">
-                              {res.type} • {res.difficulty}
-                            </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {notesData.recommendedMaterials.map((res) => {
+                      const rawUrl = res.url?.trim() || '';
+                      const safeUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+                        ? rawUrl
+                        : rawUrl
+                        ? `https://${rawUrl}`
+                        : '';
+
+                      const domain = (() => {
+                        if (!safeUrl) return null;
+                        try {
+                          return new URL(safeUrl).hostname.replace(/^www\./, '');
+                        } catch {
+                          return null;
+                        }
+                      })();
+
+                      if (!safeUrl) {
+                        return (
+                          <div
+                            key={res.id}
+                            className="p-2.5 rounded-lg border border-slate-800 bg-slate-950/40 opacity-70 flex items-center justify-between text-xs gap-2"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {getResourceIcon(res.type)}
+                              <div className="min-w-0">
+                                <p className="font-medium text-slate-400 truncate">
+                                  {res.title}
+                                </p>
+                                <span className="text-[10px] text-slate-500 uppercase font-mono">
+                                  {res.type} • URL unavailable
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 shrink-0" />
-                      </a>
-                    ))}
+                        );
+                      }
+
+                      return (
+                        <a
+                          key={res.id}
+                          href={safeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2.5 rounded-lg border border-slate-800 bg-slate-950/70 hover:border-indigo-500/50 hover:bg-slate-900/80 transition-all flex items-center justify-between text-xs gap-2.5 group"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="shrink-0 p-1 rounded bg-slate-900 border border-slate-800 text-indigo-400 group-hover:text-indigo-300">
+                              {getResourceIcon(res.type)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-200 truncate group-hover:text-indigo-300">
+                                {res.title}
+                              </p>
+                              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono mt-0.5">
+                                <span className="uppercase text-indigo-400 font-semibold">{res.type}</span>
+                                <span>•</span>
+                                <span>{res.difficulty}</span>
+                                {domain && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-slate-500 truncate max-w-[120px]">{domain}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 shrink-0 transition-colors" />
+                        </a>
+                      );
+                    })}
                   </div>
                 </div>
               )}
