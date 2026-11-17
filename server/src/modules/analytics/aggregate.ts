@@ -163,6 +163,10 @@ function sortConceptsDisplayOrder(
   });
 }
 
+function round4(n: number): number {
+  return Math.round((n + Number.EPSILON) * 10000) / 10000;
+}
+
 export function buildAnalytics(input: AnalyticsInput): AnalyticsResult {
   const { students = [], concepts = [], mastery = [], attendance = [], sessions = [] } = input;
 
@@ -259,7 +263,7 @@ export function buildAnalytics(input: AnalyticsInput): AnalyticsResult {
     }
 
     // Rule 3: avgMastery = mean over assessed cells only, or null
-    const avgMastery = studentAssessedCount > 0 ? studentScoreSum / studentAssessedCount : null;
+    const avgMastery = studentAssessedCount > 0 ? round4(studentScoreSum / studentAssessedCount) : null;
 
     const attRecord = attendanceMap.get(student.id);
     const attendanceRate = attRecord && attRecord.rate !== undefined ? attRecord.rate : null;
@@ -303,7 +307,7 @@ export function buildAnalytics(input: AnalyticsInput): AnalyticsResult {
       }
     }
 
-    const average = assessedCount > 0 ? scoreSum / assessedCount : null;
+    const average = assessedCount > 0 ? round4(scoreSum / assessedCount) : null;
 
     return {
       conceptId: concept.id,
