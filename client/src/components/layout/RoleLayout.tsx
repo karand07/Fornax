@@ -3,6 +3,7 @@ import { RoleSidebar } from './RoleSidebar';
 import { useAuth } from '@/auth-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ProfileSettingsDialog } from '@/components/profile/ProfileSettingsDialog';
 import { Menu, X, Database } from 'lucide-react';
 
 interface RoleLayoutProps {
@@ -12,6 +13,7 @@ interface RoleLayoutProps {
 export const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -82,7 +84,11 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
               LMS Connected
             </span>
 
-            <div className="flex items-center gap-2 pl-2 border-l border-border">
+            <button
+              onClick={() => setProfileDialogOpen(true)}
+              className="flex items-center gap-2 pl-2 border-l border-border hover:bg-muted/40 p-1.5 rounded-lg transition-colors text-left"
+              title="Click to manage account settings"
+            >
               <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-xs font-semibold text-blue-300">
                 {user?.firstName?.[0]}
                 {user?.lastName?.[0]}
@@ -95,7 +101,7 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
                   {user?.role}
                 </div>
               </div>
-            </div>
+            </button>
           </div>
         </header>
 
@@ -103,6 +109,12 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
         <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
+
+        {/* Profile Settings Modal */}
+        <ProfileSettingsDialog
+          open={profileDialogOpen}
+          onOpenChange={setProfileDialogOpen}
+        />
       </div>
     </div>
   );

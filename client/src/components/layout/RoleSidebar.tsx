@@ -14,11 +14,11 @@ import {
   Shield,
   Layers,
   Users,
-  FileCheck2,
   Library,
   ChevronRight,
   ScanFace,
   CheckSquare,
+  BarChart3,
 } from 'lucide-react';
 import { useReviewQueue } from '@/api/hooks';
 
@@ -54,13 +54,12 @@ export const RoleSidebar: React.FC = () => {
   ];
 
   const teacherNav: NavItem[] = [
-    { label: 'Faculty Overview', href: '/teacher', icon: LayoutDashboard },
+    { label: 'Dashboard', href: '/teacher', icon: LayoutDashboard },
     { label: 'Live Attendance', href: '/teacher/live-attendance', icon: QrCode, badge: 'Live' },
-    { label: 'Course Management', href: '/teacher?tab=courses', icon: Library },
+    { label: 'Course Analytics', href: '/teacher/analytics', icon: BarChart3 },
     { label: 'Curriculum & Concepts', href: '/teacher?tab=curriculum', icon: Layers, badge: 'Prereqs' },
-    { label: 'Assessments & Grading', href: '/teacher?tab=grading', icon: FileCheck2 },
     {
-      label: 'Review',
+      label: 'Review Queue',
       href: '/teacher/courses/all/review',
       icon: CheckSquare,
       badge: pendingCount > 0 ? `${pendingCount}` : undefined,
@@ -69,7 +68,7 @@ export const RoleSidebar: React.FC = () => {
 
   const adminNav: NavItem[] = [
     { label: 'System Telemetry', href: '/admin', icon: LayoutDashboard },
-    { label: 'User Directory', href: '/admin?tab=users', icon: Users },
+    { label: 'User Directory', href: '/admin?tab=users', icon: Users, badge: '5 Students' },
     { label: 'Course Catalog', href: '/admin?tab=courses', icon: Library },
     { label: 'Platform Security', href: '/admin?tab=security', icon: Shield },
   ];
@@ -89,13 +88,16 @@ export const RoleSidebar: React.FC = () => {
 
   const isActive = (href: string) => {
     const [path, search] = href.split('?');
-    if (search) {
-      return location.pathname === path && location.search.includes(search);
+    if (location.pathname !== path) return false;
+    const currentParams = new URLSearchParams(location.search);
+    const targetParams = new URLSearchParams(search || '');
+    const targetTab = targetParams.get('tab');
+    const currentTab = currentParams.get('tab');
+
+    if (targetTab) {
+      return currentTab === targetTab;
     }
-    if (path === '/admin') {
-      return location.pathname === '/admin' && (!location.search || location.search === '?tab=telemetry');
-    }
-    return location.pathname === path && (!location.search || location.search === '?tab=overview');
+    return !currentTab || currentTab === 'overview';
   };
 
   return (

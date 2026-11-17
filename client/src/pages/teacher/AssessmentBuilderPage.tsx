@@ -36,6 +36,7 @@ import {
   Layers,
   Sparkles,
   Info,
+  FileText,
 } from 'lucide-react';
 
 export const AssessmentBuilderPage: React.FC = () => {
@@ -359,6 +360,17 @@ export const AssessmentBuilderPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link to={`/teacher/assessments/${assessment.id}/submissions`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-slate-700 text-slate-300 hover:text-white hover:border-indigo-500"
+            >
+              <FileText className="w-4 h-4 text-indigo-400" />
+              Submissions
+            </Button>
+          </Link>
+
           {!isPublished && (
             <>
               <Button
@@ -389,8 +401,14 @@ export const AssessmentBuilderPage: React.FC = () => {
       {isPublished && (
         <Alert variant="info" className="border-emerald-900/60 bg-emerald-950/30">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <AlertTitle className="text-emerald-300 font-semibold">
-            Assessment is Published & Locked
+          <AlertTitle className="text-emerald-300 font-semibold flex items-center justify-between">
+            <span>Assessment is Published & Locked</span>
+            <Link to={`/teacher/assessments/${assessment.id}/submissions`}>
+              <Button size="sm" variant="outline" className="text-xs h-7 gap-1 border-emerald-700/60 text-emerald-200 hover:bg-emerald-900/50">
+                <FileText className="w-3.5 h-3.5" />
+                View Submissions & Grading
+              </Button>
+            </Link>
           </AlertTitle>
           <AlertDescription className="text-emerald-400/90 text-xs mt-1">
             This assessment is live for enrolled students. To preserve academic integrity and prevent grading discrepancies, questions can no longer be edited or deleted.

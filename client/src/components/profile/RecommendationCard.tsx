@@ -1,6 +1,7 @@
-import { Sparkles, CheckCircle2, ArrowRight, HelpCircle } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, HelpCircle, Dumbbell, BookOpen } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { ResourceLink } from './ResourceLink';
 import { masteryBand, formatPercent } from '../../lib/mastery-ui';
 import type { RecommendationItem } from '../../api/hooks';
@@ -9,12 +10,16 @@ export interface RecommendationCardProps {
   recommendations: RecommendationItem[];
   notAssessed?: { id: string; name: string }[];
   className?: string;
+  onStartPractice?: (conceptId: string, conceptTitle: string) => void;
+  onViewNotes?: (conceptId: string, conceptTitle: string) => void;
 }
 
 export function RecommendationCard({
   recommendations,
   notAssessed = [],
   className = '',
+  onStartPractice,
+  onViewNotes,
 }: RecommendationCardProps) {
   if (recommendations.length === 0) {
     return (
@@ -109,6 +114,32 @@ export function RecommendationCard({
                   <div className="text-xs text-muted-foreground italic px-2 py-1.5 rounded bg-muted/30 border border-dashed border-border/60">
                     No resources added yet. Ask your teacher.
                   </div>
+                )}
+              </div>
+
+              {/* Actions: Notes & Adaptive Practice */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-border/40">
+                {onViewNotes && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs h-7 gap-1.5 text-slate-300 hover:text-white hover:bg-slate-800"
+                    onClick={() => onViewNotes(rec.conceptId, rec.conceptName)}
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                    Short Notes
+                  </Button>
+                )}
+                {onStartPractice && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs h-7 gap-1.5 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary font-medium"
+                    onClick={() => onStartPractice(rec.conceptId, rec.conceptName)}
+                  >
+                    <Dumbbell className="w-3.5 h-3.5" />
+                    Start Practice Drill
+                  </Button>
                 )}
               </div>
             </div>

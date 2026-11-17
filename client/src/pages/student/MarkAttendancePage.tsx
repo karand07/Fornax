@@ -4,6 +4,7 @@ import {
   useCourses,
   useCheckAttendanceCode,
   useMarkSelfAttendance,
+  useScanQRAttendance,
   useFaceStatus,
 } from '@/api/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +29,14 @@ import {
   KeyRound,
   RotateCcw,
   Clock,
+  QrCode,
+  ScanLine,
+  Loader2,
 } from 'lucide-react';
+import {
+  QrScannerDialog,
+  ParsedQrData,
+} from '@/components/attendance/QrScannerDialog';
 
 type AttendanceStep = 'ENTER_CODE' | 'CAMERA' | 'RESULT';
 
@@ -48,6 +56,70 @@ export const MarkAttendancePage: React.FC = () => {
   const { data: faceStatus } = useFaceStatus();
   const checkCodeMutation = useCheckAttendanceCode();
   const markAttendanceMutation = useMarkSelfAttendance();
+  const scanQRMutation = useScanQRAttendance();
+
+  const queryToken = searchParams.get('qrCodeToken') || searchParams.get('token');
+  const queryMode = searchParams.get('mode');
+  const queryScan = searchParams.get('scan') === 'true';
+
+  // Mode switcher: MODE_B vs QR
+  const [checkInMode, setCheckInMode] = useState<'MODE_B' | 'QR'>(
+    queryToken || queryMode === 'qr' || queryScan ? 'QR' : 'MODE_B'
+  );
+  const [qrToken, setQrToken] = useState<string>(queryToken || '');
+  const [qrSuccessRecord, setQrSuccessRecord] = useState<any | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [qrScannerOpen, setQrScannerOpen] = useState<boolean>(queryScan);
+
+  const handleQRCheckIn = async (
+    e?: React.FormEvent,
+    overrideSessionId?: string,
+    overrideToken?: string
+  ) => {
+    if (e) e.preventDefault();
+    setQrError(null);
+    setQrSuccessRecord(null);
+
+    const targetSessionId = (overrideSessionId || sessionId).trim();
+    const targetToken = (overrideToken || qrToken).trim();
+
+    if (!targetSessionId) {
+      setQrError('Session ID is required.');
+      return;
+    }
+    if (!targetToken) {
+      setQrError('QR code token is required.');
+      return;
+    }
+
+    try {
+      const res = await scanQRMutation.mutateAsync({
+        sessionId: targetSessionId,
+        qrCodeToken: targetToken,
+      });
+      setQrSuccessRecord(res.record || res);
+    } catch (err: any) {
+      const msg = err.response?.data?.error || err.message || 'Attendance check-in failed';
+      setQrError(msg);
+    }
+  };
+
+  const handleQrScanSuccess = (data: ParsedQrData) => {
+    const nextSessionId = (data.sessionId || sessionId).trim();
+    const nextToken = (data.qrCodeToken || qrToken).trim();
+
+    if (data.sessionId) {
+      setSessionId(data.sessionId);
+    }
+    if (data.qrCodeToken) {
+      setQrToken(data.qrCodeToken);
+    }
+
+    // If both session and token are identified, auto-submit check-in
+    if (nextSessionId && nextToken) {
+      handleQRCheckIn(undefined, nextSessionId, nextToken);
+    }
+  };
 
   // Wizard state machine
   const [step, setStep] = useState<AttendanceStep>('ENTER_CODE');
@@ -429,37 +501,264 @@ export const MarkAttendancePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stepper Progress Indicator */}
-        <div className="grid grid-cols-3 gap-2 mt-5">
-          <div
-            className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
-              step === 'ENTER_CODE'
-                ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-                : 'bg-slate-900/40 border-slate-800 text-slate-400'
-            }`}
+        {/* Method Switcher */}
+        <div className="flex items-center gap-2 mt-4 p-1 rounded-lg bg-slate-900/80 border border-border self-start inline-flex">
+          <Button
+            type="button"
+            variant={checkInMode === 'MODE_B' ? 'default' : 'ghost'}
+            size="sm"
+            className="text-xs h-7 gap-1.5"
+            onClick={() => setCheckInMode('MODE_B')}
           >
-            1. Enter Code
-          </div>
-          <div
-            className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
-              step === 'CAMERA'
-                ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-                : 'bg-slate-900/40 border-slate-800 text-slate-400'
-            }`}
+            <KeyRound className="w-3 h-3" />
+            <span>Mode B (Passcode + Liveness)</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant={checkInMode === 'QR' ? 'default' : 'ghost'}
+            size="sm"
+            className="text-xs h-7 gap-1.5"
+            onClick={() => setCheckInMode('QR')}
           >
-            2. Blink & Scan
-          </div>
-          <div
-            className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
-              step === 'RESULT'
-                ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-                : 'bg-slate-900/40 border-slate-800 text-slate-400'
-            }`}
-          >
-            3. Result
-          </div>
+            <QrCode className="w-3 h-3" />
+            <span>Direct QR / Token Check-In</span>
+          </Button>
         </div>
+
+        {/* Stepper Progress Indicator (only shown for Mode B) */}
+        {checkInMode === 'MODE_B' && (
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div
+              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
+                step === 'ENTER_CODE'
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
+                  : 'bg-slate-900/40 border-slate-800 text-slate-400'
+              }`}
+            >
+              1. Enter Code
+            </div>
+            <div
+              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
+                step === 'CAMERA'
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
+                  : 'bg-slate-900/40 border-slate-800 text-slate-400'
+              }`}
+            >
+              2. Blink & Scan
+            </div>
+            <div
+              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
+                step === 'RESULT'
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
+                  : 'bg-slate-900/40 border-slate-800 text-slate-400'
+              }`}
+            >
+              3. Result
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* QR Check-In View */}
+      {checkInMode === 'QR' && (
+        <Card className="border-border bg-card shadow-xl">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-indigo-400" />
+              <CardTitle className="text-base">Direct QR & Token Check-In</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Check in using the rotating cryptographic token embedded in the instructor&apos;s QR code.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {qrSuccessRecord ? (
+              <div className="space-y-5 text-center p-6 border rounded-xl bg-emerald-500/5 border-emerald-500/20">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-slate-100">Attendance Recorded Successfully!</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Your attendance has been verified via the QR security token.
+                  </p>
+                </div>
+
+                <div className="max-w-xs mx-auto p-3 rounded-lg bg-card border border-border/80 text-xs space-y-2 text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px]">
+                      PRESENT
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Method</span>
+                    <Badge variant="outline" className="font-mono text-[10px]">
+                      QR TOKEN
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Recorded At</span>
+                    <span className="font-mono text-[11px] text-foreground">
+                      {new Date(qrSuccessRecord.timestamp || Date.now()).toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => navigate('/student?tab=attendance')}
+                  >
+                    View Check-In History
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      setQrSuccessRecord(null);
+                      setQrToken('');
+                    }}
+                  >
+                    Check In Another
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleQRCheckIn} className="space-y-4">
+                {/* In-App Camera QR Scanner Quick Action */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-900/30 via-indigo-900/30 to-purple-900/30 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-200">
+                      <Camera className="w-4 h-4 text-blue-400" />
+                      <span>Scan with Application Camera</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">
+                      Open your webcam or mobile camera to automatically scan the QR code and check in.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setQrScannerOpen(true)}
+                    className="h-9 px-4 text-xs font-semibold gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md flex-shrink-0"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Scan QR Code</span>
+                  </Button>
+                </div>
+
+                {qrError && (
+                  <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
+                    <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Verification Failed</p>
+                      <p className="mt-0.5 text-[11px] opacity-90">{qrError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Session Selector or Manual Input */}
+                <div>
+                  <label className="text-xs font-medium text-slate-300 mb-1.5 block">
+                    Select Lecture Session or Enter Session UUID
+                  </label>
+                  <div className="space-y-2">
+                    {courses && courses.length > 0 && (
+                      <select
+                        value={sessionId}
+                        onChange={(e) => setSessionId(e.target.value)}
+                        className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">-- Choose from enrolled course sessions --</option>
+                        {courses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.code} — {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    <Input
+                      placeholder="Or enter Session UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)"
+                      value={sessionId}
+                      onChange={(e) => setSessionId(e.target.value)}
+                      className="text-xs font-mono h-9 bg-slate-900 border-border"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* QR Code Token Input */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-slate-300">
+                      QR Code Token / Passcode
+                    </label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setQrScannerOpen(true)}
+                      className="text-[11px] text-blue-400 hover:text-blue-300 p-0 h-auto gap-1"
+                    >
+                      <Camera className="w-3 h-3" />
+                      Open Camera Scanner
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter or paste token from QR code..."
+                      value={qrToken}
+                      onChange={(e) => setQrToken(e.target.value)}
+                      className="text-sm font-mono tracking-widest h-11 bg-slate-900 border-border flex-1"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setQrScannerOpen(true)}
+                      className="h-11 px-3.5 border-border hover:bg-slate-800 text-slate-200 gap-1.5 flex-shrink-0 text-xs"
+                      title="Scan with Camera"
+                    >
+                      <ScanLine className="w-4 h-4 text-blue-400" />
+                      <span className="hidden sm:inline">Scan</span>
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    Click &quot;Scan QR Code&quot; to scan live with your camera, or paste/type the code manually.
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={scanQRMutation.isPending}
+                  className="w-full text-xs font-semibold h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                >
+                  {scanQRMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Verifying Token...</span>
+                    </>
+                  ) : (
+                    <>
+                      <QrCode className="w-4 h-4" />
+                      <span>Verify &amp; Mark Present</span>
+                    </>
+                  )}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Mode B Flow */}
+      {checkInMode === 'MODE_B' && (
+        <>
 
       {/* STEP 1: ENTER_CODE */}
       {step === 'ENTER_CODE' && (
@@ -785,6 +1084,15 @@ export const MarkAttendancePage: React.FC = () => {
           </CardContent>
         </Card>
       )}
+        </>
+      )}
+
+      {/* In-App QR Scanner Dialog */}
+      <QrScannerDialog
+        open={qrScannerOpen}
+        onOpenChange={setQrScannerOpen}
+        onScanSuccess={handleQrScanSuccess}
+      />
     </div>
   );
 };

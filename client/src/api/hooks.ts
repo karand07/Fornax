@@ -69,6 +69,7 @@ export interface Course {
   description?: string;
   teacher?: { id: string; firstName: string; lastName: string; email: string };
   concepts?: Concept[];
+  sessions?: ClassSessionDetails[];
   _count?: { enrollments: number; sessions: number; assessments: number; concepts?: number };
 }
 
@@ -1308,6 +1309,10 @@ export interface StudentProfileResponse {
       score: number;
       attempts: number;
       prerequisiteId: string | null;
+      prerequisiteName?: string | null;
+      prerequisites?: { id: string; name: string }[];
+      order?: number;
+      description?: string | null;
     }[];
   };
   recommendations: RecommendationItem[];
@@ -1441,6 +1446,301 @@ export async function downloadCourseAnalyticsCsv(courseId: string): Promise<void
   link.click();
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
+}
+
+// User Account Profile Hooks (GET /api/profile & PATCH /api/profile)
+export interface UserAccountProfile {
+  id: string;
+  email: string;
+  role: 'STUDENT' | 'TEACHER' | 'ADMIN';
+  firstName: string;
+  lastName: string;
+  createdAt: string;
+  hasFaceEnrolled: boolean;
+}
+
+export function useUserProfile() {
+  return useQuery<UserAccountProfile>({
+    queryKey: ['userProfile'],
+    queryFn: async () => {
+      const res = await api.get('/profile');
+      return res.data;
+    },
+  });
+}
+
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { firstName?: string; lastName?: string }) => {
+      const res = await api.patch('/profile', data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['studentProfile'] });
+    },
+  });
+}
+
+// Adaptive Learning: Practice Drills
+export interface PracticeQuestion {
+  id: string;
+  prompt: string;
+  options: string[];
+  maxMarks: number;
+  type: string;
+  difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  targetConcept?: string;
+  isPrerequisiteAnchor?: boolean;
+}
+
+export interface PracticeQuestionsResponse {
+  conceptId: string;
+  conceptTitle: string;
+  adaptiveConfig?: {
+    startingDifficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    targetQuestions: number;
+    difficultyTiers: string[];
+  };
+  questions: PracticeQuestion[];
+}
+
+export interface PracticeResultItem {
+  questionId: string;
+  prompt: string;
+  isCorrect: boolean;
+  selectedIndex: number;
+  correctIndex: number;
+  selectedAnswer?: string;
+  correctAnswer: string;
+  options?: string[];
+  explanation: string;
+  ratio: number;
+  difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+}
+
+export interface SubmitPracticeResponse {
+  conceptId: string;
+  conceptTitle: string;
+  totalQuestions: number;
+  correctCount: number;
+  previousScore: number;
+  newScore: number;
+  delta: number;
+  peakDifficultyAchieved?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  trajectory?: string[];
+  results: PracticeResultItem[];
+}
+
+export interface ExplainMisconceptionResponse {
+  misconceptionDiagnosis: string;
+  corePrinciple: string;
+  memoryRule: string;
+  source: 'gemini' | 'heuristic';
+}
+
+export function useConceptPracticeQuestions(conceptId: string | null) {
+  return useQuery<PracticeQuestionsResponse>({
+    queryKey: ['conceptPractice', conceptId],
+    queryFn: async () => {
+      const res = await api.get(`/concepts/${conceptId}/practice`);
+      return res.data;
+    },
+    enabled: Boolean(conceptId),
+  });
+}
+
+export function useSubmitPractice() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SubmitPracticeResponse,
+    Error,
+    {
+      conceptId: string;
+      answers: Array<{
+        questionId: string;
+        selectedIndex: number;
+        difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+      }>;
+    }
+  >({
+    mutationFn: async ({ conceptId, answers }) => {
+      const res = await api.post(`/concepts/${conceptId}/practice`, { answers });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['studentRecommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['courseAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+    },
+  });
+}
+
+export function useExplainMisconception() {
+  return useMutation<
+    ExplainMisconceptionResponse,
+    Error,
+    {
+      conceptId: string;
+      questionPrompt: string;
+      options?: string[];
+      selectedAnswer: string;
+      correctAnswer: string;
+      generalExplanation?: string;
+    }
+  >({
+    mutationFn: async ({ conceptId, ...data }) => {
+      const res = await api.post(`/concepts/${conceptId}/explain-misconception`, data);
+      return res.data;
+    },
+  });
+}
+
+export interface AdaptiveQuizQuestion {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  prompt: string;
+  options: string[];
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+}
+
+export interface GenerateAdaptiveQuizResponse {
+  quizId: string;
+  quizTitle: string;
+  targetConcepts: Array<{ id: string; name: string; score: number }>;
+  estimatedTimeMinutes: number;
+  questions: AdaptiveQuizQuestion[];
+  source: 'gemini' | 'course-bank';
+}
+
+export interface AdaptiveQuizResultItem {
+  questionId: string;
+  conceptId: string;
+  conceptTitle: string;
+  prompt: string;
+  isCorrect: boolean;
+  selectedIndex: number;
+  correctIndex: number;
+  selectedAnswer: string;
+  correctAnswer: string;
+  options: string[];
+  explanation: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+}
+
+export interface SubmitAdaptiveQuizResponse {
+  quizTitle: string;
+  totalQuestions: number;
+  correctCount: number;
+  accuracyPercentage: number;
+  conceptUpdates: Array<{
+    conceptId: string;
+    conceptTitle: string;
+    previousScore: number;
+    newScore: number;
+    delta: number;
+  }>;
+  newAvgMastery: number | null;
+  riskLevel: 'OK' | 'WATCH' | 'AT_RISK' | 'INSUFFICIENT_DATA';
+  results: AdaptiveQuizResultItem[];
+}
+
+export function useGenerateAdaptiveQuiz() {
+  return useMutation<
+    GenerateAdaptiveQuizResponse,
+    Error,
+    { studentId: string; courseId: string }
+  >({
+    mutationFn: async ({ studentId, courseId }) => {
+      const res = await api.post(
+        `/students/${studentId}/adaptive-quiz/generate?courseId=${courseId}`,
+        { courseId }
+      );
+      return res.data;
+    },
+  });
+}
+
+export function useSubmitAdaptiveQuiz() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SubmitAdaptiveQuizResponse,
+    Error,
+    {
+      studentId: string;
+      courseId: string;
+      quizId: string;
+      answers: Array<{
+        questionId: string;
+        conceptId: string;
+        selectedIndex: number;
+        difficulty?: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+      }>;
+    }
+  >({
+    mutationFn: async ({ studentId, courseId, quizId, answers }) => {
+      const res = await api.post(`/students/${studentId}/adaptive-quiz/submit`, {
+        courseId,
+        quizId,
+        answers,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studentProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['studentRecommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['courseAnalytics'] });
+      queryClient.invalidateQueries({ queryKey: ['studentMastery'] });
+    },
+  });
+}
+
+export interface StudyResourceItem {
+  id: string;
+  title: string;
+  type: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  url: string;
+}
+
+export interface GeneratedStudyNotesResponse {
+  conceptId: string;
+  conceptTitle: string;
+  currentMastery: number;
+  difficultyBand: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  prerequisites: string | null;
+  recommendedMaterials: StudyResourceItem[];
+  shortNotes: {
+    summary: string;
+    keyFormulas: string[];
+    commonPitfalls: string[];
+    ruleOfThumb: string;
+    quickCheckQuestion: {
+      prompt: string;
+      answer: string;
+    };
+  };
+  markdownText: string;
+  source: 'gemini' | 'heuristic';
+}
+
+export function useGenerateStudyNotes() {
+  return useMutation<
+    GeneratedStudyNotesResponse,
+    Error,
+    { studentId: string; courseId: string; conceptId?: string }
+  >({
+    mutationFn: async ({ studentId, courseId, conceptId }) => {
+      const res = await api.post(`/students/${studentId}/study-notes`, {
+        courseId,
+        conceptId,
+      });
+      return res.data;
+    },
+  });
 }
 
 

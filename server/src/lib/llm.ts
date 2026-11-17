@@ -92,7 +92,7 @@ export class GeminiLlmClient implements LlmClient {
 
   constructor(apiKey?: string, model?: string) {
     this.apiKey = apiKey || env.GEMINI_API_KEY || '';
-    this.model = model || env.GEMINI_MODEL || 'gemini-1.5-flash';
+    this.model = model || env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
   }
 
   async generateCompletion(prompt: string, systemPrompt?: string): Promise<string> {

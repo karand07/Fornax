@@ -129,10 +129,16 @@ export class MasteryService {
       return {
         conceptId: c.id,
         name: c.title,
+        description: c.description ?? null,
+        order: c.order,
         score: row?.score ?? 0.5,
         attempts: row?.attempts ?? 0,
         prerequisiteId: c.prerequisites[0]?.prerequisiteId ?? null,
         prerequisiteName: c.prerequisites[0]?.prerequisite?.title ?? null,
+        prerequisites: c.prerequisites.map((p) => ({
+          id: p.prerequisiteId,
+          name: p.prerequisite.title,
+        })),
         lastUpdated: row?.updatedAt ?? null,
       };
     });

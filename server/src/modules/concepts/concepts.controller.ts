@@ -21,6 +21,26 @@ const prerequisiteSchema = z.object({
   prerequisiteId: z.string().uuid('Valid prerequisite ID is required'),
 });
 
+const submitPracticeSchema = z.object({
+  answers: z
+    .array(
+      z.object({
+        questionId: z.string().min(1, 'Question ID is required'),
+        selectedIndex: z.number().int().min(0, 'Selected index must be non-negative'),
+        difficulty: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']).optional(),
+      })
+    )
+    .min(1, 'At least one answer must be submitted'),
+});
+
+const explainMisconceptionSchema = z.object({
+  questionPrompt: z.string().min(1, 'Question prompt is required'),
+  options: z.array(z.string()).optional(),
+  selectedAnswer: z.string().min(1, 'Selected answer is required'),
+  correctAnswer: z.string().min(1, 'Correct answer is required'),
+  generalExplanation: z.string().optional(),
+});
+
 export class ConceptsController {
   async getAllConcepts(req: Request, res: Response): Promise<void> {
     try {
@@ -111,6 +131,63 @@ export class ConceptsController {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to remove prerequisite';
       res.status(400).json({ error: msg });
+    }
+  }
+
+  async getPracticeQuestions(req: Request, res: Response): Promise<void> {
+    try {
+      const practice = await conceptsService.getPracticeQuestions(req.params.id);
+      res.status(200).json(practice);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve practice questions';
+      res.status(404).json({ error: msg });
+    }
+  }
+
+  async submitPractice(req: Request, res: Response): Promise<void> {
+    const parseResult = submitPracticeSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User authentication required' });
+      return;
+    }
+
+    try {
+      const result = await conceptsService.submitPractice(
+        req.params.id,
+        userId,
+        parseResult.data.answers
+      );
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to submit practice drill';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async explainMisconception(req: Request, res: Response): Promise<void> {
+    const parseResult = explainMisconceptionSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    try {
+      const result = await conceptsService.explainMisconception(
+        req.params.id,
+        parseResult.data
+      );
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate misconception explanation';
+      res.status(500).json({ error: msg });
     }
   }
 }

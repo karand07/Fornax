@@ -197,13 +197,13 @@ export const TeacherStudentProfilePage: React.FC = () => {
                     <GraduationCap className="w-4 h-4 text-indigo-400" /> Concept Mastery Avg
                   </span>
                   <Badge variant="outline" className="text-[10px]">
-                    {profile.mastery.concepts.length} Topics
+                    {(profile.mastery?.concepts ?? (profile as any).concepts ?? []).length} Topics
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-extrabold font-mono text-foreground">
-                  {formatPercent(profile.mastery.average)}
+                  {formatPercent(profile.mastery?.average ?? (profile as any).avgMastery)}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Average score across assessed curriculum topics
@@ -219,7 +219,7 @@ export const TeacherStudentProfilePage: React.FC = () => {
                     <Award className="w-4 h-4 text-amber-400" /> Assessment Average
                   </span>
                   <Badge variant="outline" className="text-[10px]">
-                    {profile.assessmentHistory.length} Graded
+                    {(profile.assessmentHistory ?? (profile as any).assessments ?? []).length} Graded
                   </Badge>
                 </div>
               </CardHeader>
@@ -238,13 +238,13 @@ export const TeacherStudentProfilePage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Concept Mastery Radar */}
             <MasteryRadar
-              concepts={profile.mastery.concepts}
-              average={profile.mastery.average}
+              concepts={profile.mastery?.concepts ?? (profile as any).concepts ?? []}
+              average={profile.mastery?.average ?? (profile as any).avgMastery}
             />
 
             {/* Assessment History & Trajectory Line Chart */}
             <TrendChart
-              history={profile.assessmentHistory}
+              history={profile.assessmentHistory ?? (profile as any).assessments ?? []}
               assessmentAvg={profile.assessmentAvg}
             />
           </div>

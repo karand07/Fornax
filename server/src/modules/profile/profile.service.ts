@@ -17,11 +17,22 @@ export interface UserAccountProfile {
 }
 
 export interface StudentUnifiedProfile {
-  student: { id: string; name: string };
-  course: { id: string; title: string };
+  student: { id: string; name: string; email?: string };
+  course: { id: string; code?: string; title: string };
   attendance: any;
   concepts: any[];
   avgMastery: number | null;
+  mastery?: {
+    average: number | null;
+    concepts: {
+      id: string;
+      conceptId?: string;
+      name: string;
+      score: number;
+      attempts: number;
+      prerequisiteId: string | null;
+    }[];
+  };
   assessments: {
     assessmentId: string;
     title: string;
@@ -30,6 +41,14 @@ export interface StudentUnifiedProfile {
     max: number;
     percentage: number | null;
     pendingCount: number;
+  }[];
+  assessmentHistory?: {
+    assessmentId: string;
+    title: string;
+    date: string;
+    score: number;
+    max: number;
+    percentage: number;
   }[];
   assessmentAvg: number | null;
   risk: RiskResult;
@@ -124,7 +143,7 @@ export class ProfileService {
       },
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        course: { select: { id: true, title: true, teacherId: true } },
+        course: { select: { id: true, code: true, title: true, teacherId: true } },
       },
     });
 
@@ -275,19 +294,52 @@ export class ProfileService {
     // 9. Risk calculation
     const risk = computeRisk({ attendanceRate: attendance.rate, avgMastery });
 
+    const mappedConcepts = concepts.map((c: any) => ({
+      id: c.conceptId || c.id,
+      conceptId: c.conceptId || c.id,
+      name: c.name,
+      description: (c as any).description ?? null,
+      order: (c as any).order ?? 0,
+      score: c.score,
+      attempts: c.attempts,
+      prerequisiteId: c.prerequisiteId,
+      prerequisiteName: (c as any).prerequisiteName ?? null,
+      prerequisites: (c as any).prerequisites ?? (c.prerequisiteId ? [{ id: c.prerequisiteId, name: (c as any).prerequisiteName || '' }] : []),
+    }));
+
+    const mappedHistory = assessmentItems.map((a) => ({
+      assessmentId: a.assessmentId,
+      title: a.title,
+      date: typeof a.submittedAt === 'string' ? a.submittedAt : (a.submittedAt?.toISOString ? a.submittedAt.toISOString() : String(a.submittedAt)),
+      score: a.awarded,
+      max: a.max,
+      percentage: a.percentage ?? 0,
+    }));
+
     return {
       student: {
         id: enrollment.user.id,
         name: `${enrollment.user.firstName} ${enrollment.user.lastName}`.trim(),
+        email: enrollment.user.email,
       },
       course: {
         id: enrollment.course.id,
+        code: enrollment.course.code || enrollment.course.title.split(' ')[0] || enrollment.course.id,
         title: enrollment.course.title,
       },
-      attendance,
+      attendance: {
+        ...attendance,
+        attended: attendance.present,
+        total: attendance.totalSessions,
+      },
       concepts,
       avgMastery,
+      mastery: {
+        average: avgMastery,
+        concepts: mappedConcepts,
+      },
       assessments: assessmentItems,
+      assessmentHistory: mappedHistory,
       assessmentAvg,
       risk,
       recommendations,

@@ -221,6 +221,14 @@ export const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/teacher/analytics"
+        element={
+          <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>
+            <TeacherAnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/teacher/courses/:id/analytics"
         element={
           <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>

@@ -32,6 +32,7 @@ import {
   ExternalLink,
   CheckSquare,
   BarChart3,
+  FileText,
 } from 'lucide-react';
 
 export const TeacherAssessmentsPage: React.FC = () => {
@@ -76,7 +77,7 @@ export const TeacherAssessmentsPage: React.FC = () => {
           <Link to="/teacher">
             <Button variant="outline" size="sm" className="gap-1.5 border-slate-800 text-slate-300 hover:text-white">
               <ArrowLeft className="w-4 h-4" />
-              Faculty Portal
+              Dashboard
             </Button>
           </Link>
           <div>
@@ -245,15 +246,25 @@ export const TeacherAssessmentsPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                <Link to={`/teacher/assessments/${a.id}`} className="w-full">
+              <CardContent className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                <Link to={`/teacher/assessments/${a.id}`} className="flex-1">
                   <Button
                     variant="outline"
                     size="sm"
                     className="w-full text-xs border-slate-700 hover:border-indigo-500 hover:text-indigo-300 gap-1.5"
                   >
-                    {a.published ? 'View Assessment & Results' : 'Author Questions & Publish'}
+                    {a.published ? 'Builder & Key' : 'Author Questions'}
                     <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-70" />
+                  </Button>
+                </Link>
+                <Link to={`/teacher/assessments/${a.id}/submissions`} className="flex-1">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="w-full text-xs bg-indigo-600 hover:bg-indigo-500 text-white gap-1.5"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Submissions ({a.submissionCount ?? 0})
                   </Button>
                 </Link>
               </CardContent>

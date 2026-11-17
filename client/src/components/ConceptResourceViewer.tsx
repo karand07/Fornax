@@ -25,10 +25,16 @@ import {
   GitBranch,
 } from 'lucide-react';
 
-export const ConceptResourceViewer: React.FC = () => {
+interface ConceptResourceViewerProps {
+  courseId?: string;
+}
+
+export const ConceptResourceViewer: React.FC<ConceptResourceViewerProps> = ({ courseId }) => {
   const { user } = useAuth();
   const { data: courses } = useCourses();
-  const dbCourse = courses?.find((c) => c.title.toLowerCase().includes('database')) || courses?.[0];
+  const dbCourse = (courseId && courses?.find((c) => c.id === courseId)) ||
+    courses?.find((c) => c.title.toLowerCase().includes('database')) ||
+    courses?.[0];
   const { data: courseDetails } = useCourse(dbCourse?.id || '');
 
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null);
@@ -429,9 +435,35 @@ export const ConceptResourceViewer: React.FC = () => {
                               <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
                                 {res.type}
                               </span>
+                              {(() => {
+                                const raw = res.url?.trim() || '';
+                                const url = raw.startsWith('http') ? raw : raw ? `https://${raw}` : '';
+                                try {
+                                  if (!url) return null;
+                                  const domain = new URL(url).hostname.replace(/^www\./, '');
+                                  return (
+                                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/80 text-blue-400/90 border border-slate-700/60">
+                                      {domain}
+                                    </span>
+                                  );
+                                } catch {
+                                  return null;
+                                }
+                              })()}
                             </div>
                             <h5 className="text-sm font-semibold text-slate-100">
-                              {res.title}
+                              {res.url ? (
+                                <a
+                                  href={res.url.startsWith('http') ? res.url : `https://${res.url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:text-blue-400 hover:underline transition-colors inline-flex items-center gap-1.5"
+                                >
+                                  {res.title}
+                                </a>
+                              ) : (
+                                res.title
+                              )}
                             </h5>
                             <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
                               {res.description}
@@ -441,7 +473,7 @@ export const ConceptResourceViewer: React.FC = () => {
 
                         {res.url && (
                           <a
-                            href={res.url}
+                            href={res.url.startsWith('http') ? res.url : `https://${res.url}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors flex-shrink-0"
