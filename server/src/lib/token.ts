@@ -104,7 +104,7 @@ export function isValid(
   sessionId: string,
   inputCodeOrToken: string,
   stepSeconds: number = ROTATING_CODE_STEP_SECONDS,
-  toleranceSteps: number = 1
+  toleranceSteps: number = 24
 ): boolean {
   return verifyRotatingCode(sessionId, inputCodeOrToken, stepSeconds, toleranceSteps);
 }

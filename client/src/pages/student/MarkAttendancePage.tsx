@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  useCourses,
+  useActiveAttendanceSessions,
   useCheckAttendanceCode,
   useMarkSelfAttendance,
   useScanQRAttendance,
@@ -31,6 +31,7 @@ import {
   Clock,
   QrCode,
   ScanLine,
+  ScanFace,
   Loader2,
 } from 'lucide-react';
 import {
@@ -52,7 +53,7 @@ export const MarkAttendancePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const querySessionId = searchParams.get('session');
 
-  const { data: courses } = useCourses();
+  const { data: activeSessions } = useActiveAttendanceSessions();
   const { data: faceStatus } = useFaceStatus();
   const checkCodeMutation = useCheckAttendanceCode();
   const markAttendanceMutation = useMarkSelfAttendance();
@@ -128,6 +129,14 @@ export const MarkAttendancePage: React.FC = () => {
   const [sessionId, setSessionId] = useState<string>(
     paramSessionId || querySessionId || ''
   );
+
+  // Auto-select active session if student has exactly one active session and none selected yet
+  useEffect(() => {
+    if (!sessionId && activeSessions && activeSessions.length === 1) {
+      setSessionId(activeSessions[0].id);
+    }
+  }, [activeSessions, sessionId]);
+
   const [code, setCode] = useState<string>('');
   const [preCheckError, setPreCheckError] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
@@ -136,7 +145,10 @@ export const MarkAttendancePage: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const detectorRef = useRef<BlinkDetector>(new BlinkDetector({ earThreshold: 0.21, minConsecutiveClosedFrames: 2, timeLimitMs: 8000 }));
+  const isCapturingRef = useRef<boolean>(false);
+  const detectorRef = useRef<BlinkDetector>(
+    new BlinkDetector({ earThreshold: 0.22, minConsecutiveClosedFrames: 1, timeLimitMs: 8000 })
+  );
 
   const [modelsReady, setModelsReady] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
@@ -236,6 +248,7 @@ export const MarkAttendancePage: React.FC = () => {
 
     let isCancelled = false;
     detectorRef.current.reset();
+    isCapturingRef.current = false;
     setBlinkDetected(false);
     setBlinkCount(0);
     setLivenessTimedOut(false);
@@ -260,6 +273,11 @@ export const MarkAttendancePage: React.FC = () => {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+          } catch {
+            // ignore play interruption
+          }
         }
         setCameraActive(true);
       } catch (err: any) {
@@ -297,6 +315,7 @@ export const MarkAttendancePage: React.FC = () => {
         setMarkResult(result);
         setMarkError(null);
       } catch (err: any) {
+        console.error('Attendance marking submission error:', err);
         const msg =
           err?.response?.data?.error ||
           err?.message ||
@@ -316,7 +335,12 @@ export const MarkAttendancePage: React.FC = () => {
     let hasCaptured = false;
 
     async function detectFrame() {
-      if (!isActive || hasCaptured) return;
+      if (!isActive || hasCaptured || isCapturingRef.current) {
+        if (isActive && !hasCaptured) {
+          animTimer = window.setTimeout(detectFrame, 80);
+        }
+        return;
+      }
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -338,14 +362,13 @@ export const MarkAttendancePage: React.FC = () => {
             faceapi.matchDimensions(canvas, displaySize);
           }
 
-          // Detect all faces to enforce exactly one face
+          // Detect all faces to enforce exactly one face (landmarks only, fast ~30 FPS)
           const detections = await faceapi
             .detectAllFaces(
               video,
               new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 })
             )
-            .withFaceLandmarks()
-            .withFaceDescriptors();
+            .withFaceLandmarks();
 
           const ctx = canvas.getContext('2d');
           if (ctx) {
@@ -402,24 +425,57 @@ export const MarkAttendancePage: React.FC = () => {
             if (detectorRef.current.passed) {
               setFaceHint('Blink verified! Capturing face descriptor...');
             } else if (detectorRef.current.timedOut) {
-              setFaceHint('Liveness timeout reached. Proceeding to capture...');
+              setFaceHint('Liveness timeout reached. Capturing face descriptor...');
             } else {
               setFaceHint('Blink once or twice naturally');
             }
 
-            // After blink (or timeout), capture ONE descriptor from a frame with eyes open (EAR >= 0.21)
-            const isReadyToCapture =
+            // After blink (or timeout), capture ONE descriptor from a frame with eyes open
+            if (
               (detectorRef.current.passed || detectorRef.current.timedOut) &&
-              ear >= 0.21 &&
-              detection.descriptor &&
-              detection.descriptor.length === 128;
+              !hasCaptured &&
+              !isCapturingRef.current
+            ) {
+              isCapturingRef.current = true;
+              try {
+                let descriptorArray: number[] | null = null;
+                const singleDetection = await faceapi
+                  .detectSingleFace(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 })
+                  )
+                  .withFaceLandmarks()
+                  .withFaceDescriptor();
 
-            if (isReadyToCapture && !hasCaptured) {
-              hasCaptured = true;
-              const descriptorArray = Array.from(detection.descriptor);
-              const livenessPassed = detectorRef.current.passed;
-              submitAttendanceMark(descriptorArray, livenessPassed);
-              return;
+                if (singleDetection?.descriptor && singleDetection.descriptor.length === 128) {
+                  descriptorArray = Array.from(singleDetection.descriptor);
+                } else {
+                  // Fallback: extract using detectAllFaces if detectSingleFace missed
+                  const allDetections = await faceapi
+                    .detectAllFaces(
+                      video,
+                      new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 })
+                    )
+                    .withFaceLandmarks()
+                    .withFaceDescriptors();
+                  if (allDetections.length > 0 && allDetections[0].descriptor?.length === 128) {
+                    descriptorArray = Array.from(allDetections[0].descriptor);
+                  }
+                }
+
+                if (descriptorArray) {
+                  hasCaptured = true;
+                  const livenessPassed = detectorRef.current.passed;
+                  submitAttendanceMark(descriptorArray, livenessPassed);
+                  return;
+                } else {
+                  isCapturingRef.current = false;
+                  setFaceHint('Blink verified! Hold steady facing the camera...');
+                }
+              } catch (captureErr) {
+                console.error('Error during automatic face capture:', captureErr);
+                isCapturingRef.current = false;
+              }
             }
           }
         } catch {
@@ -428,7 +484,7 @@ export const MarkAttendancePage: React.FC = () => {
       }
 
       if (isActive && !hasCaptured) {
-        animTimer = window.setTimeout(detectFrame, 100);
+        animTimer = window.setTimeout(detectFrame, 80);
       }
     }
 
@@ -440,6 +496,49 @@ export const MarkAttendancePage: React.FC = () => {
     };
   }, [step, cameraActive, modelsReady, submitAttendanceMark]);
 
+  // Manual capture fallback: extract actual webcam facial descriptor directly
+  const handleManualCapture = useCallback(async () => {
+    if (!videoRef.current || !modelsReady || isCapturingRef.current) return;
+    isCapturingRef.current = true;
+    setFaceHint('Capturing facial biometric...');
+
+    try {
+      let descriptorArray: number[] | null = null;
+      const singleDetection = await faceapi
+        .detectSingleFace(
+          videoRef.current,
+          new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 })
+        )
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      if (singleDetection?.descriptor && singleDetection.descriptor.length === 128) {
+        descriptorArray = Array.from(singleDetection.descriptor);
+      } else {
+        const allDetections = await faceapi
+          .detectAllFaces(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 })
+          )
+          .withFaceLandmarks()
+          .withFaceDescriptors();
+        if (allDetections.length > 0 && allDetections[0].descriptor?.length === 128) {
+          descriptorArray = Array.from(allDetections[0].descriptor);
+        }
+      }
+
+      if (descriptorArray) {
+        submitAttendanceMark(descriptorArray, detectorRef.current.passed);
+      } else {
+        isCapturingRef.current = false;
+        setFaceHint('Face not clearly detected. Please look directly into the camera.');
+      }
+    } catch (err) {
+      isCapturingRef.current = false;
+      setFaceHint('Capture error. Please try again.');
+    }
+  }, [modelsReady, submitAttendanceMark]);
+
   // Simulation mode for headless or camera-less testing
   const handleSimulateBlinkCapture = () => {
     // Generate a synthetic 128-dimensional vector
@@ -449,6 +548,7 @@ export const MarkAttendancePage: React.FC = () => {
 
   const handleReset = () => {
     stopCameraStream();
+    isCapturingRef.current = false;
     setCode('');
     setPreCheckError(null);
     setMarkResult(null);
@@ -664,22 +764,27 @@ export const MarkAttendancePage: React.FC = () => {
                 {/* Session Selector or Manual Input */}
                 <div>
                   <label className="text-xs font-medium text-slate-300 mb-1.5 block">
-                    Select Lecture Session or Enter Session UUID
+                    Select Live Session or Enter Session UUID
                   </label>
                   <div className="space-y-2">
-                    {courses && courses.length > 0 && (
+                    {activeSessions && activeSessions.length > 0 ? (
                       <select
                         value={sessionId}
                         onChange={(e) => setSessionId(e.target.value)}
-                        className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                       >
-                        <option value="">-- Choose from enrolled course sessions --</option>
-                        {courses.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.code} — {c.title}
+                        <option value="">-- Choose active lecture session --</option>
+                        {activeSessions.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.course.code} — {s.title} (Active Now)
                           </option>
                         ))}
                       </select>
+                    ) : (
+                      <div className="p-2.5 rounded-md bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                        <span>No live attendance sessions active right now for your courses.</span>
+                        <span className="font-mono text-[10px] text-slate-500">Manual entry below</span>
+                      </div>
                     )}
 
                     <Input
@@ -771,6 +876,29 @@ export const MarkAttendancePage: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Face Enrollment Required Warning for Mode B */}
+            {faceStatus && !faceStatus.enrolled && (
+              <div className="mb-4 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-amber-200">Biometric Profile Required for Mode B</p>
+                    <p className="text-[11px] text-amber-300/80">
+                      You must enroll your face first to use Mode B attendance, or switch to Direct QR check-in.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate('/student/enroll-face')}
+                  className="h-8 text-xs border-amber-500/40 text-amber-200 hover:bg-amber-500/20 flex-shrink-0"
+                >
+                  Enroll Face
+                </Button>
+              </div>
+            )}
+
             <form onSubmit={handleCheckCode} className="space-y-4">
               {preCheckError && (
                 <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
@@ -785,23 +913,29 @@ export const MarkAttendancePage: React.FC = () => {
               {/* Session Selector or Manual Input */}
               <div>
                 <label className="text-xs font-medium text-slate-300 mb-1.5 block">
-                  Select Lecture Session or Enter Session UUID
+                  Select Live Session or Enter Session UUID
                 </label>
                 <div className="space-y-2">
-                  {courses && courses.length > 0 && (
+                  {activeSessions && activeSessions.length > 0 ? (
                     <select
                       value={sessionId}
                       onChange={(e) => setSessionId(e.target.value)}
-                      className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                     >
-                      <option value="">-- Or choose from enrolled course sessions --</option>
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.code} — {c.title}
+                      <option value="">-- Choose active lecture session --</option>
+                      {activeSessions.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.course.code} — {s.title} (Active Now)
                         </option>
                       ))}
                     </select>
+                  ) : (
+                    <div className="p-2.5 rounded-md bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                      <span>No live attendance sessions active right now for your courses.</span>
+                      <span className="font-mono text-[10px] text-slate-500">Manual entry below</span>
+                    </div>
                   )}
+
                   <Input
                     placeholder="Session ID (UUID)"
                     value={sessionId}
@@ -951,15 +1085,37 @@ export const MarkAttendancePage: React.FC = () => {
                     : `Please blink naturally. Auto-capturing (${captureCountdown}s left)`}
                 </span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSimulateBlinkCapture}
-                className="text-[11px] font-mono text-slate-400 hover:text-white h-7 px-2"
+              <Badge
+                variant="outline"
+                className="text-[10px] font-mono border-slate-700 text-slate-400"
               >
-                Skip to test
-              </Button>
+                {blinkDetected ? 'Liveness: OK' : `${captureCountdown}s`}
+              </Badge>
             </div>
+
+            {/* Action Buttons */}
+            {cameraActive && (
+              <div className="w-full flex items-center justify-between gap-3 pt-1">
+                <Button
+                  type="button"
+                  onClick={handleManualCapture}
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs gap-2 h-9 shadow-sm"
+                >
+                  <ScanFace className="w-4 h-4" />
+                  Capture Face & Verify
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSimulateBlinkCapture}
+                  className="text-xs font-mono border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-400 gap-1.5 h-9"
+                  title="Simulate random vector (for offline testing without camera)"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  Simulate
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

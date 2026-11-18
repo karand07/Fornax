@@ -157,12 +157,40 @@ export class AttendanceService {
       throw new Error('Attendance session is closed');
     }
 
+    // Verify student is enrolled in the course
+    const enrollment = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId: session.courseId,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new Error('You are not enrolled in this course');
+    }
+
     // Verify rotating HMAC code (or static session.qrCodeToken as fallback)
     const isRotatingValid = verifyRotatingCode(sessionId, qrCodeToken);
     const isStaticValid = session.qrCodeToken && session.qrCodeToken === qrCodeToken;
 
     if (!isRotatingValid && !isStaticValid) {
       throw new Error('Invalid or expired attendance code. Please check the screen for the current code.');
+    }
+
+    // Reject if record was already reviewed or approved
+    const existing = await prisma.attendanceRecord.findUnique({
+      where: {
+        sessionId_userId: {
+          sessionId,
+          userId,
+        },
+      },
+    });
+
+    if (existing && (existing.status === 'PRESENT' || existing.reviewedBy !== null)) {
+      throw new Error('Attendance has already been marked or confirmed for this session');
     }
 
     return prisma.attendanceRecord.upsert({
@@ -175,6 +203,10 @@ export class AttendanceService {
       update: {
         status: 'PRESENT',
         verifiedBy: 'QR',
+        method: 'QR',
+        codeValid: true,
+        networkOk: true,
+        integrityScore: 1.0,
         timestamp: new Date(),
       },
       create: {
@@ -182,6 +214,10 @@ export class AttendanceService {
         userId,
         status: 'PRESENT',
         verifiedBy: 'QR',
+        method: 'QR',
+        codeValid: true,
+        networkOk: true,
+        integrityScore: 1.0,
       },
       include: {
         user: {
@@ -204,6 +240,20 @@ export class AttendanceService {
       throw new Error('Attendance session is closed');
     }
 
+    // Verify student is enrolled in the course
+    const enrollment = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId: session.courseId,
+        },
+      },
+    });
+
+    if (!enrollment) {
+      throw new Error('You are not enrolled in this course');
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -219,6 +269,19 @@ export class AttendanceService {
       throw new Error('Facial verification failed. Descriptors do not match.');
     }
 
+    const existing = await prisma.attendanceRecord.findUnique({
+      where: {
+        sessionId_userId: {
+          sessionId,
+          userId,
+        },
+      },
+    });
+
+    if (existing && (existing.status === 'PRESENT' || existing.reviewedBy !== null)) {
+      throw new Error('Attendance has already been marked or confirmed for this session');
+    }
+
     return prisma.attendanceRecord.upsert({
       where: {
         sessionId_userId: {
@@ -229,6 +292,10 @@ export class AttendanceService {
       update: {
         status: 'PRESENT',
         verifiedBy: 'FACE',
+        method: 'SELF',
+        codeValid: true,
+        networkOk: true,
+        integrityScore: 1.0,
         timestamp: new Date(),
       },
       create: {
@@ -236,6 +303,10 @@ export class AttendanceService {
         userId,
         status: 'PRESENT',
         verifiedBy: 'FACE',
+        method: 'SELF',
+        codeValid: true,
+        networkOk: true,
+        integrityScore: 1.0,
       },
       include: {
         user: {
@@ -901,8 +972,56 @@ export class AttendanceService {
       },
     });
   }
-}
 
+  async getActiveSessions(userId: string, role: Role) {
+    if (role === Role.STUDENT) {
+      return prisma.classSession.findMany({
+        where: {
+          isActive: true,
+          course: {
+            enrollments: {
+              some: { userId },
+            },
+          },
+        },
+        include: {
+          course: {
+            select: { id: true, code: true, title: true },
+          },
+        },
+        orderBy: { sessionDate: 'desc' },
+      });
+    }
+
+    if (role === Role.TEACHER) {
+      return prisma.classSession.findMany({
+        where: {
+          isActive: true,
+          course: {
+            teacherId: userId,
+          },
+        },
+        include: {
+          course: {
+            select: { id: true, code: true, title: true },
+          },
+        },
+        orderBy: { sessionDate: 'desc' },
+      });
+    }
+
+    // Role.ADMIN
+    return prisma.classSession.findMany({
+      where: { isActive: true },
+      include: {
+        course: {
+          select: { id: true, code: true, title: true },
+        },
+      },
+      orderBy: { sessionDate: 'desc' },
+    });
+  }
+}
 
 export const attendanceService = new AttendanceService();
 

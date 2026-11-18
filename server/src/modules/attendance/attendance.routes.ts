@@ -56,6 +56,20 @@ router.get(
   (req, res) => attendanceController.getSessionById(req, res)
 );
 
+// Active Sessions for Student / Teacher
+router.get(
+  '/active-sessions',
+  authMiddleware,
+  requireRole(Role.STUDENT, Role.TEACHER, Role.ADMIN),
+  (req, res) => attendanceController.getActiveSessions(req, res)
+);
+router.get(
+  '/sessions/active',
+  authMiddleware,
+  requireRole(Role.STUDENT, Role.TEACHER, Role.ADMIN),
+  (req, res) => attendanceController.getActiveSessions(req, res)
+);
+
 // Student Verification Check-Ins
 router.post(
   '/check-in/qr',

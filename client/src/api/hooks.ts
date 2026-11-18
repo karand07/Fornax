@@ -418,6 +418,30 @@ export function useSessionRecords(sessionId: string, isLive: boolean = true) {
   });
 }
 
+export interface ActiveSessionItem {
+  id: string;
+  title: string;
+  sessionDate: string;
+  windowEndsAt?: string | null;
+  isActive: boolean;
+  course: {
+    id: string;
+    code: string;
+    title: string;
+  };
+}
+
+export function useActiveAttendanceSessions() {
+  return useQuery<ActiveSessionItem[]>({
+    queryKey: ['activeAttendanceSessions'],
+    queryFn: async () => {
+      const res = await api.get('/attendance/active-sessions');
+      return res.data;
+    },
+    refetchInterval: 10000,
+  });
+}
+
 export function useScanQRAttendance() {
   const queryClient = useQueryClient();
   return useMutation({

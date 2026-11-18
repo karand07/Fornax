@@ -469,6 +469,23 @@ export class AttendanceController {
       res.status(statusCode).json({ error: msg });
     }
   }
+
+  async getActiveSessions(req: Request, res: Response): Promise<void> {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+    if (!userId || !role) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
+
+    try {
+      const sessions = await attendanceService.getActiveSessions(userId, role);
+      res.status(200).json(sessions);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve active sessions';
+      res.status(500).json({ error: msg });
+    }
+  }
 }
 
 export const attendanceController = new AttendanceController();
