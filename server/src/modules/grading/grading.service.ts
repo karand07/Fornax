@@ -623,7 +623,14 @@ Please provide concise, constructive feedback and an estimated score recommendat
       where: whereClause,
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        assessment: { select: { id: true, title: true, courseId: true } },
+        assessment: {
+          select: {
+            id: true,
+            title: true,
+            courseId: true,
+            course: { select: { id: true, code: true, title: true } },
+          },
+        },
         question: { select: { id: true, prompt: true, maxMarks: true, type: true } },
         grade: true,
       },
@@ -682,6 +689,9 @@ Please provide concise, constructive feedback and an estimated score recommendat
         return {
           submissionId: s.id,
           studentName: `${s.user.firstName} ${s.user.lastName}`.trim(),
+          courseId: s.assessment.courseId,
+          courseCode: s.assessment.course?.code,
+          courseTitle: s.assessment.course?.title,
           assessmentTitle: s.assessment.title,
           questionPrompt: (q.prompt || '').slice(0, 120),
           type: q.type,

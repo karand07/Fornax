@@ -1128,6 +1128,9 @@ export interface TeacherSubmissionDetail {
 export interface ReviewQueueItem {
   submissionId: string;
   studentName: string;
+  courseId?: string;
+  courseCode?: string;
+  courseTitle?: string;
   assessmentTitle: string;
   questionPrompt: string;
   type: string;
