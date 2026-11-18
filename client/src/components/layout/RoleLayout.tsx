@@ -64,10 +64,17 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ children }) => {
                   : 'Institutional Telemetry & Governance'}
               </span>
               <span className="hidden sm:inline-block text-xs text-slate-500">•</span>
-              <Badge variant="outline" className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono border-blue-500/20 text-blue-400 bg-blue-500/5">
-                <Database className="w-3 h-3 text-blue-400" />
-                Database Systems (CS301)
-              </Badge>
+              {user?.role === 'ADMIN' ? (
+                <Badge variant="outline" className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono border-blue-500/20 text-blue-400 bg-blue-500/5">
+                  <Database className="w-3 h-3 text-blue-400" />
+                  Admin Console
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono border-blue-500/20 text-blue-400 bg-blue-500/5">
+                  <Database className="w-3 h-3 text-blue-400" />
+                  Database Systems (CS301)
+                </Badge>
+              )}
             </div>
           </div>
 

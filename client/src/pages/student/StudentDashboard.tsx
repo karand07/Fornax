@@ -42,6 +42,11 @@ import { RiskBadge } from '@/components/profile/RiskBadge';
 import { MasteryRadar, type ConceptMasteryItem } from '@/components/profile/MasteryRadar';
 import { TrendChart, type AssessmentHistoryItem } from '@/components/profile/TrendChart';
 import { RecommendationCard } from '@/components/profile/RecommendationCard';
+import { AdaptivePracticeDialog } from '@/components/profile/AdaptivePracticeDialog';
+import { AdaptiveQuizModal } from '@/components/profile/AdaptiveQuizModal';
+import { StudyNotesDialog } from '@/components/profile/StudyNotesDialog';
+import { ConceptSkillTree } from '@/components/profile/ConceptSkillTree';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ConceptResourceViewer } from '@/components/ConceptResourceViewer';
 import { ProfileSettingsDialog } from '@/components/profile/ProfileSettingsDialog';
 import { formatPercent, masteryBand } from '@/lib/mastery-ui';
@@ -56,6 +61,9 @@ import {
   ShieldCheck,
   AlertCircle,
   RefreshCw,
+  Network,
+  Sparkles,
+  BrainCircuit,
   BookOpen,
   Layers,
   XCircle,
@@ -78,6 +86,9 @@ export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [practiceConcept, setPracticeConcept] = useState<{ id: string; title: string } | null>(null);
+  const [isAdaptiveQuizOpen, setIsAdaptiveQuizOpen] = useState(false);
+  const [notesConcept, setNotesConcept] = useState<{ id?: string; title?: string } | null>(null);
 
   // Active Tab handling
   const rawTab = searchParams.get('tab');
@@ -388,22 +399,33 @@ export const StudentDashboard: React.FC = () => {
             </div>
           </div>
 
-          {courses.length > 1 && (
-            <div className="w-full sm:w-64">
-              <Select value={selectedCourseId} onValueChange={handleCourseChange}>
-                <SelectTrigger className="w-full text-xs">
-                  <SelectValue placeholder="Switch Course" />
-                </SelectTrigger>
-                <SelectContent>
-                  {courses.map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="text-xs">
-                      {c.code} - {c.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <Button
+              size="sm"
+              onClick={() => setIsAdaptiveQuizOpen(true)}
+              className="text-xs h-8 gap-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-sm font-medium"
+            >
+              <BrainCircuit className="w-3.5 h-3.5 text-indigo-200" />
+              <span>AI Dynamic Challenge</span>
+            </Button>
+
+            {courses.length > 1 && (
+              <div className="w-full sm:w-64">
+                <Select value={selectedCourseId} onValueChange={handleCourseChange}>
+                  <SelectTrigger className="w-full text-xs">
+                    <SelectValue placeholder="Switch Course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="text-xs">
+                        {c.code} - {c.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1541,33 +1563,77 @@ export const StudentDashboard: React.FC = () => {
                   variant="student"
                 />
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Your academic standing is continuously updated. Keeping attendance above 75% and concept scores above 70% ensures you remain On Track.
+                  Status is updated automatically after every graded quiz and class attendance review. Keeping attendance above 75% and concept scores above 70% ensures you remain On Track.
                 </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsAdaptiveQuizOpen(true)}
+                  className="w-full text-xs h-8 gap-1.5 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10 font-medium"
+                >
+                  <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+                  Take AI Performance Booster
+                </Button>
               </CardContent>
             </Card>
           )}
 
-          {/* Charts Row */}
+          {/* Charts Row: Concept Progression & Multi-Axis Analytics */}
           {profileLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Skeleton className="h-80 w-full rounded-xl" />
-              <Skeleton className="h-80 w-full rounded-xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-9 w-64 rounded-lg" />
+              <Skeleton className="h-96 w-full rounded-xl" />
             </div>
           ) : profileError ? (
             <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-center text-xs text-destructive">
               Unable to load concept analytics.
             </div>
           ) : profile ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <MasteryRadar
-                concepts={profileConcepts}
-                average={profileMasteryAvg}
-              />
-              <TrendChart
-                history={profileHistory}
-                assessmentAvg={profile.assessmentAvg}
-              />
-            </div>
+            <Tabs defaultValue="skill-tree" className="w-full space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <TabsList className="bg-slate-900 border border-slate-800 p-1">
+                  <TabsTrigger
+                    value="skill-tree"
+                    className="text-xs gap-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium"
+                  >
+                    <Network className="w-3.5 h-3.5" />
+                    Adaptive Skill Tree
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="charts"
+                    className="text-xs gap-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Mastery Radar & Quiz Trends
+                  </TabsTrigger>
+                </TabsList>
+
+                <p className="text-xs text-muted-foreground hidden sm:block">
+                  Explore prerequisite pathways and multi-axis performance analytics
+                </p>
+              </div>
+
+              <TabsContent value="skill-tree" className="m-0 focus-visible:outline-none">
+                <ConceptSkillTree
+                  concepts={profileConcepts}
+                  onStartPractice={(id, title) => setPracticeConcept({ id, title })}
+                  onViewNotes={(id, title) => setNotesConcept({ id, title })}
+                />
+              </TabsContent>
+
+              <TabsContent value="charts" className="m-0 focus-visible:outline-none">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <MasteryRadar
+                    concepts={profileConcepts}
+                    average={profileMasteryAvg}
+                  />
+                  <TrendChart
+                    history={profileHistory}
+                    assessmentAvg={profile.assessmentAvg}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           ) : null}
 
           {/* Detailed Concept Breakdown Table */}
@@ -1637,8 +1703,41 @@ export const StudentDashboard: React.FC = () => {
             <RecommendationCard
               recommendations={profile.recommendations}
               notAssessed={profile.notAssessed}
+              onStartPractice={(conceptId, conceptTitle) =>
+                setPracticeConcept({ id: conceptId, title: conceptTitle })
+              }
+              onViewNotes={(conceptId, conceptTitle) =>
+                setNotesConcept({ id: conceptId, title: conceptTitle })
+              }
             />
           ) : null}
+
+          {/* Interactive Adaptive Practice Drill Dialog */}
+          <AdaptivePracticeDialog
+            isOpen={Boolean(practiceConcept)}
+            conceptId={practiceConcept?.id || null}
+            conceptTitle={practiceConcept?.title}
+            onClose={() => setPracticeConcept(null)}
+          />
+
+          {/* Autonomous AI Adaptive Challenge Quiz Modal */}
+          <AdaptiveQuizModal
+            isOpen={isAdaptiveQuizOpen}
+            studentId={user?.id || ''}
+            courseId={selectedCourseId}
+            courseTitle={selectedCourse?.title}
+            onClose={() => setIsAdaptiveQuizOpen(false)}
+          />
+
+          {/* Personalized High-Yield Study Notes Dialog */}
+          <StudyNotesDialog
+            isOpen={Boolean(notesConcept)}
+            studentId={user?.id || ''}
+            courseId={selectedCourseId}
+            conceptId={notesConcept?.id || null}
+            conceptTitle={notesConcept?.title}
+            onClose={() => setNotesConcept(null)}
+          />
         </div>
       )}
 

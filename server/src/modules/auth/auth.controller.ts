@@ -66,6 +66,61 @@ export class AuthController {
       res.status(404).json({ error: msg });
     }
   }
+
+  async getAllUsers(_req: Request, res: Response): Promise<void> {
+    try {
+      const users = await authService.getAllUsers();
+      res.status(200).json(users);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to retrieve users';
+      res.status(500).json({ error: msg });
+    }
+  }
+
+  async updateUserRole(req: Request, res: Response): Promise<void> {
+    const updateRoleSchema = z.object({
+      role: roleEnum,
+    });
+    const parseResult = updateRoleSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      const error = parseResult.error.errors.map((e) => e.message).join(', ');
+      res.status(400).json({ error });
+      return;
+    }
+
+    try {
+      const updated = await authService.updateUserRole(req.params.id, parseResult.data.role);
+      res.status(200).json(updated);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update user role';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async resetUserFace(req: Request, res: Response): Promise<void> {
+    try {
+      const updated = await authService.resetUserFace(req.params.id);
+      res.status(200).json(updated);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to reset biometric descriptor';
+      res.status(400).json({ error: msg });
+    }
+  }
+
+  async deleteUser(req: Request, res: Response): Promise<void> {
+    try {
+      const requesterId = req.user?.userId;
+      if (!requesterId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const result = await authService.deleteUser(req.params.id, requesterId);
+      res.status(200).json(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete user';
+      res.status(400).json({ error: msg });
+    }
+  }
 }
 
 export const authController = new AuthController();

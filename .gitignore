@@ -6,3 +6,5 @@ build/
 *.log
 storage/
 storage/scans/
+.pgdata/
+

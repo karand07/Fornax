@@ -99,6 +99,76 @@ export class AuthService {
 
     return user;
   }
+
+  async getAllUsers() {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        faceDescriptor: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateUserRole(userId: string, role: Role) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+      },
+    });
+  }
+
+  async resetUserFace(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return prisma.user.update({
+      where: { id: userId },
+      data: { faceDescriptor: null },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        faceDescriptor: true,
+      },
+    });
+  }
+
+  async deleteUser(userId: string, requesterId: string) {
+    if (userId === requesterId) {
+      throw new Error('Administrators cannot delete their own active account');
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const teachingCount = await prisma.course.count({ where: { teacherId: userId } });
+    if (teachingCount > 0) {
+      throw new Error('Cannot delete instructor assigned to active courses. Reassign course instructor first.');
+    }
+
+    await prisma.user.delete({ where: { id: userId } });
+    return { success: true, message: `User ${user.email} successfully deleted` };
+  }
 }
 
 export const authService = new AuthService();

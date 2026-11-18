@@ -11,7 +11,7 @@
     "transcribe:try": "tsx scripts/try-transcribe.ts",
     "ocr:wer": "tsx scripts/ocr-wer.ts",
     "recs:simulate": "tsx scripts/simulate-recs.ts",
-    "test": "tsx --test test/**/*.test.ts",
+    "test": "tsx --test test/*.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts"
