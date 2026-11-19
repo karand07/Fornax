@@ -143,7 +143,8 @@ export const AssessmentBuilderPage: React.FC = () => {
   // Dynamic Rubric Items
   const handleAddRubric = () => {
     if (rubric.length < 8) {
-      setRubric([...rubric, { description: '', marks: 1 }]);
+      const remaining = Math.max(0.5, Math.round((Number(maxMarks) - rubricTotal) * 100) / 100);
+      setRubric([...rubric, { description: '', marks: remaining }]);
     }
   };
 
@@ -159,10 +160,34 @@ export const AssessmentBuilderPage: React.FC = () => {
     setRubric(updated);
   };
 
-  // Calculate rubric total
-  const rubricTotal = rubric.reduce((sum, r) => sum + (Number(r.marks) || 0), 0);
+  // Calculate rubric total with 2-decimal precision to prevent JS float glitches
+  const rubricTotal = Math.round(rubric.reduce((sum, r) => sum + (Number(r.marks) || 0), 0) * 100) / 100;
   const isRubricSumValid =
     type === 'MCQ' || Math.abs(rubricTotal - Number(maxMarks)) < 0.001;
+  const rubricDiff = Math.round((Number(maxMarks) - rubricTotal) * 100) / 100;
+
+  // Auto balance rubric marks across all criteria so sum equals maxMarks
+  const handleAutoBalanceRubric = () => {
+    if (rubric.length === 0) return;
+    const total = Number(maxMarks) || 1;
+    const count = rubric.length;
+    const base = Math.floor((total / count) * 4) / 4 || 0.25;
+    const remainder = Math.round((total - base * (count - 1)) * 100) / 100;
+
+    setRubric(
+      rubric.map((r, i) => ({
+        ...r,
+        marks: i === 0 ? Math.max(0.25, remainder) : base,
+      }))
+    );
+  };
+
+  const handleMaxMarksChange = (val: number) => {
+    setMaxMarks(val);
+    if (rubric.length === 1) {
+      setRubric([{ ...rubric[0], marks: val }]);
+    }
+  };
 
   // Save Question
   const handleSaveQuestion = async (e: React.FormEvent) => {
@@ -247,7 +272,7 @@ export const AssessmentBuilderPage: React.FC = () => {
       } else {
         payload.rubric = rubric.map((r) => ({
           description: r.description.trim(),
-          marks: Number(r.marks),
+          marks: Math.round(Number(r.marks) * 100) / 100,
         }));
       }
 
@@ -681,9 +706,9 @@ export const AssessmentBuilderPage: React.FC = () => {
                   type="number"
                   min={1}
                   max={100}
-                  step={0.5}
+                  step="any"
                   value={maxMarks}
-                  onChange={(e) => setMaxMarks(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => handleMaxMarksChange(parseFloat(e.target.value) || 0)}
                   className="bg-slate-950 border-slate-800 text-slate-100 text-xs font-mono"
                 />
               </div>
@@ -779,7 +804,7 @@ export const AssessmentBuilderPage: React.FC = () => {
                       <span className="text-xs font-semibold text-slate-300">
                         Rubric Criteria (1 to 8)
                       </span>
-                      <div className="mt-0.5">
+                      <div className="mt-0.5 flex items-center gap-2 flex-wrap">
                         <span
                           className={`text-xs font-mono font-bold ${
                             isRubricSumValid
@@ -790,24 +815,49 @@ export const AssessmentBuilderPage: React.FC = () => {
                           Rubric total: {rubricTotal} / {maxMarks} maxMarks
                         </span>
                         {!isRubricSumValid && (
-                          <span className="text-[11px] text-red-400 ml-2">
-                            (Must sum exactly to {maxMarks})
+                          <span className="text-[11px] text-red-400">
+                            ({rubricDiff > 0 ? `Need +${rubricDiff}` : `Exceeds by ${Math.abs(rubricDiff)}`})
                           </span>
+                        )}
+                        {!isRubricSumValid && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handleAutoBalanceRubric}
+                            className="h-6 text-[10px] px-2 border-indigo-700/60 text-indigo-300 hover:bg-indigo-950/50"
+                          >
+                            Auto-balance to {maxMarks}
+                          </Button>
                         )}
                       </div>
                     </div>
 
-                    {rubric.length < 8 && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleAddRubric}
-                        className="text-indigo-400 hover:text-indigo-300 text-xs gap-1 h-7"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Add Criterion
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {rubric.length > 1 && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleAutoBalanceRubric}
+                          className="text-slate-400 hover:text-slate-200 text-xs h-7"
+                          title="Balance marks evenly across criteria"
+                        >
+                          Balance
+                        </Button>
+                      )}
+                      {rubric.length < 8 && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleAddRubric}
+                          className="text-indigo-400 hover:text-indigo-300 text-xs gap-1 h-7"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Add Criterion
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -824,7 +874,7 @@ export const AssessmentBuilderPage: React.FC = () => {
                         <Input
                           type="number"
                           min={0.1}
-                          step={0.5}
+                          step="any"
                           value={r.marks}
                           onChange={(e) =>
                             handleRubricChange(
