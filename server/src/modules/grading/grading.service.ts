@@ -935,6 +935,7 @@ Please provide concise, constructive feedback and an estimated score recommendat
       where: { id: submissionId },
       include: {
         assessment: { include: { course: true } },
+        question: true,
         grade: true,
       },
     });

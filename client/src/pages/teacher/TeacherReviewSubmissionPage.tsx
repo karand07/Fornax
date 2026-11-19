@@ -272,13 +272,13 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
     }
   };
 
-  const isOverrideValid = useMemo(() => {
+  const isOverrideValid = (() => {
     const parsed = parseFloat(overrideMarks);
-    if (isNaN(parsed) || parsed < 0 || parsed > question.maxMarks) return false;
+    if (isNaN(parsed) || parsed < 0 || parsed > (question?.maxMarks ?? 0)) return false;
     if (Math.round(parsed * 100) % 25 !== 0) return false;
     const noteTrimmed = overrideNote.trim();
     return noteTrimmed.length >= 5 && noteTrimmed.length <= 500;
-  }, [overrideMarks, overrideNote, question.maxMarks]);
+  })();
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
