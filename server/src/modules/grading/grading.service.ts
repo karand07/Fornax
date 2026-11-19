@@ -758,12 +758,17 @@ Please provide concise, constructive feedback and an estimated score recommendat
 
     const index = queue.items.findIndex((item) => item.submissionId === currentSubmissionId);
     if (index === -1) {
-      return { prevId: null, nextId: null };
+      return { prevId: null, nextId: null, current: 0, total: queue.total };
     }
 
     const prevId = index > 0 ? queue.items[index - 1].submissionId : null;
     const nextId = index < queue.items.length - 1 ? queue.items[index + 1].submissionId : null;
-    return { prevId, nextId };
+    return {
+      prevId,
+      nextId,
+      current: index + 1,
+      total: queue.total,
+    };
   }
 
   async updateOcrTranscript(
@@ -940,6 +945,7 @@ Please provide concise, constructive feedback and an estimated score recommendat
       where: { id: submissionId },
       include: {
         assessment: { include: { course: true } },
+        question: true,
         grade: true,
       },
     });
@@ -1161,10 +1167,15 @@ Please provide concise, constructive feedback and an estimated score recommendat
   ) {
     const { entityType, entityId } = params;
 
+    let whereClause: any = { entityType, entityId };
+
     if (entityType === 'Submission') {
       const sub = await prisma.submission.findUnique({
         where: { id: entityId },
-        include: { assessment: { include: { course: true } } },
+        include: {
+          assessment: { include: { course: true } },
+          grade: true,
+        },
       });
       if (!sub) {
         const err = new Error('Submission not found');
@@ -1176,6 +1187,13 @@ Please provide concise, constructive feedback and an estimated score recommendat
         (err as any).statusCode = 403;
         throw err;
       }
+
+      whereClause = {
+        OR: [
+          { entityType: 'Submission', entityId: sub.id },
+          ...(sub.grade ? [{ entityType: 'Grade', entityId: sub.grade.id }] : []),
+        ],
+      };
     } else if (entityType === 'Grade') {
       const grade = await prisma.grade.findUnique({
         where: { id: entityId },
@@ -1201,7 +1219,7 @@ Please provide concise, constructive feedback and an estimated score recommendat
     }
 
     const logs = await prisma.auditLog.findMany({
-      where: { entityType, entityId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -1254,9 +1272,7 @@ Please provide concise, constructive feedback and an estimated score recommendat
     const submissions = await prisma.submission.findMany({
       where: {
         assessmentId,
-        question: {
-          type: 'SHORT',
-        },
+        questionId: { not: null },
       },
       include: {
         user: {
@@ -1289,6 +1305,11 @@ Please provide concise, constructive feedback and an estimated score recommendat
           )
         : false;
 
+      const marks = s.grade ? (s.grade.finalMarks ?? s.grade.totalMarks) : s.score;
+      const autoMarks = s.grade ? s.grade.totalMarks : s.score;
+      const finalMarks = s.grade ? (s.grade.finalMarks ?? s.grade.totalMarks) : s.score;
+      const needsReview = s.grade ? s.grade.needsReview : (marks === null);
+
       return {
         id: s.id,
         assessmentId: s.assessmentId,
@@ -1296,11 +1317,13 @@ Please provide concise, constructive feedback and an estimated score recommendat
         student: s.user,
         question: s.question,
         answerText: s.answerText,
-        marks: s.grade ? (s.grade.finalMarks ?? s.grade.totalMarks) : null,
-        autoMarks: s.grade ? s.grade.totalMarks : null,
-        finalMarks: s.grade ? (s.grade.finalMarks ?? s.grade.totalMarks) : null,
+        selectedIndex: s.selectedIndex,
+        scanPath: s.scanPath,
+        marks,
+        autoMarks,
+        finalMarks,
         confidence: s.grade?.confidence ?? null,
-        needsReview: s.grade ? s.grade.needsReview : false,
+        needsReview,
         overridden,
         submittedAt: s.submittedAt,
         gradedAt: s.gradedAt,

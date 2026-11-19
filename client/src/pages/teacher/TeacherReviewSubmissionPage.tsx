@@ -133,14 +133,16 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
     );
   }
 
-  if (loadError || !submission) {
+  if (loadError || !submission || !submission.question) {
     return (
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
         <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
         <h2 className="text-xl font-bold text-slate-100">Unable to load submission</h2>
         <p className="text-sm text-slate-400">
           {(loadError as any)?.response?.data?.error ||
-            'Submission not found or you do not have permission to review it.'}
+            (!submission?.question
+              ? 'Question details are not associated with this submission.'
+              : 'Submission not found or you do not have permission to review it.')}
         </p>
         <Button
           variant="outline"
@@ -154,13 +156,15 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
   }
 
   const { question, student, queue, grade, gradeStale, scanAvailable } = submission;
-  const isHandwritten = question.type === 'HANDWRITTEN';
+  const isHandwritten = question?.type === 'HANDWRITTEN';
 
   const navigateToQueueOrNext = (nextSubId?: string | null) => {
     if (nextSubId) {
       navigate(`/teacher/review/${nextSubId}`);
+    } else if (submission.courseId) {
+      navigate(`/teacher/courses/${submission.courseId}/review`);
     } else {
-      navigate(`/teacher/courses/${submission.assessmentId ? 'all' : 'all'}/review`);
+      navigate('/teacher/courses/all/review');
     }
   };
 
@@ -185,6 +189,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
   };
 
   const handleApprove = async () => {
+    const nextTargetId = queue?.nextId;
     try {
       await approveMutation.mutateAsync(submission.id);
       setNotification({
@@ -192,7 +197,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
         message: 'Grade approved. Moving to next item...',
       });
       setTimeout(() => {
-        navigateToQueueOrNext(queue?.nextId);
+        navigateToQueueOrNext(nextTargetId);
       }, 700);
     } catch (err: any) {
       const msg = err.response?.data?.error || err.message || 'Failed to approve grade';
@@ -246,6 +251,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
       return;
     }
 
+    const nextTargetId = queue?.nextId;
     try {
       await overrideMutation.mutateAsync({
         submissionId: submission.id,
@@ -258,7 +264,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
         message: 'Marks overridden successfully. Moving to next item...',
       });
       setTimeout(() => {
-        navigateToQueueOrNext(queue?.nextId);
+        navigateToQueueOrNext(nextTargetId);
       }, 700);
     } catch (err: any) {
       const msg = err.response?.data?.error || err.message || 'Failed to override marks';
@@ -266,13 +272,13 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
     }
   };
 
-  const isOverrideValid = useMemo(() => {
+  const isOverrideValid = (() => {
     const parsed = parseFloat(overrideMarks);
-    if (isNaN(parsed) || parsed < 0 || parsed > question.maxMarks) return false;
+    if (isNaN(parsed) || parsed < 0 || parsed > (question?.maxMarks ?? 0)) return false;
     if (Math.round(parsed * 100) % 25 !== 0) return false;
     const noteTrimmed = overrideNote.trim();
     return noteTrimmed.length >= 5 && noteTrimmed.length <= 500;
-  }, [overrideMarks, overrideNote, question.maxMarks]);
+  })();
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
@@ -301,7 +307,13 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (submission.courseId) {
+                navigate(`/teacher/courses/${submission.courseId}/review`);
+              } else {
+                navigate('/teacher/courses/all/review');
+              }
+            }}
             className="gap-1.5 border-slate-800 text-slate-300"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -310,7 +322,9 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
           <div className="h-4 w-[1px] bg-slate-800 mx-1 hidden sm:block" />
           {queue && (
             <span className="text-xs text-slate-400 font-mono">
-              Item {queue.current} of {queue.total} pending
+              {queue.current > 0
+                ? `Item ${queue.current} of ${queue.total} pending`
+                : `Reviewed (${queue.total} pending in queue)`}
             </span>
           )}
         </div>
@@ -492,13 +506,17 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
             <CardContent className="p-4 space-y-3">
               <Textarea
                 value={ocrText}
-                onChange={(e) => setOcrText(e.target.value)}
-                placeholder="Transcribed student answer..."
-                className="min-h-[120px] font-mono text-xs bg-slate-950/70 border-slate-800 text-slate-200 focus-visible:ring-indigo-500 leading-relaxed resize-y"
+                onChange={(e) => isHandwritten && setOcrText(e.target.value)}
+                readOnly={!isHandwritten}
+                placeholder={isHandwritten ? 'Transcribed student answer...' : 'No student response submitted.'}
+                className={cn(
+                  'min-h-[120px] font-mono text-xs bg-slate-950/70 border-slate-800 text-slate-200 focus-visible:ring-indigo-500 leading-relaxed resize-y',
+                  !isHandwritten && 'cursor-default opacity-90'
+                )}
               />
 
-              {/* Dirty actions bar */}
-              {isDirty && (
+              {/* Dirty actions bar (for handwritten OCR edits) */}
+              {isDirty && isHandwritten && (
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-950/20 border border-amber-900/50">
                   <span className="text-xs text-amber-300 flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
@@ -601,19 +619,26 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                   <Button
                     type="button"
                     size="sm"
-                    disabled={gradeStale || isDirty || approveMutation.isPending}
+                    disabled={(grade.reviewed && !grade.overridden) || gradeStale || isDirty || approveMutation.isPending}
                     onClick={handleApprove}
                     title={
-                      gradeStale
+                      grade.reviewed && !grade.overridden
+                        ? 'This evaluation is already approved'
+                        : gradeStale
                         ? 'Re-grade first before approving stale transcript'
                         : isDirty
                         ? 'Save or reset transcript changes before approving'
                         : 'Approve AI evaluation'
                     }
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs gap-1.5 shadow-sm shadow-emerald-600/30"
+                    className={cn(
+                      'text-white text-xs gap-1.5 shadow-sm',
+                      grade.reviewed && !grade.overridden
+                        ? 'bg-slate-700 text-slate-300 opacity-80 cursor-default'
+                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+                    )}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Approve
+                    {grade.reviewed && !grade.overridden ? 'Approved' : 'Approve'}
                   </Button>
                 </div>
               }
@@ -646,7 +671,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                       regradeMutation.isPending && 'animate-spin'
                     )}
                   />
-                  Re-grade
+                  {regradeMutation.isPending ? 'Evaluating...' : 'Evaluate with AI'}
                 </Button>
                 <Button
                   type="button"

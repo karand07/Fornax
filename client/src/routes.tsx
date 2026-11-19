@@ -213,6 +213,14 @@ export const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/teacher/review"
+        element={<Navigate to="/teacher/courses/all/review" replace />}
+      />
+      <Route
+        path="/teacher/review-queue"
+        element={<Navigate to="/teacher/courses/all/review" replace />}
+      />
+      <Route
         path="/teacher/review/:submissionId"
         element={
           <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN']}>

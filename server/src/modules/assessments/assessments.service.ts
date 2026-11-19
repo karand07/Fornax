@@ -5,6 +5,7 @@ import { computeMastery, GradedItem } from '../../lib/mastery.js';
 import { getConfidenceLevel } from '../grading/grading.constants.js';
 import { processAndStoreScan, deleteStoredScan } from '../../lib/scan.js';
 import { processHandwrittenSubmissions } from '../grading/transcribe.js';
+import { gradingService } from '../grading/grading.service.js';
 
 export interface McqQuestionInput {
   type: 'MCQ';
@@ -522,6 +523,7 @@ export class AssessmentsService {
 
     const answerMap = new Map(answers.map((a) => [a.questionId, a]));
     const handwrittenSubIds: string[] = [];
+    const shortSubIds: string[] = [];
 
     let txResult;
     try {
@@ -574,7 +576,7 @@ export class AssessmentsService {
             if (ans && ans.answerText && ans.answerText.trim().length > 0) {
               pendingGrading++;
               submissionCount++;
-              await tx.submission.create({
+              const sub = await tx.submission.create({
                 data: {
                   assessmentId,
                   questionId: q.id,
@@ -583,6 +585,7 @@ export class AssessmentsService {
                   submittedAt: new Date(),
                 },
               });
+              shortSubIds.push(sub.id);
             }
             // Questions left unanswered are skipped for SHORT
           } else if (q.type === QuestionType.HANDWRITTEN) {
@@ -636,6 +639,21 @@ export class AssessmentsService {
         handwrittenNeedReview = procResult.needReview;
       } catch (err) {
         console.error('Error in post-submit processHandwrittenSubmissions:', err);
+      }
+    }
+
+    // AFTER commit: auto-grade typed SHORT questions (in non-test runtime)
+    const isTest =
+      process.env.NODE_ENV === 'test' ||
+      process.env.npm_lifecycle_event === 'test' ||
+      Boolean(process.env.NODE_TEST_CONTEXT);
+    if (shortSubIds.length > 0 && !isTest) {
+      for (const subId of shortSubIds) {
+        try {
+          await gradingService.gradeShortOrHandwrittenSubmission(subId);
+        } catch (err: any) {
+          console.error(`Error in post-submit grading for short submission ${subId}:`, err);
+        }
       }
     }
 
