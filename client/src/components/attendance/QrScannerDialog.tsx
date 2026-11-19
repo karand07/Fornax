@@ -338,17 +338,17 @@ export const QrScannerDialog: React.FC<QrScannerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-slate-950 border-slate-800 text-slate-100 shadow-2xl">
-        <DialogHeader className="p-4 pb-2 bg-slate-900/80 border-b border-border/60">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border-slate-200 text-slate-900 shadow-2xl">
+        <DialogHeader className="p-4 pb-3 bg-white border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+            <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 border border-blue-200">
               <QrCode className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-sm font-semibold">
+              <DialogTitle className="text-sm font-bold text-slate-900">
                 Scan Attendance QR Code
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
+              <DialogDescription className="text-xs text-slate-500 font-medium">
                 Point your camera at the instructor&apos;s live QR code on screen
               </DialogDescription>
             </div>
@@ -384,7 +384,7 @@ export const QrScannerDialog: React.FC<QrScannerDialogProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="mt-2 text-xs border-slate-700 hover:bg-slate-800"
+                className="mt-2 text-xs border-slate-700 hover:bg-slate-800 text-white"
                 onClick={startCamera}
               >
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
@@ -444,14 +444,14 @@ export const QrScannerDialog: React.FC<QrScannerDialogProps> = ({
         </div>
 
         {/* Dialog Footer Controls */}
-        <div className="p-3 bg-slate-900/90 border-t border-border/60 flex items-center justify-between">
+        <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {hasMultipleCameras && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-xs h-8 text-slate-300 hover:text-white"
+                className="text-xs h-8 text-slate-700 hover:text-slate-900 hover:bg-slate-200/60 font-medium"
                 onClick={handleSwitchCamera}
                 disabled={!isScanning}
               >
@@ -465,17 +465,17 @@ export const QrScannerDialog: React.FC<QrScannerDialogProps> = ({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className={`text-xs h-8 ${torchOn ? 'text-amber-300 bg-amber-500/10' : 'text-slate-300'}`}
+                className={`text-xs h-8 font-medium ${torchOn ? 'text-amber-700 bg-amber-100/70' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'}`}
                 onClick={toggleTorch}
               >
                 {torchOn ? (
                   <>
-                    <ZapOff className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+                    <ZapOff className="w-3.5 h-3.5 mr-1.5 text-amber-600" />
                     Flash Off
                   </>
                 ) : (
                   <>
-                    <Zap className="w-3.5 h-3.5 mr-1.5" />
+                    <Zap className="w-3.5 h-3.5 mr-1.5 text-slate-600" />
                     Flash On
                   </>
                 )}
@@ -487,7 +487,7 @@ export const QrScannerDialog: React.FC<QrScannerDialogProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            className="text-xs h-8 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 ml-auto"
+            className="text-xs h-8 border-slate-300 text-slate-700 hover:bg-slate-100 ml-auto font-medium"
             onClick={() => onOpenChange(false)}
           >
             Cancel

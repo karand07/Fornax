@@ -103,7 +103,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
           <Badge
             key={reason}
             variant="outline"
-            className="text-[11px] bg-sky-950/40 text-sky-300 border-sky-800/60 inline-flex items-center gap-1"
+            className="text-[11px] bg-sky-50 text-sky-700 border-sky-200 font-semibold inline-flex items-center gap-1"
           >
             <PenTool className="w-3 h-3" />
             <span>Handwritten</span>
@@ -114,7 +114,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
           <Badge
             key={reason}
             variant="outline"
-            className="text-[11px] bg-amber-950/40 text-amber-300 border-amber-800/60 inline-flex items-center gap-1"
+            className="text-[11px] bg-amber-50 text-amber-800 border-amber-200 font-semibold inline-flex items-center gap-1"
           >
             <AlertTriangle className="w-3 h-3" />
             <span>Low confidence</span>
@@ -125,7 +125,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
           <Badge
             key={reason}
             variant="outline"
-            className="text-[11px] bg-purple-950/40 text-purple-300 border-purple-800/60 inline-flex items-center gap-1"
+            className="text-[11px] bg-purple-50 text-purple-700 border-purple-200 font-semibold inline-flex items-center gap-1"
           >
             <AlignLeft className="w-3 h-3" />
             <span>Short answer</span>
@@ -136,7 +136,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
           <Badge
             key={reason}
             variant="outline"
-            className="text-[11px] bg-slate-800 text-slate-300 border-slate-700 inline-flex items-center gap-1"
+            className="text-[11px] bg-slate-100 text-slate-700 border-slate-200 font-semibold inline-flex items-center gap-1"
           >
             <Clock className="w-3 h-3" />
             <span>Ungraded</span>
@@ -147,7 +147,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
           <Badge
             key={reason}
             variant="outline"
-            className="text-[11px] bg-red-950/40 text-red-300 border-red-800/60 inline-flex items-center gap-1"
+            className="text-[11px] bg-rose-50 text-rose-700 border-rose-200 font-semibold inline-flex items-center gap-1"
           >
             <EyeOff className="w-3 h-3" />
             <span>Unreadable</span>
@@ -158,7 +158,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
           <Badge
             key={reason}
             variant="outline"
-            className="text-[11px] bg-red-950/40 text-red-300 border-red-800/60 inline-flex items-center gap-1"
+            className="text-[11px] bg-rose-50 text-rose-700 border-rose-200 font-semibold inline-flex items-center gap-1"
           >
             <XCircle className="w-3 h-3" />
             <span>OCR failed</span>
@@ -166,7 +166,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
         );
       default:
         return (
-          <Badge key={reason} variant="outline" className="text-[11px]">
+          <Badge key={reason} variant="outline" className="text-[11px] bg-slate-100 text-slate-700 border-slate-200 font-semibold">
             {reason}
           </Badge>
         );
@@ -227,32 +227,32 @@ export const TeacherReviewQueuePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Link to={effectiveCourseId ? `/teacher/courses/${effectiveCourseId}/assessments` : '/teacher'}>
-              <Button variant="outline" size="sm" className="gap-1.5 border-slate-800 text-slate-300 hover:text-white">
+              <Button variant="outline" size="sm" className="gap-1.5 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-medium shadow-xs">
                 <ArrowLeft className="w-4 h-4" />
                 {effectiveCourseId ? 'Back to Course' : 'Faculty Dashboard'}
               </Button>
             </Link>
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3 mt-2">
+          <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-3 mt-2">
             <span>Teacher Review Queue</span>
             {currentCourse ? (
-              <Badge variant="secondary" className="font-mono text-xs">
+              <Badge variant="outline" className="font-mono text-xs bg-blue-50 text-blue-700 border-blue-200 font-bold">
                 {currentCourse.code}
               </Badge>
             ) : (
-              <Badge variant="secondary" className="font-mono text-xs">
+              <Badge variant="outline" className="font-mono text-xs bg-slate-100 text-slate-700 border-slate-200 font-bold">
                 All Courses
               </Badge>
             )}
-            <Badge variant="outline" className="text-xs font-mono border-slate-700">
+            <Badge variant="outline" className="text-xs font-mono border-slate-300 text-slate-700 font-semibold">
               {total} {status === 'pending' ? 'Pending Review' : 'Completed'}
             </Badge>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 font-medium">
             Review short-answer & handwritten student submissions flagged for low confidence, transcription edits, or teacher oversight.
           </p>
         </div>
@@ -264,16 +264,16 @@ export const TeacherReviewQueuePage: React.FC = () => {
             onValueChange={(val) => setStatus(val as 'pending' | 'done')}
             className="w-auto"
           >
-            <TabsList className="bg-slate-900 border border-slate-800 h-9">
+            <TabsList className="bg-slate-100 border border-slate-200 p-0.5 h-9 rounded-lg">
               <TabsTrigger
                 value="pending"
-                className="text-xs px-3.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                className="text-xs px-3.5 font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-xs"
               >
                 Pending ({status === 'pending' ? total : ''})
               </TabsTrigger>
               <TabsTrigger
                 value="done"
-                className="text-xs px-3.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                className="text-xs px-3.5 font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-xs"
               >
                 Reviewed ({status === 'done' ? total : ''})
               </TabsTrigger>
@@ -284,49 +284,49 @@ export const TeacherReviewQueuePage: React.FC = () => {
 
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="bg-slate-900/60 border-slate-800">
+        <Card className="bg-white border-slate-200 shadow-xs hover:shadow-sm transition-all rounded-xl">
           <CardContent className="p-3.5">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
               <span>Total Flagged</span>
-              <Inbox className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="p-1 rounded-md bg-blue-50 text-blue-600"><Inbox className="w-3.5 h-3.5" /></span>
             </div>
-            <p className="text-xl font-bold font-mono text-slate-100">{total}</p>
+            <p className="text-2xl font-extrabold font-mono text-slate-900">{total}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/60 border-slate-800">
+        <Card className="bg-white border-amber-200 shadow-xs hover:shadow-sm transition-all rounded-xl">
           <CardContent className="p-3.5">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <div className="flex items-center justify-between text-amber-700 text-xs font-semibold mb-1">
               <span>Low Confidence</span>
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+              <span className="p-1 rounded-md bg-amber-50 text-amber-600"><AlertTriangle className="w-3.5 h-3.5" /></span>
             </div>
-            <p className="text-xl font-bold font-mono text-amber-300">{lowConfidenceCount}</p>
+            <p className="text-2xl font-extrabold font-mono text-amber-600">{lowConfidenceCount}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/60 border-slate-800">
+        <Card className="bg-white border-sky-200 shadow-xs hover:shadow-sm transition-all rounded-xl">
           <CardContent className="p-3.5">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <div className="flex items-center justify-between text-sky-700 text-xs font-semibold mb-1">
               <span>Handwritten</span>
-              <PenTool className="w-3.5 h-3.5 text-sky-400" />
+              <span className="p-1 rounded-md bg-sky-50 text-sky-600"><PenTool className="w-3.5 h-3.5" /></span>
             </div>
-            <p className="text-xl font-bold font-mono text-sky-300">{handwrittenCount}</p>
+            <p className="text-2xl font-extrabold font-mono text-sky-600">{handwrittenCount}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/60 border-slate-800">
+        <Card className="bg-white border-rose-200 shadow-xs hover:shadow-sm transition-all rounded-xl">
           <CardContent className="p-3.5">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+            <div className="flex items-center justify-between text-rose-700 text-xs font-semibold mb-1">
               <span>Unreadable / Failed</span>
-              <EyeOff className="w-3.5 h-3.5 text-rose-400" />
+              <span className="p-1 rounded-md bg-rose-50 text-rose-600"><EyeOff className="w-3.5 h-3.5" /></span>
             </div>
-            <p className="text-xl font-bold font-mono text-rose-300">{ungradedOrUnreadableCount}</p>
+            <p className="text-2xl font-extrabold font-mono text-rose-600">{ungradedOrUnreadableCount}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-xs">
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
           {/* Search bar */}
           <div className="relative min-w-[200px] max-w-[260px]">
@@ -336,21 +336,21 @@ export const TeacherReviewQueuePage: React.FC = () => {
               placeholder="Search student or assessment..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 text-xs bg-slate-950 border-slate-800 text-slate-200"
+              className="h-8 pl-8 text-xs bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white"
             />
           </div>
 
           {/* Course Filter Dropdown */}
           <div className="flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+            <BookOpen className="w-3.5 h-3.5 text-slate-500" />
             <Select
               value={selectedCourseId}
               onValueChange={handleCourseChange}
             >
-              <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-200">
+              <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 text-slate-900 font-medium focus:bg-white">
                 <SelectValue placeholder="Filter by Course" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+              <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-lg">
                 <SelectItem value="all">All Courses</SelectItem>
                 {courses?.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
@@ -364,15 +364,15 @@ export const TeacherReviewQueuePage: React.FC = () => {
           {/* Assessment Filter Dropdown */}
           {assessments && assessments.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <Filter className="w-3.5 h-3.5 text-slate-500" />
               <Select
                 value={selectedAssessmentId}
                 onValueChange={(val) => setSelectedAssessmentId(val)}
               >
-                <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-200">
+                <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 text-slate-900 font-medium focus:bg-white">
                   <SelectValue placeholder="All Assessments" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-lg">
                   <SelectItem value="all">All Assessments</SelectItem>
                   {assessments.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
@@ -390,10 +390,10 @@ export const TeacherReviewQueuePage: React.FC = () => {
               value={selectedReason}
               onValueChange={(val) => setSelectedReason(val)}
             >
-              <SelectTrigger className="w-[160px] h-8 text-xs bg-slate-950 border-slate-800 text-slate-200">
+              <SelectTrigger className="w-[160px] h-8 text-xs bg-slate-50 border-slate-200 text-slate-900 font-medium focus:bg-white">
                 <SelectValue placeholder="All Flag Reasons" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+              <SelectContent className="bg-white border-slate-200 text-slate-900 shadow-lg">
                 <SelectItem value="all">All Flag Reasons</SelectItem>
                 <SelectItem value="LOW_CONFIDENCE">Low Confidence (&lt;70%)</SelectItem>
                 <SelectItem value="HANDWRITTEN">Handwritten Answer</SelectItem>
@@ -412,7 +412,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={handleResetFilters}
-            className="text-xs text-slate-400 hover:text-slate-200 h-8 gap-1 px-2"
+            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 gap-1 px-2 font-semibold"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Reset Filters</span>
@@ -421,23 +421,23 @@ export const TeacherReviewQueuePage: React.FC = () => {
       </div>
 
       {/* Queue Table */}
-      <Card className="bg-slate-900/60 border-slate-800 overflow-hidden shadow-sm">
+      <Card className="bg-white border-slate-200 overflow-hidden shadow-xs rounded-xl">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">
               {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full bg-slate-800/60" />
+                <Skeleton key={i} className="h-12 w-full bg-slate-100" />
               ))}
             </div>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-400">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                 <Inbox className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-semibold text-slate-200">
+              <h3 className="text-base font-bold text-slate-900">
                 {rawItems.length > 0 ? 'No matching submissions' : 'Nothing to review'}
               </h3>
-              <p className="text-xs text-slate-400 max-w-sm">
+              <p className="text-xs text-slate-600 font-medium max-w-sm">
                 {rawItems.length > 0
                   ? 'Try broadening your search term or clearing the selected reason filters.'
                   : status === 'pending'
@@ -449,7 +449,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleResetFilters}
-                  className="text-xs border-slate-700 mt-2"
+                  className="text-xs border-slate-300 text-slate-700 hover:bg-slate-50 mt-2 font-medium"
                 >
                   Clear Filters
                 </Button>
@@ -457,20 +457,20 @@ export const TeacherReviewQueuePage: React.FC = () => {
             </div>
           ) : (
             <Table>
-              <TableHeader className="bg-slate-950/70">
-                <TableRow className="border-slate-800 hover:bg-transparent">
-                  <TableHead className="w-[170px] text-xs text-slate-300 font-semibold">Student</TableHead>
+              <TableHeader className="bg-slate-50/80 border-b border-slate-200">
+                <TableRow className="border-b border-slate-200 hover:bg-transparent">
+                  <TableHead className="w-[170px] text-xs text-slate-700 font-bold">Student</TableHead>
                   {selectedCourseId === 'all' && (
-                    <TableHead className="w-[110px] text-xs text-slate-300 font-semibold">Course</TableHead>
+                    <TableHead className="w-[110px] text-xs text-slate-700 font-bold">Course</TableHead>
                   )}
-                  <TableHead className="w-[170px] text-xs text-slate-300 font-semibold">Assessment</TableHead>
-                  <TableHead className="text-xs text-slate-300 font-semibold">Question</TableHead>
-                  <TableHead className="w-[100px] text-xs text-slate-300 font-semibold">Type</TableHead>
-                  <TableHead className="w-[90px] text-xs text-slate-300 font-semibold">Marks</TableHead>
-                  <TableHead className="w-[130px] text-xs text-slate-300 font-semibold">Confidence</TableHead>
-                  <TableHead className="w-[200px] text-xs text-slate-300 font-semibold">Flag Reasons</TableHead>
-                  <TableHead className="w-[110px] text-xs text-slate-300 font-semibold text-right">Submitted</TableHead>
-                  <TableHead className="w-[80px] text-xs text-slate-300 font-semibold text-right">Action</TableHead>
+                  <TableHead className="w-[170px] text-xs text-slate-700 font-bold">Assessment</TableHead>
+                  <TableHead className="text-xs text-slate-700 font-bold">Question</TableHead>
+                  <TableHead className="w-[100px] text-xs text-slate-700 font-bold">Type</TableHead>
+                  <TableHead className="w-[90px] text-xs text-slate-700 font-bold">Marks</TableHead>
+                  <TableHead className="w-[130px] text-xs text-slate-700 font-bold">Confidence</TableHead>
+                  <TableHead className="w-[200px] text-xs text-slate-700 font-bold">Flag Reasons</TableHead>
+                  <TableHead className="w-[110px] text-xs text-slate-700 font-bold text-right">Submitted</TableHead>
+                  <TableHead className="w-[80px] text-xs text-slate-700 font-bold text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -478,45 +478,45 @@ export const TeacherReviewQueuePage: React.FC = () => {
                   <TableRow
                     key={item.submissionId}
                     onClick={() => navigate(`/teacher/review/${item.submissionId}`)}
-                    className="border-slate-800/80 hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                    className="border-b border-slate-100 hover:bg-blue-50/40 cursor-pointer transition-colors group"
                   >
-                    <TableCell className="font-medium text-xs text-slate-200 group-hover:text-indigo-300">
+                    <TableCell className="font-bold text-xs text-slate-900 group-hover:text-blue-600 transition-colors">
                       {item.studentName}
                     </TableCell>
 
                     {selectedCourseId === 'all' && (
                       <TableCell className="text-xs">
                         <Badge
-                          variant="secondary"
-                          className="font-mono text-[10px] bg-slate-800 text-slate-300 border border-slate-700"
+                          variant="outline"
+                          className="font-mono text-[10px] bg-slate-100 text-slate-700 border border-slate-200 font-semibold"
                         >
                           {item.courseCode || 'Course'}
                         </Badge>
                       </TableCell>
                     )}
 
-                    <TableCell className="text-xs text-slate-300 truncate max-w-[170px]">
+                    <TableCell className="text-xs text-slate-700 font-medium truncate max-w-[170px]">
                       {item.assessmentTitle}
                     </TableCell>
 
-                    <TableCell className="text-xs text-slate-300">
+                    <TableCell className="text-xs text-slate-600">
                       <div className="line-clamp-2">{item.questionPrompt}</div>
                     </TableCell>
 
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] uppercase font-mono ${
+                        className={`text-[10px] uppercase font-mono font-semibold ${
                           item.type === 'HANDWRITTEN'
-                            ? 'border-purple-800 bg-purple-950/30 text-purple-300'
-                            : 'border-slate-700 bg-slate-800/50 text-slate-300'
+                            ? 'border-purple-200 bg-purple-50 text-purple-700'
+                            : 'border-slate-200 bg-slate-100 text-slate-700'
                         }`}
                       >
                         {item.type}
                       </Badge>
                     </TableCell>
 
-                    <TableCell className="text-xs font-mono font-medium text-slate-200">
+                    <TableCell className="text-xs font-mono font-bold text-slate-900">
                       {item.marks !== null ? `${item.marks} / ${item.maxMarks}` : `— / ${item.maxMarks}`}
                     </TableCell>
 
@@ -537,7 +537,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
                       </div>
                     </TableCell>
 
-                    <TableCell className="text-xs text-slate-400 font-mono text-right whitespace-nowrap">
+                    <TableCell className="text-xs text-slate-500 font-mono text-right whitespace-nowrap">
                       {new Date(item.submittedAt).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -550,7 +550,7 @@ export const TeacherReviewQueuePage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-xs text-indigo-400 group-hover:text-indigo-300 group-hover:bg-indigo-500/10 gap-0.5"
+                        className="h-7 px-2.5 text-xs text-blue-600 group-hover:text-white group-hover:bg-blue-600 font-semibold gap-1 rounded-md transition-all shadow-2xs"
                       >
                         <span>Review</span>
                         <ChevronRight className="w-3.5 h-3.5" />

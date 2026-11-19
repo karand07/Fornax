@@ -7,15 +7,15 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-slate-900 border-slate-800 text-slate-100',
+        default: 'bg-card border-border text-foreground',
         destructive:
-          'border-red-900/50 bg-red-950/40 text-red-300 [&>svg]:text-red-400',
+          'border-red-200 bg-red-50 text-red-700 [&>svg]:text-red-600',
         warning:
-          'border-amber-900/50 bg-amber-950/40 text-amber-300 [&>svg]:text-amber-400',
+          'border-amber-200 bg-amber-50 text-amber-800 [&>svg]:text-amber-600',
         info:
-          'border-blue-900/50 bg-blue-950/40 text-blue-300 [&>svg]:text-blue-400',
+          'border-blue-200 bg-blue-50 text-blue-800 [&>svg]:text-blue-600',
         success:
-          'border-emerald-900/50 bg-emerald-950/40 text-emerald-300 [&>svg]:text-emerald-400',
+          'border-emerald-200 bg-emerald-50 text-emerald-800 [&>svg]:text-emerald-600',
       },
     },
     defaultVariants: {

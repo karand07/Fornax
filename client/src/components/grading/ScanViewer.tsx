@@ -59,15 +59,15 @@ export const ScanViewer: React.FC<ScanViewerProps> = ({ submissionId, className 
 
   return (
     <div
-      className={`flex flex-col h-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden ${
+      className={`flex flex-col h-full bg-white border border-slate-200 rounded-lg overflow-hidden shadow-xs ${
         className || ''
       }`}
     >
       {/* Control bar */}
-      <div className="flex items-center justify-between px-3 py-2 bg-slate-950/70 border-b border-slate-800 text-xs text-slate-300">
-        <span className="font-medium text-slate-400">Handwritten Scan</span>
+      <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200 text-xs text-slate-700">
+        <span className="font-semibold text-slate-800">Handwritten Scan</span>
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-slate-400 font-mono mr-1">
+          <span className="text-[11px] text-slate-500 font-mono mr-1">
             {Math.round(zoom * 100)}%
           </span>
           <Button
@@ -76,7 +76,7 @@ export const ScanViewer: React.FC<ScanViewerProps> = ({ submissionId, className 
             size="sm"
             onClick={handleZoomOut}
             disabled={loading || !!error || zoom <= 0.5}
-            className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-slate-800"
+            className="h-7 w-7 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             title="Zoom Out"
             aria-label="Zoom Out"
           >
@@ -88,7 +88,7 @@ export const ScanViewer: React.FC<ScanViewerProps> = ({ submissionId, className 
             size="sm"
             onClick={handleZoomIn}
             disabled={loading || !!error || zoom >= 3}
-            className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-slate-800"
+            className="h-7 w-7 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             title="Zoom In"
             aria-label="Zoom In"
           >
@@ -100,7 +100,7 @@ export const ScanViewer: React.FC<ScanViewerProps> = ({ submissionId, className 
             size="sm"
             onClick={handleFit}
             disabled={loading || !!error}
-            className="h-7 px-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+            className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             title="Fit to view"
           >
             <RotateCcw className="w-3 h-3 mr-1" />
@@ -110,16 +110,16 @@ export const ScanViewer: React.FC<ScanViewerProps> = ({ submissionId, className 
       </div>
 
       {/* Image Pan/Scroll Container */}
-      <div className="relative flex-1 overflow-auto p-4 bg-slate-950/40 flex items-center justify-center min-h-[300px]">
+      <div className="relative flex-1 overflow-auto p-4 bg-slate-100/60 flex items-center justify-center min-h-[300px]">
         {loading && (
-          <div className="flex flex-col items-center gap-2 text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+          <div className="flex flex-col items-center gap-2 text-slate-500">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
             <span className="text-xs">Loading scan image...</span>
           </div>
         )}
 
         {error && (
-          <div className="flex flex-col items-center gap-2 text-red-400 text-center max-w-xs">
+          <div className="flex flex-col items-center gap-2 text-rose-600 text-center max-w-xs">
             <AlertCircle className="w-6 h-6" />
             <span className="text-xs">{error}</span>
           </div>
@@ -136,7 +136,7 @@ export const ScanViewer: React.FC<ScanViewerProps> = ({ submissionId, className 
             <img
               src={blobUrl}
               alt="Handwritten student scan"
-              className="max-w-full rounded shadow-md border border-slate-700/60 object-contain select-none"
+              className="max-w-full rounded shadow-md border border-slate-200 object-contain select-none bg-white"
               draggable={false}
             />
           </div>

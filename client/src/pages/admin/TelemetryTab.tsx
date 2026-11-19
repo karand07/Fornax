@@ -88,7 +88,7 @@ export const TelemetryTab: React.FC<TelemetryTabProps> = ({ overview, isLoading 
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={roleChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} />
                 <YAxis
                   stroke="#64748b"
@@ -98,13 +98,14 @@ export const TelemetryTab: React.FC<TelemetryTabProps> = ({ overview, isLoading 
                   axisLine={false}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(255, 255, 255, 0.03)' }}
+                  cursor={{ fill: 'rgba(0, 0, 0, 0.03)' }}
                   contentStyle={{
-                    backgroundColor: '#0f172a',
-                    borderColor: '#334155',
+                    backgroundColor: '#ffffff',
+                    borderColor: '#e2e8f0',
                     borderRadius: '6px',
                     fontSize: '12px',
-                    color: '#f8fafc',
+                    color: '#0f172a',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                   }}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>

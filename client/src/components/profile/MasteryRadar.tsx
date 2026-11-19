@@ -84,16 +84,16 @@ export function MasteryRadar({ concepts, average, className = '' }: MasteryRadar
           <div className="w-full h-[280px] min-h-[280px] min-w-0">
             <ResponsiveContainer width="100%" height={280} minWidth={0}>
               <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-                <PolarGrid stroke="#334155" strokeDasharray="3 3" />
+                <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
                 <PolarAngleAxis
                   dataKey="name"
-                  tick={{ fill: '#94a3b8', fontSize: 11 }}
+                  tick={{ fill: '#64748b', fontSize: 11 }}
                 />
                 <PolarRadiusAxis
                   angle={90}
                   domain={[0, 100]}
                   tick={{ fill: '#64748b', fontSize: 10 }}
-                  stroke="#334155"
+                  stroke="#cbd5e1"
                 />
                 <Radar
                   name="Mastery"

@@ -358,9 +358,9 @@ export const StudentDashboard: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate('/student/mark-attendance?mode=qr&scan=true')}
-            className="text-xs font-semibold gap-1.5 border-border bg-slate-900/60 hover:bg-slate-800 text-slate-200"
+            className="text-xs font-semibold gap-1.5 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-xs"
           >
-            <QrCode className="w-3.5 h-3.5 text-blue-400" />
+            <QrCode className="w-3.5 h-3.5 text-blue-600" />
             <span>Scan QR</span>
           </Button>
 
@@ -1157,9 +1157,9 @@ export const StudentDashboard: React.FC = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => navigate('/student/mark-attendance?mode=qr&scan=true')}
-                className="text-xs font-semibold gap-1.5 border-border bg-slate-900/60 hover:bg-slate-800 text-slate-200 h-8"
+                className="text-xs font-semibold gap-1.5 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 h-8 shadow-xs"
               >
-                <QrCode className="w-3.5 h-3.5 text-blue-400" />
+                <QrCode className="w-3.5 h-3.5 text-blue-600" />
                 <span>Scan QR</span>
               </Button>
 
@@ -1591,17 +1591,17 @@ export const StudentDashboard: React.FC = () => {
           ) : profile ? (
             <Tabs defaultValue="skill-tree" className="w-full space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <TabsList className="bg-slate-900 border border-slate-800 p-1">
+                <TabsList className="bg-slate-100 border border-slate-200 p-1">
                   <TabsTrigger
                     value="skill-tree"
-                    className="text-xs gap-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium"
+                    className="text-xs gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
                   >
                     <Network className="w-3.5 h-3.5" />
                     Adaptive Skill Tree
                   </TabsTrigger>
                   <TabsTrigger
                     value="charts"
-                    className="text-xs gap-1.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-medium"
+                    className="text-xs gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     Mastery Radar & Quiz Trends

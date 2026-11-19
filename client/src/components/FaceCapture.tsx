@@ -340,20 +340,20 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
   };
 
   return (
-    <Card className="max-w-lg mx-auto border-border bg-card shadow-xl overflow-hidden">
-      <CardHeader className="text-center pb-3 border-b border-border/50">
-        <div className="mx-auto w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-2">
+    <Card className="max-w-lg mx-auto border-slate-200 bg-white shadow-xs overflow-hidden">
+      <CardHeader className="text-center pb-3 border-b border-slate-100">
+        <div className="mx-auto w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 mb-2">
           <ScanFace className="w-5 h-5" />
         </div>
-        <CardTitle className="text-lg font-semibold flex items-center justify-center gap-2">
+        <CardTitle className="text-lg font-bold text-slate-900 flex items-center justify-center gap-2">
           {title}
         </CardTitle>
-        <CardDescription className="text-xs max-w-sm mx-auto">{description}</CardDescription>
+        <CardDescription className="text-xs text-slate-500 font-medium max-w-sm mx-auto">{description}</CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-col items-center gap-4 pt-4">
         {/* Video / Canvas Viewport */}
-        <div className="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-border flex items-center justify-center shadow-inner">
+        <div className="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center shadow-inner">
           <video
             ref={videoRef}
             autoPlay
@@ -373,15 +373,15 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           {!streamActive && (
             <div className="text-center p-6 text-slate-500 text-sm space-y-2">
               <Camera className="w-10 h-10 mx-auto opacity-30 text-slate-400 animate-pulse" />
-              <p className="text-xs text-slate-400">Camera preview inactive or blocked</p>
+              <p className="text-xs text-slate-400 font-medium">Camera preview inactive or blocked</p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSimulateCapture}
                 disabled={capturing || disabled}
-                className="text-xs font-mono mt-2 border-slate-700 bg-slate-900/80 hover:bg-slate-800"
+                className="text-xs font-mono mt-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-xs"
               >
-                <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+                <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
                 Run 3-Frame Simulation (Demo)
               </Button>
             </div>
@@ -417,8 +417,8 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           {/* Visual Target Reticle */}
           {streamActive && !faceDetected && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className="w-44 h-56 border-2 border-dashed border-blue-500/30 rounded-2xl flex items-center justify-center">
-                <span className="text-[10px] uppercase font-mono tracking-wider text-blue-400/60">
+              <div className="w-44 h-56 border-2 border-dashed border-blue-500/40 rounded-2xl flex items-center justify-center">
+                <span className="text-[10px] uppercase font-mono tracking-wider text-blue-400/80 font-bold">
                   Target Zone
                 </span>
               </div>
@@ -432,10 +432,10 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
         </div>
 
         {/* 3-Frame Capture Stepper */}
-        <div className="w-full bg-slate-900/60 border border-border/80 rounded-lg p-3">
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-2xs">
           <div className="flex items-center justify-between text-xs mb-2">
-            <span className="font-medium text-slate-300">Biometric Sampling Progress</span>
-            <span className="font-mono text-slate-400">{capturedFramesCount} / 3 Frames</span>
+            <span className="font-bold text-slate-800">Biometric Sampling Progress</span>
+            <span className="font-mono text-slate-500 font-semibold">{capturedFramesCount} / 3 Frames</span>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -448,18 +448,18 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
                   key={frameNum}
                   className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md border text-xs font-mono transition-all ${
                     isDone
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-medium'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-2xs'
                       : isCurrent
-                      ? 'bg-blue-500/15 border-blue-500/50 text-blue-300 animate-pulse'
-                      : 'bg-slate-900 border-slate-800 text-slate-500'
+                      ? 'bg-blue-50 border-blue-400 text-blue-800 font-bold animate-pulse'
+                      : 'bg-white border-slate-200 text-slate-400 font-medium'
                   }`}
                 >
                   {isDone ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   ) : isCurrent ? (
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
                   ) : (
-                    <span className="w-3.5 h-3.5 text-center text-[10px] leading-none">○</span>
+                    <span className="w-3.5 h-3.5 text-center text-[10px] leading-none text-slate-400">○</span>
                   )}
                   <span>Frame {frameNum}</span>
                 </div>
@@ -468,14 +468,14 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
           </div>
 
           {capturing && (
-            <p className="text-[11px] text-center text-blue-400 font-mono mt-2 animate-pulse">
+            <p className="text-[11px] text-center text-blue-700 font-mono mt-2 animate-pulse font-semibold">
               Extracting frame {captureStep} of 3... Hold steady
             </p>
           )}
 
           {capturedSuccess && (
-            <p className="text-[11px] text-center text-emerald-400 font-mono mt-2 flex items-center justify-center gap-1">
-              <CheckCircle2 className="w-3 h-3" />
+            <p className="text-[11px] text-center text-emerald-700 font-mono mt-2 flex items-center justify-center gap-1 font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
               3 frames captured & descriptors averaged (128-dim vector)
             </p>
           )}
@@ -483,17 +483,17 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
 
         {/* Error message */}
         {(error || modelLoadingError) && (
-          <div className="w-full flex items-start gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-md">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div className="w-full flex items-start gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-300 p-2.5 rounded-md font-medium">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p>{error || modelLoadingError}</p>
               {!streamActive && (
                 <button
                   type="button"
                   onClick={handleSimulateCapture}
-                  className="mt-1 text-blue-400 hover:underline flex items-center gap-1 text-[11px]"
+                  className="mt-1 text-blue-700 font-semibold hover:underline flex items-center gap-1 text-[11px]"
                 >
-                  <Sparkles className="w-3 h-3" />
+                  <Sparkles className="w-3 h-3 text-amber-600" />
                   Click here to run demo simulation without webcam
                 </button>
               )}
@@ -508,7 +508,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               type="button"
               variant="outline"
               onClick={handleReset}
-              className="w-full text-xs border-slate-700 hover:bg-slate-800 text-slate-200"
+              className="w-full text-xs border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold shadow-xs"
             >
               <RotateCcw className="w-3.5 h-3.5 mr-2" />
               Retake Biometric Frames
@@ -519,7 +519,7 @@ export const FaceCapture: React.FC<FaceCaptureProps> = ({
               onClick={handleCapture3Frames}
               disabled={capturing || disabled || !modelsReady || !streamActive}
               variant="default"
-              className="w-full"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
             >
               {capturing ? (
                 <>

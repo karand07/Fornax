@@ -24,11 +24,11 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
         <Badge
           variant="outline"
           className={cn(
-            'gap-1.5 border-emerald-500/40 bg-emerald-950/40 text-emerald-300 font-medium text-xs py-0.5 px-2.5',
+            'gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold text-xs py-0.5 px-2.5',
             className
           )}
         >
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
           <span>High confidence{percentText}</span>
         </Badge>
       );
@@ -37,11 +37,11 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
         <Badge
           variant="outline"
           className={cn(
-            'gap-1.5 border-amber-500/40 bg-amber-950/40 text-amber-300 font-medium text-xs py-0.5 px-2.5',
+            'gap-1.5 border-amber-300 bg-amber-50 text-amber-800 font-semibold text-xs py-0.5 px-2.5',
             className
           )}
         >
-          <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
+          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
           <span>Medium confidence{percentText}</span>
         </Badge>
       );
@@ -51,11 +51,11 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
         <Badge
           variant="outline"
           className={cn(
-            'gap-1.5 border-rose-500/40 bg-rose-950/40 text-rose-300 font-medium text-xs py-0.5 px-2.5',
+            'gap-1.5 border-rose-300 bg-rose-50 text-rose-800 font-semibold text-xs py-0.5 px-2.5',
             className
           )}
         >
-          <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" aria-hidden="true" />
+          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" aria-hidden="true" />
           <span>Low confidence{percentText}</span>
         </Badge>
       );

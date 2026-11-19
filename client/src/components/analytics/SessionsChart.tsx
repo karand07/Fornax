@@ -86,16 +86,16 @@ export function SessionsChart({ sessions }: SessionsChartProps) {
                 data={chartData}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: '#94a3b8', fontSize: 11 }}
-                  stroke="#334155"
+                  tick={{ fill: '#64748b', fontSize: 11 }}
+                  stroke="#cbd5e1"
                 />
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fill: '#94a3b8', fontSize: 11 }}
-                  stroke="#334155"
+                  tick={{ fill: '#64748b', fontSize: 11 }}
+                  stroke="#cbd5e1"
                 />
                 <Tooltip
                   content={({ active, payload }) => {

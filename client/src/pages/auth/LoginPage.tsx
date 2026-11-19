@@ -49,36 +49,36 @@ export const LoginPage: React.FC = () => {
           <div className="mx-auto w-12 h-12 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm">
             <GraduationCap className="w-6 h-6" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-slate-100">Fornax Academic Hub</CardTitle>
-          <CardDescription>Sign in to your academic portal account</CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">Fornax Academic Hub</CardTitle>
+          <CardDescription className="text-slate-600 font-medium">Sign in to your academic portal account</CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="p-3 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-md flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div className="p-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
                 <span>{error}</span>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Email Address</label>
+              <label className="text-xs font-semibold text-slate-700">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
+                <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                 <Input
                   type="email"
                   placeholder="name@fornax.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 bg-white border-slate-200 text-slate-900"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Password</label>
+              <label className="text-xs font-semibold text-slate-700">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                 <Input
@@ -136,10 +136,10 @@ export const LoginPage: React.FC = () => {
           </div>
         </CardContent>
 
-        <CardFooter className="justify-center border-t border-border pt-4">
-          <p className="text-xs text-slate-400">
+        <CardFooter className="justify-center border-t border-slate-200 pt-4">
+          <p className="text-xs text-slate-600 font-medium">
             Don't have an account?{' '}
-            <Link to="/register" className="text-blue-400 hover:underline font-medium">
+            <Link to="/register" className="text-blue-600 hover:underline font-semibold">
               Create an account
             </Link>
           </p>

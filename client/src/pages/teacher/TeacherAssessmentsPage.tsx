@@ -82,10 +82,10 @@ export const TeacherAssessmentsPage: React.FC = () => {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-100">Course Assessments</h1>
+              <h1 className="text-xl font-bold text-slate-900">Course Assessments</h1>
               {course && <Badge variant="default">{course.code}</Badge>}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               {courseLoading ? 'Loading course details...' : course?.title || 'Manage exams, quizzes, and auto-grading'}
             </p>
           </div>
@@ -205,7 +205,7 @@ export const TeacherAssessmentsPage: React.FC = () => {
           {assessments.map((a: AssessmentListItem) => (
             <Card
               key={a.id}
-              className="border-slate-800 bg-slate-900/70 hover:border-slate-700 transition-all flex flex-col justify-between"
+              className="border-slate-200/90 bg-white shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between"
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -213,45 +213,45 @@ export const TeacherAssessmentsPage: React.FC = () => {
                     variant={a.published ? 'default' : 'outline'}
                     className={
                       a.published
-                        ? 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60 hover:bg-emerald-900/80'
-                        : 'bg-amber-950/40 text-amber-400 border-amber-800/50'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-semibold'
+                        : 'bg-amber-50 text-amber-800 border-amber-300 font-semibold'
                     }
                   >
                     {a.published ? (
                       <span className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Published
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Published
                       </span>
                     ) : (
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Draft
+                        <Clock className="w-3 h-3 text-amber-600" /> Draft
                       </span>
                     )}
                   </Badge>
-                  <span className="text-[11px] font-mono text-slate-500">
+                  <span className="text-[11px] font-mono text-slate-500 font-medium">
                     ID: {a.id.slice(0, 8)}
                   </span>
                 </div>
-                <CardTitle className="text-base font-semibold text-slate-100 line-clamp-1">
+                <CardTitle className="text-base font-bold text-slate-900 line-clamp-1">
                   {a.title}
                 </CardTitle>
-                <CardDescription className="text-xs text-slate-400 flex items-center gap-4 mt-2">
-                  <span className="flex items-center gap-1 text-slate-300">
-                    <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                <CardDescription className="text-xs text-slate-600 flex items-center gap-4 mt-2">
+                  <span className="flex items-center gap-1 text-slate-700 font-medium">
+                    <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
                     {a.questionCount} {a.questionCount === 1 ? 'Question' : 'Questions'}
                   </span>
-                  <span className="flex items-center gap-1 text-slate-300">
-                    <Users className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="flex items-center gap-1 text-slate-700 font-medium">
+                    <Users className="w-3.5 h-3.5 text-slate-500" />
                     {a.submissionCount ?? 0} Submissions
                   </span>
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+              <CardContent className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                 <Link to={`/teacher/assessments/${a.id}`} className="flex-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full text-xs border-slate-700 hover:border-indigo-500 hover:text-indigo-300 gap-1.5"
+                    className="w-full text-xs border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 font-semibold gap-1.5 shadow-2xs"
                   >
                     {a.published ? 'Builder & Key' : 'Author Questions'}
                     <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-70" />

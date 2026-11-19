@@ -57,15 +57,15 @@ export const TeacherSubmissionsPage: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Link to={assessment?.courseId ? `/teacher/courses/${assessment.courseId}/assessments` : '/teacher'}>
-              <Button variant="outline" size="sm" className="gap-1.5 border-slate-800 text-slate-300">
+              <Button variant="outline" size="sm" className="gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50 font-medium shadow-2xs">
                 <ArrowLeft className="w-4 h-4" /> Back to Assessments
               </Button>
             </Link>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2 mt-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 flex items-center gap-2 mt-2">
             <span>{assessment?.title || 'Assessment'} Submissions</span>
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 font-medium">
             Instructor Grade Review: All short-form responses with AI criterion scoring and explainable evidence.
           </p>
         </div>
@@ -92,11 +92,11 @@ export const TeacherSubmissionsPage: React.FC = () => {
             onClick={() => setFilter('NEEDS_REVIEW')}
             className={`text-xs gap-1.5 ${
               filter === 'NEEDS_REVIEW'
-                ? 'bg-amber-600 hover:bg-amber-500'
-                : 'text-amber-300 border-amber-900/40 hover:bg-amber-950/20'
+                ? 'bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-xs'
+                : 'text-amber-800 border-amber-300 bg-amber-50/60 hover:bg-amber-100 font-semibold'
             }`}
           >
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
             <span>Needs Review</span>
             {needsReviewCount > 0 && (
               <Badge className="ml-1 text-[11px] px-1.5 py-0 bg-amber-500 text-slate-950 font-bold">
@@ -119,22 +119,22 @@ export const TeacherSubmissionsPage: React.FC = () => {
       {/* Loading Skeletons */}
       {isLoading && (
         <div className="space-y-3">
-          <Skeleton className="h-20 w-full rounded-xl bg-slate-900" />
-          <Skeleton className="h-20 w-full rounded-xl bg-slate-900" />
-          <Skeleton className="h-20 w-full rounded-xl bg-slate-900" />
+          <Skeleton className="h-20 w-full rounded-xl bg-slate-200" />
+          <Skeleton className="h-20 w-full rounded-xl bg-slate-200" />
+          <Skeleton className="h-20 w-full rounded-xl bg-slate-200" />
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && filteredSubmissions.length === 0 && (
-        <Card className="border border-slate-800 bg-slate-900/40 p-12 text-center space-y-3">
-          <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-          <h3 className="text-base font-semibold text-slate-200">
+        <Card className="border border-slate-200 bg-white p-12 text-center space-y-3 shadow-xs">
+          <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+          <h3 className="text-base font-bold text-slate-900">
             {filter === 'NEEDS_REVIEW'
               ? 'No submissions pending review'
               : 'No short answer submissions yet'}
           </h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <p className="text-xs text-slate-600 max-w-sm mx-auto">
             {filter === 'NEEDS_REVIEW'
               ? 'All AI evaluations have high confidence scores or have already been verified.'
               : 'When students submit responses to SHORT questions in this assessment, they will appear here.'}
@@ -153,44 +153,44 @@ export const TeacherSubmissionsPage: React.FC = () => {
             return (
               <div
                 key={sub.id}
-                className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700/80 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="p-4 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 {/* Student Info & Question snippet */}
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-sm text-slate-100">
+                    <span className="font-bold text-sm text-slate-900">
                       {studentName}
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">
+                    <span className="text-xs text-slate-500 font-mono">
                       ({sub.student.email})
                     </span>
                     {sub.needsReview && (
                       <Badge
                         variant="destructive"
-                        className="gap-1 bg-rose-950/60 text-rose-300 border-rose-500/40 text-[11px] py-0 px-2"
+                        className="gap-1 bg-rose-50 text-rose-700 border-rose-200 text-[11px] font-semibold py-0 px-2"
                       >
-                        <AlertTriangle className="w-3 h-3 text-rose-400" />
+                        <AlertTriangle className="w-3 h-3 text-rose-600" />
                         Needs review
                       </Badge>
                     )}
                     {sub.overridden && (
                       <Badge
                         variant="outline"
-                        className="gap-1 border-blue-500/40 bg-blue-950/40 text-blue-300 text-[11px] py-0 px-2"
+                        className="gap-1 border-blue-200 bg-blue-50 text-blue-700 text-[11px] font-semibold py-0 px-2"
                       >
-                        <SlidersHorizontal className="w-3 h-3 text-blue-400" />
+                        <SlidersHorizontal className="w-3 h-3 text-blue-600" />
                         Adjusted
                       </Badge>
                     )}
                     {sub.question?.type && (
                       <Badge
                         variant="outline"
-                        className={`text-[10px] font-mono py-0 px-1.5 ${
+                        className={`text-[10px] font-mono font-semibold py-0 px-1.5 ${
                           sub.question.type === 'HANDWRITTEN'
-                            ? 'border-purple-800 bg-purple-950/30 text-purple-300'
+                            ? 'border-purple-200 bg-purple-50 text-purple-700'
                             : sub.question.type === 'SHORT'
-                            ? 'border-indigo-800 bg-indigo-950/30 text-indigo-300'
-                            : 'border-slate-700 bg-slate-800/50 text-slate-300'
+                            ? 'border-blue-200 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 bg-slate-100 text-slate-700'
                         }`}
                       >
                         {sub.question.type}
@@ -198,17 +198,17 @@ export const TeacherSubmissionsPage: React.FC = () => {
                     )}
                   </div>
 
-                  <p className="text-xs text-slate-300 line-clamp-1">
-                    <span className="text-slate-400 font-medium">Question: </span>
+                  <p className="text-xs text-slate-700 line-clamp-1">
+                    <span className="text-slate-500 font-medium">Question: </span>
                     {sub.question?.prompt}
                   </p>
 
                   {sub.answerText ? (
-                    <p className="text-xs text-slate-400 line-clamp-1 italic">
+                    <p className="text-xs text-slate-500 line-clamp-1 italic">
                       "{sub.answerText}"
                     </p>
                   ) : (sub as any).scanPath ? (
-                    <p className="text-xs text-purple-400/80 line-clamp-1 italic">
+                    <p className="text-xs text-purple-700 line-clamp-1 italic font-medium">
                       Handwritten scan submitted
                     </p>
                   ) : null}
@@ -217,10 +217,10 @@ export const TeacherSubmissionsPage: React.FC = () => {
                 {/* Score & Action */}
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right">
-                    <div className="text-sm font-mono font-bold text-slate-200">
+                    <div className="text-sm font-mono font-bold text-slate-900">
                       {marksDisplay}
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-slate-500 font-medium">
                       {sub.confidence !== null
                         ? `${Math.round(sub.confidence * 100)}% conf`
                         : 'Manual'}
@@ -232,7 +232,7 @@ export const TeacherSubmissionsPage: React.FC = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => setSelectedSubId(sub.id)}
-                      className="gap-1.5 border-slate-700 text-slate-300 hover:text-white text-xs"
+                      className="gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-medium"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>View GradeCard</span>
@@ -242,7 +242,7 @@ export const TeacherSubmissionsPage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="default"
-                        className="gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs"
+                        className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs"
                       >
                         <CheckSquare className="w-3.5 h-3.5" />
                         <span>Full Review</span>
@@ -258,17 +258,17 @@ export const TeacherSubmissionsPage: React.FC = () => {
 
       {/* Submission Detail Modal / Drawer */}
       <Dialog open={selectedSubId !== null} onOpenChange={(open) => !open && setSelectedSubId(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-950 border border-slate-800 text-slate-100 p-6">
-          <DialogHeader className="pb-4 border-b border-slate-800">
-            <DialogTitle className="text-lg font-bold text-slate-100 flex items-center justify-between gap-2">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border border-slate-200 text-slate-900 p-6 shadow-xl">
+          <DialogHeader className="pb-4 border-b border-slate-200">
+            <DialogTitle className="text-lg font-bold text-slate-900 flex items-center justify-between gap-2">
               <span>Teacher Review: {submissionDetail?.student ? `${submissionDetail.student.firstName} ${submissionDetail.student.lastName}` : 'Submission'}</span>
             </DialogTitle>
           </DialogHeader>
 
           {isLoadingDetail && (
             <div className="py-12 space-y-4">
-              <Skeleton className="h-32 w-full rounded-xl bg-slate-900" />
-              <Skeleton className="h-48 w-full rounded-xl bg-slate-900" />
+              <Skeleton className="h-32 w-full rounded-xl bg-slate-200" />
+              <Skeleton className="h-48 w-full rounded-xl bg-slate-200" />
             </div>
           )}
 

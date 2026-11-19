@@ -370,35 +370,35 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
         }
       }}
     >
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-800 text-slate-100 p-6">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white border-slate-200 text-slate-900 p-6 shadow-xl">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/20 text-primary">
+              <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shadow-2xs">
                 <ScanFace className="w-5 h-5" />
               </div>
-              <DialogTitle className="text-xl font-bold">Class Photo Attendance</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-slate-900">Class Photo Attendance</DialogTitle>
             </div>
             {matchResult && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={resetAll}
-                className="text-xs border-slate-700 hover:bg-slate-800"
+                className="text-xs border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-semibold shadow-2xs"
               >
                 <RefreshCw className="w-3.5 h-3.5 mr-1" />
                 New Photo
               </Button>
             )}
           </div>
-          <DialogDescription className="text-slate-400 text-sm">
+          <DialogDescription className="text-slate-500 text-sm font-medium">
             Capture or upload up to 5 photos of the classroom to detect and match enrolled students.
           </DialogDescription>
         </DialogHeader>
 
         {/* Privacy Note */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs">
-          <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
+          <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
           <span>
             Privacy Guarantee: Photos are processed entirely in your browser. Raw images are never
             uploaded or stored on any server.
@@ -406,25 +406,25 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
         </div>
 
         {modelsLoading && (
-          <div className="p-4 rounded-lg bg-slate-800/60 border border-slate-700/60 flex items-center justify-center gap-3 text-slate-300 text-sm">
-            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center gap-3 text-slate-700 text-sm font-medium">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
             <span>Loading biometric facial detection models...</span>
           </div>
         )}
 
         {modelError && (
-          <div className="p-3 rounded-lg bg-red-950/50 border border-red-800 text-red-200 text-sm flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2 font-medium">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{modelError}</span>
           </div>
         )}
 
         {/* Processing Progress */}
         {processingPhoto && (
-          <div className="space-y-2 p-4 rounded-lg bg-slate-800/80 border border-slate-700">
-            <div className="flex justify-between items-center text-xs text-slate-300">
+          <div className="space-y-2 p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <div className="flex justify-between items-center text-xs text-slate-700 font-medium">
               <span className="flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
                 Detecting faces in photo...
               </span>
               <span>{processingProgress}%</span>
@@ -438,30 +438,30 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
           /* RESULT SCREEN */
           <div className="space-y-5">
             {/* Summary Header */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-800/70 border border-slate-700/70">
-              <div className="text-center p-2 rounded-lg bg-emerald-950/30 border border-emerald-800/30">
-                <div className="text-2xl font-bold text-emerald-400">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="text-center p-2 rounded-lg bg-emerald-50 border border-emerald-200 shadow-2xs">
+                <div className="text-2xl font-bold text-emerald-700">
                   {presentMatches.length}
                 </div>
-                <div className="text-xs text-slate-400 font-medium">Present</div>
+                <div className="text-xs text-slate-600 font-semibold">Present</div>
               </div>
-              <div className="text-center p-2 rounded-lg bg-amber-950/30 border border-amber-800/30">
-                <div className="text-2xl font-bold text-amber-400">
+              <div className="text-center p-2 rounded-lg bg-amber-50 border border-amber-200 shadow-2xs">
+                <div className="text-2xl font-bold text-amber-700">
                   {flaggedMatches.length}
                 </div>
-                <div className="text-xs text-slate-400 font-medium">To Review</div>
+                <div className="text-xs text-slate-600 font-semibold">To Review</div>
               </div>
-              <div className="text-center p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                <div className="text-2xl font-bold text-slate-300">
+              <div className="text-center p-2 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                <div className="text-2xl font-bold text-slate-800">
                   {notFoundStudents.length}
                 </div>
-                <div className="text-xs text-slate-400 font-medium">Not Found</div>
+                <div className="text-xs text-slate-600 font-semibold">Not Found</div>
               </div>
-              <div className="text-center p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                <div className="text-2xl font-bold text-purple-400">
+              <div className="text-center p-2 rounded-lg bg-purple-50 border border-purple-200 shadow-2xs">
+                <div className="text-2xl font-bold text-purple-700">
                   {matchResult.unknownFaces}
                 </div>
-                <div className="text-xs text-slate-400 font-medium">Unknown Faces</div>
+                <div className="text-xs text-slate-600 font-semibold">Unknown Faces</div>
               </div>
             </div>
 
@@ -471,26 +471,26 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
               onValueChange={(val) => setResultTab(val as typeof resultTab)}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-3 bg-slate-950 border border-slate-800">
+              <TabsList className="grid grid-cols-3 bg-slate-100 border border-slate-200 p-1">
                 <TabsTrigger
                   value="present"
-                  className="data-[state=active]:bg-emerald-950 data-[state=active]:text-emerald-300 gap-1.5"
+                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white font-semibold gap-1.5"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Present ({presentMatches.length})</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="review"
-                  className="data-[state=active]:bg-amber-950 data-[state=active]:text-amber-300 gap-1.5"
+                  className="data-[state=active]:bg-amber-600 data-[state=active]:text-white font-semibold gap-1.5"
                 >
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  <AlertTriangle className="w-3.5 h-3.5" />
                   <span>Needs Review ({flaggedMatches.length})</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="notfound"
-                  className="data-[state=active]:bg-slate-800 data-[state=active]:text-slate-200 gap-1.5"
+                  className="data-[state=active]:bg-slate-800 data-[state=active]:text-white font-semibold gap-1.5"
                 >
-                  <UserX className="w-3.5 h-3.5 text-slate-400" />
+                  <UserX className="w-3.5 h-3.5" />
                   <span>Not Found ({notFoundStudents.length})</span>
                 </TabsTrigger>
               </TabsList>
@@ -502,35 +502,35 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                     No students met the direct PRESENT threshold (distance &lt; 0.50).
                   </div>
                 ) : (
-                  <div className="border border-slate-800 rounded-lg overflow-hidden">
+                  <div className="border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
                     <Table>
-                      <TableHeader className="bg-slate-950/70">
-                        <TableRow className="border-slate-800">
-                          <TableHead className="text-slate-300">Student Name</TableHead>
-                          <TableHead className="text-slate-300">Biometric Distance</TableHead>
-                          <TableHead className="text-slate-300">Integrity Score</TableHead>
-                          <TableHead className="text-slate-300 text-right">Status</TableHead>
+                      <TableHeader className="bg-slate-50 border-b border-slate-200">
+                        <TableRow className="border-b border-slate-200 hover:bg-transparent">
+                          <TableHead className="text-slate-700 font-bold">Student Name</TableHead>
+                          <TableHead className="text-slate-700 font-bold">Biometric Distance</TableHead>
+                          <TableHead className="text-slate-700 font-bold">Integrity Score</TableHead>
+                          <TableHead className="text-slate-700 font-bold text-right">Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {presentMatches.map((m) => (
-                          <TableRow key={m.studentId} className="border-slate-800">
-                            <TableCell className="font-medium text-slate-200">
+                          <TableRow key={m.studentId} className="border-b border-slate-100 hover:bg-slate-50/50">
+                            <TableCell className="font-bold text-slate-900">
                               {m.name}
                             </TableCell>
-                            <TableCell className="font-mono text-xs text-slate-400">
+                            <TableCell className="font-mono text-xs text-slate-600 font-medium">
                               {m.distance.toFixed(3)}
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
-                                className="bg-emerald-950/30 text-emerald-400 border-emerald-800/50"
+                                className="bg-emerald-50 text-emerald-700 border-emerald-300 font-semibold"
                               >
                                 {Math.round(m.integrityScore * 100)}%
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Badge className="bg-emerald-600 text-white font-semibold">
+                              <Badge className="bg-emerald-600 text-white font-semibold shadow-2xs">
                                 PRESENT
                               </Badge>
                             </TableCell>
@@ -545,32 +545,32 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
               {/* Needs Review Tab */}
               <TabsContent value="review" className="mt-3">
                 {flaggedMatches.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400 border border-dashed border-slate-800 rounded-lg">
+                  <div className="p-8 text-center text-slate-500 border border-dashed border-slate-300 rounded-lg">
                     No flagged records requiring review.
                   </div>
                 ) : (
-                  <div className="border border-slate-800 rounded-lg overflow-hidden">
+                  <div className="border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
                     <Table>
-                      <TableHeader className="bg-slate-950/70">
-                        <TableRow className="border-slate-800">
-                          <TableHead className="text-slate-300">Student Name</TableHead>
-                          <TableHead className="text-slate-300">Biometric Distance</TableHead>
-                          <TableHead className="text-slate-300">Reason</TableHead>
-                          <TableHead className="text-slate-300 text-right">Action</TableHead>
+                      <TableHeader className="bg-slate-50 border-b border-slate-200">
+                        <TableRow className="border-b border-slate-200 hover:bg-transparent">
+                          <TableHead className="text-slate-700 font-bold">Student Name</TableHead>
+                          <TableHead className="text-slate-700 font-bold">Biometric Distance</TableHead>
+                          <TableHead className="text-slate-700 font-bold">Reason</TableHead>
+                          <TableHead className="text-slate-700 font-bold text-right">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {flaggedMatches.map((m) => {
                           const action = reviewedAction[m.recordId];
                           return (
-                            <TableRow key={m.studentId} className="border-slate-800">
-                              <TableCell className="font-medium text-slate-200">
+                            <TableRow key={m.studentId} className="border-b border-slate-100 hover:bg-slate-50/50">
+                              <TableCell className="font-bold text-slate-900">
                                 {m.name}
                               </TableCell>
-                              <TableCell className="font-mono text-xs text-amber-400">
+                              <TableCell className="font-mono text-xs text-amber-700 font-bold">
                                 {m.distance.toFixed(3)}
                               </TableCell>
-                              <TableCell className="text-xs text-slate-400">
+                              <TableCell className="text-xs text-slate-600 font-medium">
                                 Distance 0.50 – 0.60 (borderline match)
                               </TableCell>
                               <TableCell className="text-right">
@@ -578,8 +578,8 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                                   <Badge
                                     className={
                                       action === 'APPROVED'
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-red-600 text-white'
+                                        ? 'bg-emerald-600 text-white font-semibold'
+                                        : 'bg-rose-600 text-white font-semibold'
                                     }
                                   >
                                     {action === 'APPROVED' ? 'Approved' : 'Rejected'}
@@ -591,7 +591,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                                       variant="outline"
                                       disabled={reviewRecordMutation.isPending}
                                       onClick={() => handleApproveRecord(m.recordId)}
-                                      className="h-8 px-2.5 text-xs bg-emerald-950/40 text-emerald-300 border-emerald-800/60 hover:bg-emerald-900/60"
+                                      className="h-8 px-2.5 text-xs bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 font-semibold shadow-2xs"
                                     >
                                       <Check className="w-3.5 h-3.5 mr-1" />
                                       Approve
@@ -601,7 +601,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                                       variant="outline"
                                       disabled={reviewRecordMutation.isPending}
                                       onClick={() => handleRejectRecord(m.recordId)}
-                                      className="h-8 px-2.5 text-xs bg-red-950/40 text-red-300 border-red-800/60 hover:bg-red-900/60"
+                                      className="h-8 px-2.5 text-xs bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 font-semibold shadow-2xs"
                                     >
                                       <X className="w-3.5 h-3.5 mr-1" />
                                       Reject
@@ -625,35 +625,35 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                     All enrolled students were successfully matched!
                   </div>
                 ) : (
-                  <div className="border border-slate-800 rounded-lg overflow-hidden">
+                  <div className="border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
                     <Table>
-                      <TableHeader className="bg-slate-950/70">
-                        <TableRow className="border-slate-800">
-                          <TableHead className="text-slate-300">Enrolled Student</TableHead>
-                          <TableHead className="text-slate-300">Face Status</TableHead>
-                          <TableHead className="text-slate-300 text-right">Manual Action</TableHead>
+                      <TableHeader className="bg-slate-50 border-b border-slate-200">
+                        <TableRow className="border-b border-slate-200 hover:bg-transparent">
+                          <TableHead className="text-slate-700 font-bold">Enrolled Student</TableHead>
+                          <TableHead className="text-slate-700 font-bold">Face Status</TableHead>
+                          <TableHead className="text-slate-700 font-bold text-right">Manual Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {notFoundStudents.map((s) => {
                           const isMarked = markedPresentIds[s.studentId];
                           return (
-                            <TableRow key={s.studentId} className="border-slate-800">
-                              <TableCell className="font-medium text-slate-200">
+                            <TableRow key={s.studentId} className="border-b border-slate-100 hover:bg-slate-50/50">
+                              <TableCell className="font-bold text-slate-900">
                                 {s.name}
                               </TableCell>
                               <TableCell>
                                 {s.hasFaceEnrolled ? (
                                   <Badge
                                     variant="outline"
-                                    className="bg-slate-800/50 text-slate-400 border-slate-700 text-xs"
+                                    className="bg-slate-100 text-slate-600 border-slate-200 text-xs font-semibold"
                                   >
                                     Face Enrolled (Not in Photo)
                                   </Badge>
                                 ) : (
                                   <Badge
                                     variant="outline"
-                                    className="bg-amber-950/30 text-amber-400 border-amber-800/50 text-xs"
+                                    className="bg-amber-50 text-amber-800 border-amber-300 text-xs font-semibold"
                                   >
                                     No face enrolled
                                   </Badge>
@@ -661,7 +661,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                               </TableCell>
                               <TableCell className="text-right">
                                 {isMarked ? (
-                                  <Badge className="bg-emerald-600 text-white">
+                                  <Badge className="bg-emerald-600 text-white font-semibold">
                                     Marked Present
                                   </Badge>
                                 ) : (
@@ -670,9 +670,9 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                                     variant="outline"
                                     disabled={manualAttendanceMutation.isPending}
                                     onClick={() => handleMarkPresent(s.studentId)}
-                                    className="h-8 px-3 text-xs border-slate-700 bg-slate-800/60 hover:bg-slate-700 text-slate-200"
+                                    className="h-8 px-3 text-xs border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-2xs"
                                   >
-                                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-400" />
+                                    <Check className="w-3.5 h-3.5 mr-1 text-emerald-600" />
                                     Mark present
                                   </Button>
                                 )}
@@ -703,7 +703,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
             )}
 
             <div className="flex justify-end pt-2">
-              <Button onClick={onClose} className="bg-primary hover:bg-primary/90 text-white">
+              <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                 Done
               </Button>
             </div>
@@ -716,12 +716,12 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
               onValueChange={(val) => setActiveTab(val as typeof activeTab)}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-2 bg-slate-950 border border-slate-800">
-                <TabsTrigger value="upload" className="gap-2">
+              <TabsList className="grid grid-cols-2 bg-slate-100 border border-slate-200">
+                <TabsTrigger value="upload" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 font-semibold">
                   <Upload className="w-4 h-4" />
                   Upload Photos
                 </TabsTrigger>
-                <TabsTrigger value="camera" className="gap-2">
+                <TabsTrigger value="camera" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-slate-900 font-semibold">
                   <Camera className="w-4 h-4" />
                   Webcam Capture
                 </TabsTrigger>
@@ -729,7 +729,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
 
               {/* Upload Tab */}
               <TabsContent value="upload" className="mt-4 space-y-4">
-                <div className="border-2 border-dashed border-slate-700/80 hover:border-primary/60 rounded-xl p-8 text-center transition-colors bg-slate-950/30">
+                <div className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-8 text-center transition-colors bg-slate-50">
                   <input
                     type="file"
                     id="class-photo-file-input"
@@ -746,13 +746,13 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                       photos.length >= 5 ? 'opacity-50 pointer-events-none' : ''
                     }`}
                   >
-                    <div className="p-3 rounded-full bg-slate-800 text-primary">
+                    <div className="p-3 rounded-full bg-blue-50 text-blue-600">
                       <Upload className="w-6 h-6" />
                     </div>
-                    <div className="text-sm font-medium text-slate-200">
+                    <div className="text-sm font-bold text-slate-900">
                       Click to upload classroom photos
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-slate-500 font-medium">
                       PNG, JPG, WebP up to 5 photos total. Phones will offer camera capture.
                     </div>
                   </label>
@@ -761,7 +761,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
 
               {/* Webcam Tab */}
               <TabsContent value="camera" className="mt-4 space-y-4">
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-slate-800 flex items-center justify-center">
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 border border-slate-200 flex items-center justify-center">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -778,7 +778,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                         size="sm"
                         variant="outline"
                         onClick={startCamera}
-                        className="mt-2 text-xs"
+                        className="mt-2 text-xs bg-white text-slate-900 border-slate-300"
                       >
                         Try Again
                       </Button>
@@ -786,8 +786,8 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                   )}
 
                   {!isCameraActive && !cameraError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-slate-400 text-sm">
-                      <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-slate-300 text-sm">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-2" />
                       Initializing camera...
                     </div>
                   )}
@@ -798,7 +798,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                     type="button"
                     onClick={captureWebcamFrame}
                     disabled={!isCameraActive || photos.length >= 5 || processingPhoto}
-                    className="bg-primary hover:bg-primary/90 text-white gap-2"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-2"
                   >
                     <Camera className="w-4 h-4" />
                     Take Photo ({photos.length}/5)
@@ -811,7 +811,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                       stopCamera();
                       setActiveTab('upload');
                     }}
-                    className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold"
                   >
                     Done taking photos
                   </Button>
@@ -822,9 +822,9 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
             {/* Thumbnail Preview Area */}
             {photos.length > 0 && (
               <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-900">
                   <span>Captured Photos ({photos.length} of 5)</span>
-                  <span className="text-slate-400 font-normal">
+                  <span className="text-slate-500 font-medium">
                     Total faces found:{' '}
                     {photos.reduce((sum, p) => sum + p.facesCount, 0)}
                   </span>
@@ -834,7 +834,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                   {photos.map((photo, idx) => (
                     <div
                       key={photo.id}
-                      className="group relative rounded-lg border border-slate-800 overflow-hidden bg-slate-950 aspect-[4/3]"
+                      className="group relative rounded-lg border border-slate-200 overflow-hidden bg-slate-100 aspect-[4/3] shadow-xs"
                     >
                       <img
                         src={photo.dataUrl}
@@ -845,14 +845,14 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                         <button
                           type="button"
                           onClick={() => removePhoto(photo.id)}
-                          className="self-end p-1 rounded-full bg-black/60 text-slate-300 hover:text-red-400 hover:bg-black/90 transition-colors"
+                          className="self-end p-1 rounded-full bg-black/60 text-white hover:text-red-400 hover:bg-black/90 transition-colors"
                           title="Remove photo"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                         <Badge
                           variant="outline"
-                          className="self-start text-[10px] py-0 px-1.5 bg-black/70 border-slate-700 text-emerald-400"
+                          className="self-start text-[10px] py-0 px-1.5 bg-black/70 border-slate-700 text-emerald-400 font-semibold"
                         >
                           {photo.facesCount} faces found
                         </Badge>
@@ -864,8 +864,8 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
             )}
 
             {/* Run Matching Button */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-              <span className="text-xs text-slate-400">
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+              <span className="text-xs text-slate-600 font-medium">
                 {photos.length === 0
                   ? 'Add at least 1 photo to run facial matching'
                   : `${photos.length} photo(s) ready for facial matching`}
@@ -874,7 +874,7 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
                 type="button"
                 onClick={handleRunMatching}
                 disabled={photos.length === 0 || classPhotoMutation.isPending || processingPhoto}
-                className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold min-w-[140px] shadow-xs"
               >
                 {classPhotoMutation.isPending ? (
                   <>
@@ -895,3 +895,5 @@ export const ClassPhotoDialog: React.FC<ClassPhotoDialogProps> = ({
     </Dialog>
   );
 };
+
+export default ClassPhotoDialog;

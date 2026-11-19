@@ -119,22 +119,22 @@ export const AssessmentResultPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24">
       {/* Top Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-3">
           <Link to={courseBackUrl}>
             <Button
               variant="outline"
               size="sm"
-              className="gap-1.5 border-slate-800 text-slate-300 hover:text-white bg-slate-900/40"
+              className="gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-50 bg-white font-medium shadow-xs"
             >
               <ArrowLeft className="w-4 h-4" /> Back to course
             </Button>
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
               <span>{assessment?.title || 'Assessment Results'}</span>
             </h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 font-medium">
               Personal Evaluation & Mastery Progression
             </p>
           </div>
@@ -142,40 +142,40 @@ export const AssessmentResultPage: React.FC = () => {
       </div>
 
       {/* Header Card */}
-      <Card className="border border-indigo-900/60 bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 shadow-xl">
+      <Card className="border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 shadow-xs">
         <CardContent className="p-6 space-y-5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-indigo-400" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+                <Award className="w-5 h-5 text-indigo-600" />
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
                   Performance Summary
                 </span>
               </div>
               <div className="flex items-baseline gap-3">
-                <h2 className="text-3xl font-extrabold text-slate-100 font-mono tracking-tight">
+                <h2 className="text-3xl font-extrabold text-slate-900 font-mono tracking-tight">
                   {summary.totalAwarded} / {summary.totalMax}
                 </h2>
-                <span className="text-xs text-slate-400">total marks</span>
+                <span className="text-xs text-slate-500 font-medium">total marks</span>
               </div>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-slate-600 font-medium">
                 {summary.gradedCount} of {questions.length} questions graded.
               </p>
             </div>
 
             {/* Score Accuracies */}
             <div className="flex items-center gap-3">
-              <div className="bg-slate-950/80 border border-slate-800 px-5 py-3 rounded-xl text-center min-w-[120px]">
-                <div className="text-xs text-slate-400 font-medium">Graded Score</div>
-                <div className="text-2xl font-mono font-bold text-indigo-400 mt-1">
+              <div className="bg-white border border-slate-200 px-5 py-3 rounded-xl text-center min-w-[120px] shadow-xs">
+                <div className="text-xs text-slate-500 font-semibold">Graded Score</div>
+                <div className="text-2xl font-mono font-extrabold text-indigo-600 mt-1">
                   {summary.percentage !== null ? formatPercent(summary.percentage) : 'N/A'}
                 </div>
               </div>
 
               {summary.pendingCount > 0 && (
-                <div className="bg-slate-950/80 border border-amber-900/40 px-5 py-3 rounded-xl text-center min-w-[120px]">
-                  <div className="text-xs text-amber-400/90 font-medium">Pending</div>
-                  <div className="text-2xl font-mono font-bold text-amber-400 mt-1">
+                <div className="bg-white border border-amber-200 px-5 py-3 rounded-xl text-center min-w-[120px] shadow-xs">
+                  <div className="text-xs text-amber-700 font-semibold">Pending</div>
+                  <div className="text-2xl font-mono font-extrabold text-amber-600 mt-1">
                     {summary.pendingCount}
                   </div>
                 </div>
@@ -185,12 +185,12 @@ export const AssessmentResultPage: React.FC = () => {
 
           {/* Pending Alert banner if pendingCount > 0 */}
           {summary.pendingCount > 0 && (
-            <Alert className="border-amber-500/40 bg-amber-500/10 text-amber-300">
-              <Clock className="w-4 h-4 text-amber-400" />
-              <AlertTitle className="font-semibold text-xs text-amber-300">
+            <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+              <Clock className="w-4 h-4 text-amber-600" />
+              <AlertTitle className="font-bold text-xs text-amber-900">
                 Awaiting Instructor Evaluation
               </AlertTitle>
-              <AlertDescription className="text-xs text-amber-300/90 mt-0.5">
+              <AlertDescription className="text-xs text-amber-800 mt-0.5 font-medium">
                 {summary.pendingCount} {summary.pendingCount === 1 ? 'answer is' : 'answers are'} waiting for grading. Your total will update when they are graded.
               </AlertDescription>
             </Alert>
@@ -200,20 +200,20 @@ export const AssessmentResultPage: React.FC = () => {
 
       {/* Concept Breakdown Card */}
       {concepts.length > 0 && (
-        <Card className="border border-slate-800 bg-slate-900/60 shadow-md">
-          <CardHeader className="pb-3 border-b border-slate-800/60">
+        <Card className="border border-slate-200 bg-white shadow-xs">
+          <CardHeader className="pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              <CardTitle className="text-sm font-semibold text-slate-100">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <CardTitle className="text-sm font-bold text-slate-900">
                 Concept Mastery Progression
               </CardTitle>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 font-medium">
               How your performance on this assessment impacted your competency profile
             </p>
           </CardHeader>
 
-          <CardContent className="pt-4 divide-y divide-slate-800/60">
+          <CardContent className="pt-4 divide-y divide-slate-100">
             {concepts.map((c) => {
               const diff = Math.round((c.masteryAfter - c.masteryBefore) * 10000) / 10000;
               const isIncrease = diff > 0.0001;
@@ -227,10 +227,10 @@ export const AssessmentResultPage: React.FC = () => {
                 >
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 pr-4">
-                      <span className="text-sm font-medium text-slate-200 truncate">
+                      <span className="text-sm font-bold text-slate-900 truncate">
                         {c.name}
                       </span>
-                      <span className="text-xs font-mono font-semibold text-slate-400">
+                      <span className="text-xs font-mono font-semibold text-slate-500">
                         {c.awarded} / {c.max} marks
                       </span>
                     </div>
@@ -239,10 +239,10 @@ export const AssessmentResultPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <Progress
                         value={c.masteryAfter * 100}
-                        className="h-2 flex-1 bg-slate-800"
+                        className="h-2 flex-1 bg-slate-100"
                         indicatorClassName={bandInfo.progressColor}
                       />
-                      <span className="text-xs font-mono font-semibold text-slate-300 w-10 text-right">
+                      <span className="text-xs font-mono font-bold text-slate-700 w-10 text-right">
                         {formatPercent(c.masteryAfter)}
                       </span>
                     </div>
@@ -251,22 +251,22 @@ export const AssessmentResultPage: React.FC = () => {
                   {/* Delta Badge */}
                   <div className="shrink-0 flex items-center gap-2">
                     {isIncrease ? (
-                      <Badge className="bg-emerald-950/60 text-emerald-400 border-emerald-500/40 gap-1 font-mono text-xs font-semibold py-1 px-2.5">
-                        <ArrowUp className="w-3.5 h-3.5 text-emerald-400" />
+                      <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-300 gap-1 font-mono text-xs font-bold py-1 px-2.5">
+                        <ArrowUp className="w-3.5 h-3.5 text-emerald-600" />
                         <span>
                           {formatPercent(c.masteryBefore)} → {formatPercent(c.masteryAfter)}
                         </span>
                       </Badge>
                     ) : isDecrease ? (
-                      <Badge className="bg-rose-950/60 text-rose-400 border-rose-500/40 gap-1 font-mono text-xs font-semibold py-1 px-2.5">
-                        <ArrowDown className="w-3.5 h-3.5 text-rose-400" />
+                      <Badge className="bg-rose-50 text-rose-700 border border-rose-300 gap-1 font-mono text-xs font-bold py-1 px-2.5">
+                        <ArrowDown className="w-3.5 h-3.5 text-rose-600" />
                         <span>
                           {formatPercent(c.masteryBefore)} → {formatPercent(c.masteryAfter)}
                         </span>
                       </Badge>
                     ) : (
-                      <Badge className="bg-slate-800 text-slate-400 border-slate-700 gap-1 font-mono text-xs font-medium py-1 px-2.5">
-                        <Minus className="w-3.5 h-3.5 text-slate-400" />
+                      <Badge className="bg-slate-100 text-slate-700 border border-slate-200 gap-1 font-mono text-xs font-medium py-1 px-2.5">
+                        <Minus className="w-3.5 h-3.5 text-slate-500" />
                         <span>no change ({formatPercent(c.masteryAfter)})</span>
                       </Badge>
                     )}
@@ -281,7 +281,7 @@ export const AssessmentResultPage: React.FC = () => {
       {/* Per-Question List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-200">
+          <h3 className="text-sm font-bold text-slate-900">
             Question Breakdown ({questions.length} questions)
           </h3>
         </div>

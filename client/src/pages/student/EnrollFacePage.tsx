@@ -88,7 +88,7 @@ export const EnrollFacePage: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={() => navigate('/student')}
-          className="text-xs text-slate-400 hover:text-slate-200 gap-1.5"
+          className="text-xs text-slate-600 hover:text-slate-900 font-semibold gap-1.5"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Student Dashboard
@@ -96,17 +96,17 @@ export const EnrollFacePage: React.FC = () => {
 
         <div className="flex items-center gap-2">
           {statusLoading ? (
-            <Badge variant="outline" className="text-xs font-mono border-slate-700 text-slate-400">
+            <Badge variant="outline" className="text-xs font-mono border-slate-300 text-slate-600 font-medium">
               Checking status...
             </Badge>
           ) : isAlreadyEnrolled ? (
-            <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-mono flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-300 text-xs font-mono font-semibold flex items-center gap-1.5 shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               Biometrics Active & Enrolled
             </Badge>
           ) : (
-            <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-mono flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5" />
+            <Badge className="bg-amber-50 text-amber-800 border border-amber-300 text-xs font-mono font-semibold flex items-center gap-1.5 shadow-2xs">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
               Enrollment Required
             </Badge>
           )}
@@ -114,33 +114,33 @@ export const EnrollFacePage: React.FC = () => {
       </div>
 
       {/* Main Header Card */}
-      <div className="rounded-xl bg-gradient-to-r from-blue-950/40 via-card to-card border border-border p-6 md:p-8">
+      <div className="rounded-xl bg-gradient-to-r from-blue-50/80 via-slate-50 to-indigo-50/50 border border-slate-200 p-6 md:p-8 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">
-              <ShieldCheck className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100/80 text-blue-800 border border-blue-200 mb-3">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
               Academic Identity & Verification
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
               Enroll Facial Biometrics
             </h1>
-            <p className="mt-1.5 text-sm text-slate-400 max-w-2xl leading-relaxed">
+            <p className="mt-1.5 text-sm text-slate-600 max-w-2xl leading-relaxed font-medium">
               Register your facial biometric descriptor to enable instant one-touch attendance
               verification in lecture halls and laboratory sessions.
             </p>
           </div>
 
           <div className="flex-shrink-0">
-            <div className="p-3 rounded-lg bg-slate-900/80 border border-border flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm border border-blue-500/30">
+            <div className="p-3 rounded-xl bg-white border border-slate-200 flex items-center gap-3 shadow-2xs">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm border border-blue-200">
                 {user?.firstName?.[0]}
                 {user?.lastName?.[0]}
               </div>
               <div className="text-xs">
-                <p className="font-semibold text-slate-200">
+                <p className="font-bold text-slate-900">
                   {user?.firstName} {user?.lastName}
                 </p>
-                <p className="text-slate-400 font-mono text-[11px]">{user?.email}</p>
+                <p className="text-slate-500 font-mono text-[11px] font-medium">{user?.email}</p>
               </div>
             </div>
           </div>
@@ -150,59 +150,59 @@ export const EnrollFacePage: React.FC = () => {
       {/* Success / Status Banner */}
       {submissionMessage && (
         <div
-          className={`p-4 rounded-xl border flex items-start gap-3 transition-all ${
+          className={`p-4 rounded-xl border flex items-start gap-3 transition-all shadow-xs ${
             submissionMessage.success
-              ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+              : 'bg-rose-50 border-rose-300 text-rose-900'
           }`}
         >
           {submissionMessage.success ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" />
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600 mt-0.5" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" />
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" />
           )}
           <div className="flex-1 text-sm">
-            <p className="font-medium">
+            <p className="font-bold">
               {submissionMessage.success ? 'Enrollment Completed' : 'Enrollment Notice'}
             </p>
-            <p className="text-xs mt-0.5 opacity-90">{submissionMessage.text}</p>
+            <p className="text-xs mt-0.5 font-medium">{submissionMessage.text}</p>
           </div>
         </div>
       )}
 
       {/* Privacy Guarantees Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="p-3.5 rounded-lg bg-card/60 border border-border flex items-start gap-3">
-          <div className="p-2 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-start gap-3 shadow-2xs">
+          <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">
             <EyeOff className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-slate-200">Zero Image Storage</h4>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <h4 className="text-xs font-bold text-slate-900">Zero Image Storage</h4>
+            <p className="text-[11px] text-slate-600 font-medium mt-0.5 leading-relaxed">
               No photographs or videos are ever uploaded or saved on our servers.
             </p>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-card/60 border border-border flex items-start gap-3">
-          <div className="p-2 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-start gap-3 shadow-2xs">
+          <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200">
             <Binary className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-slate-200">Vector Embeddings Only</h4>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <h4 className="text-xs font-bold text-slate-900">Vector Embeddings Only</h4>
+            <p className="text-[11px] text-slate-600 font-medium mt-0.5 leading-relaxed">
               Only a one-way 128-float mathematical embedding is retained.
             </p>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-card/60 border border-border flex items-start gap-3">
-          <div className="p-2 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <div className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-start gap-3 shadow-2xs">
+          <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200">
             <Lock className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-slate-200">Encrypted & Restricted</h4>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <h4 className="text-xs font-bold text-slate-900">Encrypted & Restricted</h4>
+            <p className="text-[11px] text-slate-600 font-medium mt-0.5 leading-relaxed">
               Accessible exclusively for attendance verification during your registered classes.
             </p>
           </div>
@@ -221,13 +221,13 @@ export const EnrollFacePage: React.FC = () => {
           />
 
           {capturedDescriptor && (
-            <Card className="border-border bg-slate-900/50">
+            <Card className="border-emerald-200 bg-emerald-50/70 shadow-xs">
               <CardContent className="p-4 flex items-center justify-between text-xs font-mono">
-                <div className="flex items-center gap-2 text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-emerald-800 font-bold">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>3 Frames Averaged: 128-d Vector Ready</span>
                 </div>
-                <span className="text-slate-500 text-[11px]">
+                <span className="text-slate-600 font-medium text-[11px]">
                   Sample: [{capturedDescriptor.slice(0, 3).map((n) => n.toFixed(3)).join(', ')}, ...]
                 </span>
               </CardContent>
@@ -237,48 +237,48 @@ export const EnrollFacePage: React.FC = () => {
 
         {/* Right Column: Consent Agreement & Submission Form */}
         <div className="lg:col-span-5 space-y-4">
-          <Card className="border-border bg-card shadow-lg">
-            <CardHeader className="pb-3 border-b border-border/50">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-blue-400" />
+          <Card className="border-slate-200 bg-white shadow-xs">
+            <CardHeader className="pb-3 border-b border-slate-100">
+              <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
                 Biometric Consent & Authorization
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-xs text-slate-500 font-medium">
                 In compliance with biometric privacy regulations, your explicit consent is mandatory.
               </CardDescription>
             </CardHeader>
 
             <CardContent className="pt-4 space-y-4">
-              <div className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs text-slate-300 space-y-2 leading-relaxed">
-                <div className="flex items-center gap-1.5 font-semibold text-slate-200">
-                  <Info className="w-3.5 h-3.5 text-blue-400" />
+              <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-2 leading-relaxed">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                  <Info className="w-3.5 h-3.5 text-blue-600" />
                   <span>Data Processing Agreement:</span>
                 </div>
-                <p className="text-slate-400 text-[11px]">
+                <p className="text-slate-600 font-medium text-[11px]">
                   1. The client-side neural network processes video frames locally in your browser to
                   extract facial landmark geometries.
                 </p>
-                <p className="text-slate-400 text-[11px]">
+                <p className="text-slate-600 font-medium text-[11px]">
                   2. Exactly 3 frames are captured and mathematically averaged into a single 128-dimensional
                   feature vector.
                 </p>
-                <p className="text-slate-400 text-[11px]">
+                <p className="text-slate-600 font-medium text-[11px]">
                   3. The server stores only the 128 numerical values in your encrypted profile. Photographs
                   and video are strictly discarded.
                 </p>
               </div>
 
               {/* Consent Checkbox */}
-              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors">
+              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-blue-200 bg-blue-50/50 hover:bg-blue-50/80 transition-colors">
                 <Checkbox
                   id="biometric-consent-checkbox"
                   checked={consentGiven}
-                  onCheckedChange={(checked) => setConsentGiven(checked)}
-                  className="mt-0.5 border-blue-400/50"
+                  onCheckedChange={(checked) => setConsentGiven(checked as boolean)}
+                  className="mt-0.5 border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white"
                 />
                 <label
                   htmlFor="biometric-consent-checkbox"
-                  className="text-xs font-medium text-slate-200 cursor-pointer select-none leading-snug"
+                  className="text-xs font-semibold text-slate-900 cursor-pointer select-none leading-snug"
                 >
                   I consent to the capture of my facial biometric descriptor for attendance
                   verification purposes. I understand that the server stores the descriptor vector only
@@ -289,14 +289,14 @@ export const EnrollFacePage: React.FC = () => {
               {/* Requirement Checklist */}
               <div className="space-y-1.5 pt-1 text-xs font-mono">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">1. Consent Checkbox:</span>
-                  <span className={consentGiven ? 'text-emerald-400' : 'text-slate-500'}>
+                  <span className="text-slate-600 font-medium">1. Consent Checkbox:</span>
+                  <span className={consentGiven ? 'text-emerald-700 font-bold' : 'text-slate-400 font-semibold'}>
                     {consentGiven ? 'Accepted ✓' : 'Required ✕'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">2. 3-Frame Capture:</span>
-                  <span className={capturedDescriptor ? 'text-emerald-400' : 'text-slate-500'}>
+                  <span className="text-slate-600 font-medium">2. 3-Frame Capture:</span>
+                  <span className={capturedDescriptor ? 'text-emerald-700 font-bold' : 'text-slate-400 font-semibold'}>
                     {capturedDescriptor ? 'Sampled & Averaged ✓' : 'Pending Capture ✕'}
                   </span>
                 </div>
@@ -307,7 +307,7 @@ export const EnrollFacePage: React.FC = () => {
                 type="button"
                 onClick={handleSubmitEnrollment}
                 disabled={!consentGiven || !capturedDescriptor || enrollMutation.isPending}
-                className="w-full mt-2"
+                className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
                 size="default"
               >
                 {enrollMutation.isPending ? (
@@ -317,7 +317,7 @@ export const EnrollFacePage: React.FC = () => {
                   </>
                 ) : isAlreadyEnrolled ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-300" />
                     Update Enrolled Face Descriptor
                   </>
                 ) : (
@@ -329,7 +329,7 @@ export const EnrollFacePage: React.FC = () => {
               </Button>
 
               {!consentGiven && (
-                <p className="text-[11px] text-center text-slate-500">
+                <p className="text-[11px] text-center text-slate-500 font-medium">
                   Check the consent box above to enable enrollment.
                 </p>
               )}

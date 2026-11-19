@@ -564,7 +564,7 @@ export const MarkAttendancePage: React.FC = () => {
           variant="ghost"
           size="sm"
           onClick={() => navigate('/student')}
-          className="text-xs text-slate-400 hover:text-slate-200 gap-1.5"
+          className="text-xs text-slate-600 hover:text-slate-900 font-semibold gap-1.5"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
@@ -572,13 +572,13 @@ export const MarkAttendancePage: React.FC = () => {
 
         <div className="flex items-center gap-2">
           {faceStatus?.enrolled ? (
-            <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-mono flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" />
+            <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-300 text-xs font-mono font-semibold flex items-center gap-1.5 shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               Face Biometrics Enrolled
             </Badge>
           ) : (
-            <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-mono flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" />
+            <Badge className="bg-amber-50 text-amber-800 border border-amber-300 text-xs font-mono font-semibold flex items-center gap-1.5 shadow-2xs">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
               Face Enrollment Recommended
             </Badge>
           )}
@@ -586,31 +586,34 @@ export const MarkAttendancePage: React.FC = () => {
       </div>
 
       {/* Main Title Card */}
-      <div className="rounded-xl bg-gradient-to-r from-blue-950/40 via-card to-card border border-border p-6">
+      <div className="rounded-xl bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/50 border border-slate-200 p-6 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-600 flex items-center justify-center shadow-2xs">
             <KeyRound className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-100 tracking-tight">
+            <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
               Mark Attendance (Self-Verification)
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-600 font-medium mt-0.5">
               Mode B: Short-window passcode check followed by blink liveness & face descriptor
             </p>
           </div>
         </div>
 
         {/* Method Switcher */}
-        <div className="flex items-center gap-2 mt-4 p-1 rounded-lg bg-slate-900/80 border border-border self-start inline-flex">
+        <div className="flex items-center gap-1.5 mt-4 p-1 rounded-lg bg-slate-100 border border-slate-200 self-start inline-flex">
           <Button
             type="button"
             variant={checkInMode === 'MODE_B' ? 'default' : 'ghost'}
             size="sm"
-            className="text-xs h-7 gap-1.5"
+            className={`text-xs h-7 gap-1.5 font-semibold ${checkInMode === 'MODE_B'
+                ? 'bg-white text-slate-900 shadow-xs hover:bg-white'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
             onClick={() => setCheckInMode('MODE_B')}
           >
-            <KeyRound className="w-3 h-3" />
+            <KeyRound className="w-3 h-3 text-blue-600" />
             <span>Mode B (Passcode + Liveness)</span>
           </Button>
 
@@ -618,10 +621,13 @@ export const MarkAttendancePage: React.FC = () => {
             type="button"
             variant={checkInMode === 'QR' ? 'default' : 'ghost'}
             size="sm"
-            className="text-xs h-7 gap-1.5"
+            className={`text-xs h-7 gap-1.5 font-semibold ${checkInMode === 'QR'
+                ? 'bg-white text-slate-900 shadow-xs hover:bg-white'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
             onClick={() => setCheckInMode('QR')}
           >
-            <QrCode className="w-3 h-3" />
+            <QrCode className="w-3 h-3 text-indigo-600" />
             <span>Direct QR / Token Check-In</span>
           </Button>
         </div>
@@ -630,29 +636,26 @@ export const MarkAttendancePage: React.FC = () => {
         {checkInMode === 'MODE_B' && (
           <div className="grid grid-cols-3 gap-2 mt-4">
             <div
-              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
-                step === 'ENTER_CODE'
-                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-                  : 'bg-slate-900/40 border-slate-800 text-slate-400'
-              }`}
+              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${step === 'ENTER_CODE'
+                  ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-2xs'
+                  : 'bg-white border-slate-200 text-slate-500 font-medium'
+                }`}
             >
               1. Enter Code
             </div>
             <div
-              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
-                step === 'CAMERA'
-                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-                  : 'bg-slate-900/40 border-slate-800 text-slate-400'
-              }`}
+              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${step === 'CAMERA'
+                  ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-2xs'
+                  : 'bg-white border-slate-200 text-slate-500 font-medium'
+                }`}
             >
               2. Blink & Scan
             </div>
             <div
-              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${
-                step === 'RESULT'
-                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 font-semibold'
-                  : 'bg-slate-900/40 border-slate-800 text-slate-400'
-              }`}
+              className={`p-2 rounded-lg border text-center text-xs font-mono transition-all ${step === 'RESULT'
+                  ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-2xs'
+                  : 'bg-white border-slate-200 text-slate-500 font-medium'
+                }`}
             >
               3. Result
             </div>
@@ -662,45 +665,45 @@ export const MarkAttendancePage: React.FC = () => {
 
       {/* QR Check-In View */}
       {checkInMode === 'QR' && (
-        <Card className="border-border bg-card shadow-xl">
-          <CardHeader>
+        <Card className="border-slate-200 bg-white shadow-xs">
+          <CardHeader className="pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-indigo-400" />
-              <CardTitle className="text-base">Direct QR & Token Check-In</CardTitle>
+              <QrCode className="w-5 h-5 text-indigo-600" />
+              <CardTitle className="text-base font-bold text-slate-900">Direct QR & Token Check-In</CardTitle>
             </div>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-xs text-slate-500 font-medium">
               Check in using the rotating cryptographic token embedded in the instructor&apos;s QR code.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {qrSuccessRecord ? (
-              <div className="space-y-5 text-center p-6 border rounded-xl bg-emerald-500/5 border-emerald-500/20">
-                <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
+              <div className="space-y-5 text-center p-6 border rounded-xl bg-emerald-50/70 border-emerald-200 shadow-2xs">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300 flex items-center justify-center mx-auto shadow-xs">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-slate-100">Attendance Recorded Successfully!</h3>
-                  <p className="text-xs text-muted-foreground">
+                  <h3 className="text-lg font-bold text-emerald-950">Attendance Recorded Successfully!</h3>
+                  <p className="text-xs text-slate-600 font-medium">
                     Your attendance has been verified via the QR security token.
                   </p>
                 </div>
 
-                <div className="max-w-xs mx-auto p-3 rounded-lg bg-card border border-border/80 text-xs space-y-2 text-left">
+                <div className="max-w-xs mx-auto p-3.5 rounded-lg bg-white border border-slate-200 text-xs space-y-2 text-left shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px]">
+                    <span className="text-slate-500 font-medium">Status</span>
+                    <Badge className="bg-emerald-50 text-emerald-700 border-emerald-300 text-[10px] font-bold">
                       PRESENT
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Method</span>
-                    <Badge variant="outline" className="font-mono text-[10px]">
+                    <span className="text-slate-500 font-medium">Method</span>
+                    <Badge variant="outline" className="font-mono text-[10px] bg-slate-100 text-slate-700 border-slate-200 font-semibold">
                       QR TOKEN
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Recorded At</span>
-                    <span className="font-mono text-[11px] text-foreground">
+                    <span className="text-slate-500 font-medium">Recorded At</span>
+                    <span className="font-mono text-[11px] font-bold text-slate-900">
                       {new Date(qrSuccessRecord.timestamp || Date.now()).toLocaleTimeString()}
                     </span>
                   </div>
@@ -710,7 +713,7 @@ export const MarkAttendancePage: React.FC = () => {
                   <Button
                     variant="default"
                     size="sm"
-                    className="text-xs"
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
                     onClick={() => navigate('/student?tab=attendance')}
                   >
                     View Check-In History
@@ -718,7 +721,7 @@ export const MarkAttendancePage: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-xs"
+                    className="text-xs border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold"
                     onClick={() => {
                       setQrSuccessRecord(null);
                       setQrToken('');
@@ -731,20 +734,20 @@ export const MarkAttendancePage: React.FC = () => {
             ) : (
               <form onSubmit={handleQRCheckIn} className="space-y-4">
                 {/* In-App Camera QR Scanner Quick Action */}
-                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-900/30 via-indigo-900/30 to-purple-900/30 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-inner">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-slate-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-200">
-                      <Camera className="w-4 h-4 text-blue-400" />
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                      <Camera className="w-4 h-4 text-blue-600" />
                       <span>Scan with Application Camera</span>
                     </div>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-[11px] text-slate-600 font-medium">
                       Open your webcam or mobile camera to automatically scan the QR code and check in.
                     </p>
                   </div>
                   <Button
                     type="button"
                     onClick={() => setQrScannerOpen(true)}
-                    className="h-9 px-4 text-xs font-semibold gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md flex-shrink-0"
+                    className="h-9 px-4 text-xs font-semibold gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xs flex-shrink-0"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span>Scan QR Code</span>
@@ -752,18 +755,18 @@ export const MarkAttendancePage: React.FC = () => {
                 </div>
 
                 {qrError && (
-                  <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
-                    <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                  <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-300 text-rose-900 text-xs flex items-start gap-2">
+                    <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold">Verification Failed</p>
-                      <p className="mt-0.5 text-[11px] opacity-90">{qrError}</p>
+                      <p className="font-bold">Verification Failed</p>
+                      <p className="mt-0.5 text-[11px] font-medium">{qrError}</p>
                     </div>
                   </div>
                 )}
 
                 {/* Session Selector or Manual Input */}
                 <div>
-                  <label className="text-xs font-medium text-slate-300 mb-1.5 block">
+                  <label className="text-xs font-bold text-slate-800 mb-1.5 block">
                     Select Live Session or Enter Session UUID
                   </label>
                   <div className="space-y-2">
@@ -771,7 +774,7 @@ export const MarkAttendancePage: React.FC = () => {
                       <select
                         value={sessionId}
                         onChange={(e) => setSessionId(e.target.value)}
-                        className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                        className="w-full h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium cursor-pointer shadow-2xs"
                       >
                         <option value="">-- Choose active lecture session --</option>
                         {activeSessions.map((s) => (
@@ -781,7 +784,7 @@ export const MarkAttendancePage: React.FC = () => {
                         ))}
                       </select>
                     ) : (
-                      <div className="p-2.5 rounded-md bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                      <div className="p-2.5 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-600 font-medium flex items-center justify-between">
                         <span>No live attendance sessions active right now for your courses.</span>
                         <span className="font-mono text-[10px] text-slate-500">Manual entry below</span>
                       </div>
@@ -791,7 +794,7 @@ export const MarkAttendancePage: React.FC = () => {
                       placeholder="Or enter Session UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)"
                       value={sessionId}
                       onChange={(e) => setSessionId(e.target.value)}
-                      className="text-xs font-mono h-9 bg-slate-900 border-border"
+                      className="text-xs font-mono h-9 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"
                       required
                     />
                   </div>
@@ -800,7 +803,7 @@ export const MarkAttendancePage: React.FC = () => {
                 {/* QR Code Token Input */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-medium text-slate-300">
+                    <label className="text-xs font-bold text-slate-800">
                       QR Code Token / Passcode
                     </label>
                     <Button
@@ -808,7 +811,7 @@ export const MarkAttendancePage: React.FC = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setQrScannerOpen(true)}
-                      className="text-[11px] text-blue-400 hover:text-blue-300 p-0 h-auto gap-1"
+                      className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold p-0 h-auto gap-1"
                     >
                       <Camera className="w-3 h-3" />
                       Open Camera Scanner
@@ -819,21 +822,21 @@ export const MarkAttendancePage: React.FC = () => {
                       placeholder="Enter or paste token from QR code..."
                       value={qrToken}
                       onChange={(e) => setQrToken(e.target.value)}
-                      className="text-sm font-mono tracking-widest h-11 bg-slate-900 border-border flex-1"
+                      className="text-sm font-mono tracking-widest h-11 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 flex-1"
                       required
                     />
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setQrScannerOpen(true)}
-                      className="h-11 px-3.5 border-border hover:bg-slate-800 text-slate-200 gap-1.5 flex-shrink-0 text-xs"
+                      className="h-11 px-3.5 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold gap-1.5 flex-shrink-0 text-xs shadow-2xs"
                       title="Scan with Camera"
                     >
-                      <ScanLine className="w-4 h-4 text-blue-400" />
+                      <ScanLine className="w-4 h-4 text-blue-600" />
                       <span className="hidden sm:inline">Scan</span>
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                  <p className="text-[11px] text-slate-500 font-medium mt-1.5">
                     Click &quot;Scan QR Code&quot; to scan live with your camera, or paste/type the code manually.
                   </p>
                 </div>
@@ -841,7 +844,7 @@ export const MarkAttendancePage: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={scanQRMutation.isPending}
-                  className="w-full text-xs font-semibold h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                  className="w-full text-xs font-semibold h-10 gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
                 >
                   {scanQRMutation.isPending ? (
                     <>
@@ -863,27 +866,27 @@ export const MarkAttendancePage: React.FC = () => {
 
       {/* Mode B Flow */}
       {checkInMode === 'MODE_B' && (
-        <>
+    <>
 
       {/* STEP 1: ENTER_CODE */}
       {step === 'ENTER_CODE' && (
-        <Card className="border-border bg-card shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-base">Step 1: Enter Attendance Code</CardTitle>
-            <CardDescription className="text-xs">
+        <Card className="border-slate-200 bg-white shadow-xs">
+          <CardHeader className="pb-3 border-b border-slate-100">
+            <CardTitle className="text-base font-bold text-slate-900">Step 1: Enter Attendance Code</CardTitle>
+            <CardDescription className="text-xs text-slate-500 font-medium">
               Input the 6-digit passcode displayed by your instructor. The camera will only activate
               after the code and window are confirmed valid.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {/* Face Enrollment Required Warning for Mode B */}
             {faceStatus && !faceStatus.enrolled && (
-              <div className="mb-4 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="mb-4 p-3.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold text-amber-200">Biometric Profile Required for Mode B</p>
-                    <p className="text-[11px] text-amber-300/80">
+                    <p className="font-bold text-amber-950">Biometric Profile Required for Mode B</p>
+                    <p className="text-[11px] text-amber-800 font-medium">
                       You must enroll your face first to use Mode B attendance, or switch to Direct QR check-in.
                     </p>
                   </div>
@@ -892,7 +895,7 @@ export const MarkAttendancePage: React.FC = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => navigate('/student/enroll-face')}
-                  className="h-8 text-xs border-amber-500/40 text-amber-200 hover:bg-amber-500/20 flex-shrink-0"
+                  className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0 font-semibold"
                 >
                   Enroll Face
                 </Button>
@@ -901,18 +904,18 @@ export const MarkAttendancePage: React.FC = () => {
 
             <form onSubmit={handleCheckCode} className="space-y-4">
               {preCheckError && (
-                <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
-                  <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-300 text-rose-900 text-xs flex items-start gap-2 shadow-2xs">
+                  <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold">Code Verification Failed</p>
-                    <p className="mt-0.5 text-[11px] opacity-90">{preCheckError}</p>
+                    <p className="font-bold">Code Verification Failed</p>
+                    <p className="mt-0.5 text-[11px] font-medium">{preCheckError}</p>
                   </div>
                 </div>
               )}
 
               {/* Session Selector or Manual Input */}
               <div>
-                <label className="text-xs font-medium text-slate-300 mb-1.5 block">
+                <label className="text-xs font-bold text-slate-800 mb-1.5 block">
                   Select Live Session or Enter Session UUID
                 </label>
                 <div className="space-y-2">
@@ -920,7 +923,7 @@ export const MarkAttendancePage: React.FC = () => {
                     <select
                       value={sessionId}
                       onChange={(e) => setSessionId(e.target.value)}
-                      className="w-full h-10 rounded-md border border-border bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                      className="w-full h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium cursor-pointer shadow-2xs"
                     >
                       <option value="">-- Choose active lecture session --</option>
                       {activeSessions.map((s) => (
@@ -930,7 +933,7 @@ export const MarkAttendancePage: React.FC = () => {
                       ))}
                     </select>
                   ) : (
-                    <div className="p-2.5 rounded-md bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                    <div className="p-2.5 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-600 font-medium flex items-center justify-between">
                       <span>No live attendance sessions active right now for your courses.</span>
                       <span className="font-mono text-[10px] text-slate-500">Manual entry below</span>
                     </div>
@@ -940,7 +943,7 @@ export const MarkAttendancePage: React.FC = () => {
                     placeholder="Session ID (UUID)"
                     value={sessionId}
                     onChange={(e) => setSessionId(e.target.value)}
-                    className="font-mono text-xs bg-slate-900"
+                    className="font-mono text-xs bg-white border-slate-300 text-slate-900 placeholder:text-slate-400"
                     required
                   />
                 </div>
@@ -948,7 +951,7 @@ export const MarkAttendancePage: React.FC = () => {
 
               {/* 6-Digit Code Input */}
               <div>
-                <label className="text-xs font-medium text-slate-300 mb-1.5 block">
+                <label className="text-xs font-bold text-slate-800 mb-1.5 block">
                   6-Digit Rotating Attendance Code
                 </label>
                 <div className="relative">
@@ -958,12 +961,12 @@ export const MarkAttendancePage: React.FC = () => {
                     placeholder="e.g. 582914"
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                    className="h-12 text-center font-mono text-2xl tracking-widest bg-slate-950 font-bold border-blue-500/40 text-slate-100"
+                    className="h-12 text-center font-mono text-2xl tracking-widest bg-slate-50 font-extrabold border-2 border-blue-400 text-slate-900 focus:bg-white shadow-inner"
                     required
                     autoFocus
                   />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-slate-500 font-medium mt-1">
                   Enter the numeric passcode currently displayed on the classroom screen.
                 </p>
               </div>
@@ -971,7 +974,7 @@ export const MarkAttendancePage: React.FC = () => {
               <Button
                 type="submit"
                 disabled={checkCodeMutation.isPending || code.length < 6 || !sessionId}
-                className="w-full bg-blue-600 hover:bg-blue-500 font-semibold gap-2 mt-2 h-10"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-2 mt-2 h-10 shadow-xs"
               >
                 {checkCodeMutation.isPending ? (
                   <>
@@ -992,49 +995,47 @@ export const MarkAttendancePage: React.FC = () => {
 
       {/* STEP 2: CAMERA (ONLY AFTER PRE-CHECK SUCCEEDS) */}
       {step === 'CAMERA' && (
-        <Card className="border-border bg-card shadow-2xl overflow-hidden">
-          <CardHeader className="pb-3 border-b border-border/80 text-center">
-            <div className="inline-flex items-center justify-center gap-1.5 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full mx-auto mb-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+        <Card className="border-slate-200 bg-white shadow-xl overflow-hidden">
+          <CardHeader className="pb-3 border-b border-slate-100 text-center">
+            <div className="inline-flex items-center justify-center gap-1.5 text-xs font-mono text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1 rounded-full mx-auto mb-1 font-semibold shadow-2xs">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               <span>Passcode Accepted ({secondsLeft ? `${secondsLeft}s window` : 'Window Active'})</span>
             </div>
-            <CardTitle className="text-lg">Blink Once or Twice</CardTitle>
-            <CardDescription className="text-xs">{faceHint}</CardDescription>
+            <CardTitle className="text-lg font-bold text-slate-900">Blink Once or Twice</CardTitle>
+            <CardDescription className="text-xs text-slate-500 font-medium">{faceHint}</CardDescription>
           </CardHeader>
 
           <CardContent className="flex flex-col items-center pt-4 space-y-4">
             {/* Viewport */}
-            <div className="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-border flex items-center justify-center shadow-inner">
+            <div className="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center shadow-inner">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className={`w-full h-full object-cover transform -scale-x-100 ${
-                  cameraActive ? 'block' : 'hidden'
-                }`}
+                className={`w-full h-full object-cover transform -scale-x-100 ${cameraActive ? 'block' : 'hidden'
+                  }`}
               />
 
               <canvas
                 ref={canvasRef}
-                className={`absolute inset-0 w-full h-full pointer-events-none transform -scale-x-100 ${
-                  cameraActive ? 'block' : 'hidden'
-                }`}
+                className={`absolute inset-0 w-full h-full pointer-events-none transform -scale-x-100 ${cameraActive ? 'block' : 'hidden'
+                  }`}
               />
 
               {!cameraActive && (
                 <div className="text-center p-6 text-slate-500 text-sm space-y-3">
                   <Camera className="w-10 h-10 mx-auto opacity-40 text-slate-400 animate-pulse" />
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 font-medium">
                     {cameraError || 'Initializing biometric camera...'}
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleSimulateBlinkCapture}
-                    className="text-xs font-mono border-slate-700 bg-slate-900/80 hover:bg-slate-800 gap-1.5"
+                    className="text-xs font-mono border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold gap-1.5 shadow-xs"
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                     Simulate Blink & Capture (Test Fallback)
                   </Button>
                 </div>
@@ -1074,20 +1075,20 @@ export const MarkAttendancePage: React.FC = () => {
             </div>
 
             {/* Instruction Banner */}
-            <div className="w-full p-3 rounded-lg bg-slate-900/60 border border-border text-xs text-slate-300 flex items-center justify-between">
+            <div className="w-full p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 flex items-center justify-between font-medium">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <span>
                   {blinkDetected
                     ? 'Blink verified! Saving facial descriptor vector...'
                     : livenessTimedOut
-                    ? '8-second limit reached. Continuing for review...'
-                    : `Please blink naturally. Auto-capturing (${captureCountdown}s left)`}
+                      ? '8-second limit reached. Continuing for review...'
+                      : `Please blink naturally. Auto-capturing (${captureCountdown}s left)`}
                 </span>
               </div>
               <Badge
                 variant="outline"
-                className="text-[10px] font-mono border-slate-700 text-slate-400"
+                className="text-[10px] font-mono border-slate-300 text-slate-600 font-semibold"
               >
                 {blinkDetected ? 'Liveness: OK' : `${captureCountdown}s`}
               </Badge>
@@ -1099,7 +1100,7 @@ export const MarkAttendancePage: React.FC = () => {
                 <Button
                   type="button"
                   onClick={handleManualCapture}
-                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs gap-2 h-9 shadow-sm"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs gap-2 h-9 shadow-xs"
                 >
                   <ScanFace className="w-4 h-4" />
                   Capture Face & Verify
@@ -1108,10 +1109,10 @@ export const MarkAttendancePage: React.FC = () => {
                   type="button"
                   variant="outline"
                   onClick={handleSimulateBlinkCapture}
-                  className="text-xs font-mono border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-400 gap-1.5 h-9"
+                  className="text-xs font-mono border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold gap-1.5 h-9 shadow-2xs"
                   title="Simulate random vector (for offline testing without camera)"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   Simulate
                 </Button>
               </div>
@@ -1122,73 +1123,72 @@ export const MarkAttendancePage: React.FC = () => {
 
       {/* STEP 3: RESULT */}
       {step === 'RESULT' && (
-        <Card className="border-border bg-card shadow-2xl overflow-hidden">
-          <CardHeader className="text-center pb-4 border-b border-border/80">
+        <Card className="border-slate-200 bg-white shadow-xl overflow-hidden">
+          <CardHeader className="text-center pb-4 border-b border-slate-100">
             {markAttendanceMutation.isPending ? (
-              <div className="mx-auto w-12 h-12 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-2">
+              <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 mb-2">
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
             ) : markResult?.status === 'PRESENT' ? (
-              <div className="mx-auto w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2">
+              <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 border border-emerald-300 flex items-center justify-center text-emerald-600 mb-2 shadow-2xs">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
             ) : markResult?.status === 'FLAGGED' ? (
-              <div className="mx-auto w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-2">
+              <div className="mx-auto w-12 h-12 rounded-full bg-amber-50 border border-amber-300 flex items-center justify-center text-amber-600 mb-2 shadow-2xs">
                 <AlertTriangle className="w-7 h-7" />
               </div>
             ) : (
-              <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-2">
+              <div className="mx-auto w-12 h-12 rounded-full bg-rose-50 border border-rose-300 flex items-center justify-center text-rose-600 mb-2 shadow-2xs">
                 <XCircle className="w-7 h-7" />
               </div>
             )}
 
-            <CardTitle className="text-xl">
+            <CardTitle className="text-xl font-extrabold text-slate-900">
               {markAttendanceMutation.isPending
                 ? 'Processing Attendance Verification...'
                 : markResult?.status === 'PRESENT'
-                ? 'Attendance Verified: PRESENT'
-                : markResult?.status === 'FLAGGED'
-                ? 'Attendance Status: FLAGGED'
-                : 'Verification Rejected'}
+                  ? 'Attendance Verified: PRESENT'
+                  : markResult?.status === 'FLAGGED'
+                    ? 'Attendance Status: FLAGGED'
+                    : 'Verification Rejected'}
             </CardTitle>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-xs text-slate-500 font-medium">
               Biometric Euclidean distance & campus network integrity evaluation
             </CardDescription>
           </CardHeader>
 
           <CardContent className="pt-6 space-y-5">
             {markAttendanceMutation.isPending ? (
-              <div className="text-center py-6 text-xs text-slate-400 font-mono space-y-2">
-                <p>Verifying 128-dimensional embedding against registered profile...</p>
+              <div className="text-center py-6 text-xs text-slate-600 font-mono space-y-2">
+                <p className="font-semibold">Verifying 128-dimensional embedding against registered profile...</p>
                 <p className="text-[11px] text-slate-500">Camera hardware has been fully shut down.</p>
               </div>
             ) : markResult ? (
               <div className="space-y-4">
                 {/* Status Box */}
                 <div
-                  className={`p-4 rounded-xl border ${
-                    markResult.status === 'PRESENT'
-                      ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300'
-                      : 'bg-amber-950/30 border-amber-500/30 text-amber-300'
-                  }`}
+                  className={`p-4 rounded-xl border ${markResult.status === 'PRESENT'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                      : 'bg-amber-50 border-amber-300 text-amber-950'
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <Badge
                         className={
                           markResult.status === 'PRESENT'
-                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-xs font-mono mb-2'
-                            : 'bg-amber-500/20 text-amber-400 border-amber-500/40 text-xs font-mono mb-2'
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 text-xs font-mono font-bold mb-2'
+                            : 'bg-amber-100 text-amber-800 border-amber-300 text-xs font-mono font-bold mb-2'
                         }
                       >
                         {markResult.status}
                       </Badge>
-                      <p className="text-sm font-semibold">{markResult.message}</p>
+                      <p className="text-sm font-bold">{markResult.message}</p>
                     </div>
 
                     <div className="text-right">
-                      <p className="text-[10px] uppercase font-mono text-slate-400">Integrity Score</p>
-                      <p className="text-2xl font-black font-mono mt-0.5">
+                      <p className="text-[10px] uppercase font-mono text-slate-500 font-semibold">Integrity Score</p>
+                      <p className="text-2xl font-black font-mono mt-0.5 text-slate-900">
                         {Math.round(markResult.integrityScore * 100)}%
                       </p>
                     </div>
@@ -1196,25 +1196,25 @@ export const MarkAttendancePage: React.FC = () => {
                 </div>
 
                 {/* Details Breakdown */}
-                <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-800 text-xs space-y-2 font-mono">
-                  <div className="flex justify-between items-center text-slate-400">
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-2 font-mono">
+                  <div className="flex justify-between items-center text-slate-600 font-medium">
                     <span>Attendance Method:</span>
-                    <span className="text-slate-200">SELF (Short-Window Mode B)</span>
+                    <span className="text-slate-900 font-bold">SELF (Short-Window Mode B)</span>
                   </div>
-                  <div className="flex justify-between items-center text-slate-400">
+                  <div className="flex justify-between items-center text-slate-600 font-medium">
                     <span>Camera Status:</span>
-                    <span className="text-emerald-400">Off (Hardware indicator light off)</span>
+                    <span className="text-emerald-700 font-bold">Off (Hardware indicator light off)</span>
                   </div>
-                  <div className="flex justify-between items-center text-slate-400">
+                  <div className="flex justify-between items-center text-slate-600 font-medium">
                     <span>Privacy Policy:</span>
-                    <span className="text-slate-200">Zero Image Storage (Vectors Only)</span>
+                    <span className="text-slate-900 font-bold">Zero Image Storage (Vectors Only)</span>
                   </div>
                 </div>
               </div>
             ) : markError ? (
-              <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/30 text-rose-300 space-y-2">
-                <p className="text-sm font-semibold">Attendance Rejected by Server</p>
-                <p className="text-xs opacity-90">{markError}</p>
+              <div className="p-4 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 space-y-2 shadow-xs">
+                <p className="text-sm font-bold">Attendance Rejected by Server</p>
+                <p className="text-xs font-medium">{markError}</p>
               </div>
             ) : null}
 
@@ -1223,7 +1223,7 @@ export const MarkAttendancePage: React.FC = () => {
               <Button
                 variant="default"
                 onClick={() => navigate('/student')}
-                className="flex-1 bg-blue-600 hover:bg-blue-500"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
               >
                 Return to Dashboard
               </Button>
@@ -1231,7 +1231,7 @@ export const MarkAttendancePage: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={handleReset}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 gap-1.5"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold gap-1.5 shadow-2xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Mark Another

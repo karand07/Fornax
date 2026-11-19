@@ -41,18 +41,18 @@ export const CriterionRow: React.FC<CriterionRowProps> = ({
       className={cn(
         'p-3.5 rounded-lg border transition-colors space-y-2.5',
         isActive
-          ? 'border-amber-500/50 bg-amber-950/20'
-          : 'border-slate-800/80 bg-slate-900/40 hover:border-slate-700/80'
+          ? 'border-amber-300 bg-amber-50/70 shadow-2xs'
+          : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300'
       )}
     >
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         {/* Description & Index */}
         <div className="space-y-1 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded bg-slate-800 border border-slate-700 text-[11px] font-mono font-bold flex items-center justify-center text-slate-300 shrink-0">
+            <span className="w-5 h-5 rounded bg-white border border-slate-200 text-[11px] font-mono font-bold flex items-center justify-center text-slate-700 shrink-0 shadow-2xs">
               {index + 1}
             </span>
-            <span className="text-xs md:text-sm font-medium text-slate-200">
+            <span className="text-xs md:text-sm font-semibold text-slate-800">
               {criterion.description}
             </span>
           </div>
@@ -61,13 +61,13 @@ export const CriterionRow: React.FC<CriterionRowProps> = ({
         {/* Marks and Progress */}
         <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
           <div className="flex flex-col items-end gap-1">
-            <div className="flex items-baseline gap-1 text-xs font-mono font-bold text-slate-200">
+            <div className="flex items-baseline gap-1 text-xs font-mono font-bold text-slate-900">
               <span>{criterion.awarded}</span>
-              <span className="text-slate-400 font-normal">/ {criterion.maxMarks}</span>
+              <span className="text-slate-500 font-normal">/ {criterion.maxMarks}</span>
             </div>
             <Progress
               value={percentage}
-              className="h-1.5 w-20 bg-slate-800"
+              className="h-1.5 w-20 bg-slate-200"
               indicatorClassName={
                 percentage >= 80
                   ? 'bg-emerald-500'
@@ -82,14 +82,14 @@ export const CriterionRow: React.FC<CriterionRowProps> = ({
 
       {/* Justification block */}
       {criterion.justification && (
-        <div className="flex items-start gap-1.5 text-xs text-slate-300/90 pl-7">
+        <div className="flex items-start gap-1.5 text-xs text-slate-600 pl-7">
           <MessageSquareQuote className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" aria-hidden="true" />
           <p className="leading-relaxed italic">{criterion.justification}</p>
         </div>
       )}
 
       {/* Evidence Button or Fallback */}
-      <div className="pt-1 flex items-center justify-between gap-2 border-t border-slate-800/60 pl-7">
+      <div className="pt-1 flex items-center justify-between gap-2 border-t border-slate-200/80 pl-7">
         {hasEvidence ? (
           <Button
             variant="ghost"
@@ -99,8 +99,8 @@ export const CriterionRow: React.FC<CriterionRowProps> = ({
             className={cn(
               'h-7 px-2.5 text-xs font-medium gap-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400',
               isActive
-                ? 'bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200/80 font-medium'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 bg-white font-medium shadow-2xs'
             )}
           >
             {isActive ? (
@@ -116,7 +116,7 @@ export const CriterionRow: React.FC<CriterionRowProps> = ({
             )}
           </Button>
         ) : (
-          <span className="text-xs text-slate-500 italic">
+          <span className="text-xs text-slate-400 italic">
             No supporting text found in the answer
           </span>
         )}

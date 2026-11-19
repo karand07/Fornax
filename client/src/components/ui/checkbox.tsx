@@ -25,8 +25,8 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         <label
           htmlFor={id}
           className={cn(
-            'h-4 w-4 shrink-0 rounded border border-slate-700 bg-slate-900 ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex items-center justify-center',
-            checked && 'bg-blue-600 border-blue-500 text-white',
+            'h-4 w-4 shrink-0 rounded border border-border bg-card ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex items-center justify-center',
+            checked && 'bg-blue-600 border-blue-600 text-white',
             disabled && 'cursor-not-allowed opacity-50',
             className
           )}

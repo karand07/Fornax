@@ -62,7 +62,7 @@ export const RadioGroupItem = React.forwardRef<
         disabled={isDisabled}
         onChange={() => context.onChange?.(value)}
         className={cn(
-          'peer h-4 w-4 rounded-full border border-slate-700 bg-slate-900 text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer accent-indigo-600',
+          'peer h-4 w-4 rounded-full border border-border bg-card text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer accent-blue-600',
           className
         )}
         {...props}

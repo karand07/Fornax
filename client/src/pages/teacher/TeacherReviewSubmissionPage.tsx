@@ -122,12 +122,12 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-32 bg-slate-800" />
-          <Skeleton className="h-9 w-48 bg-slate-800" />
+          <Skeleton className="h-9 w-32 bg-slate-200" />
+          <Skeleton className="h-9 w-48 bg-slate-200" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-[600px] bg-slate-800 rounded-lg" />
-          <Skeleton className="h-[600px] bg-slate-800 rounded-lg" />
+          <Skeleton className="h-[600px] bg-slate-200 rounded-lg" />
+          <Skeleton className="h-[600px] bg-slate-200 rounded-lg" />
         </div>
       </div>
     );
@@ -136,9 +136,9 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
   if (loadError || !submission || !submission.question) {
     return (
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
-        <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-100">Unable to load submission</h2>
-        <p className="text-sm text-slate-400">
+        <AlertCircle className="w-10 h-10 text-rose-500 mx-auto" />
+        <h2 className="text-xl font-bold text-slate-900">Unable to load submission</h2>
+        <p className="text-sm text-slate-600">
           {(loadError as any)?.response?.data?.error ||
             (!submission?.question
               ? 'Question details are not associated with this submission.'
@@ -147,7 +147,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
         <Button
           variant="outline"
           onClick={() => navigate(-1)}
-          className="border-slate-800 text-slate-300"
+          className="border-slate-200 text-slate-700 hover:bg-slate-50"
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Go back
         </Button>
@@ -288,21 +288,21 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
           className={cn(
             'fixed top-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-xl text-xs font-medium border animate-in slide-in-from-top duration-200',
             notification.type === 'success'
-              ? 'bg-emerald-950 text-emerald-200 border-emerald-700/60'
-              : 'bg-red-950 text-red-200 border-red-700/60'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-emerald-500/10'
+              : 'bg-rose-50 text-rose-800 border-rose-200 shadow-rose-500/10'
           )}
         >
           {notification.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-red-400" />
+            <AlertCircle className="w-4 h-4 text-rose-600" />
           )}
           <span>{notification.message}</span>
         </div>
       )}
 
       {/* Top Navigation & Queue Position */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -314,14 +314,14 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                 navigate('/teacher/courses/all/review');
               }
             }}
-            className="gap-1.5 border-slate-800 text-slate-300"
+            className="gap-1.5 border-slate-200 text-slate-700 hover:bg-slate-50"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Queue
           </Button>
-          <div className="h-4 w-[1px] bg-slate-800 mx-1 hidden sm:block" />
+          <div className="h-4 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
           {queue && (
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-slate-500 font-mono">
               {queue.current > 0
                 ? `Item ${queue.current} of ${queue.total} pending`
                 : `Reviewed (${queue.total} pending in queue)`}
@@ -336,7 +336,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
             size="sm"
             disabled={!queue?.prevId}
             onClick={() => queue?.prevId && navigate(`/teacher/review/${queue.prevId}`)}
-            className="gap-1 text-xs border-slate-800 text-slate-300 hover:text-white"
+            className="gap-1 text-xs border-slate-200 text-slate-700 hover:bg-slate-50"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Previous
@@ -346,7 +346,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
             size="sm"
             disabled={!queue?.nextId}
             onClick={() => queue?.nextId && navigate(`/teacher/review/${queue.nextId}`)}
-            className="gap-1 text-xs border-slate-800 text-slate-300 hover:text-white"
+            className="gap-1 text-xs border-slate-200 text-slate-700 hover:bg-slate-50"
           >
             Next
             <ChevronRight className="w-3.5 h-3.5" />
@@ -373,15 +373,15 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
         {/* Right Column: Submission Details, Editor, GradeCard & Actions */}
         <div className="space-y-6">
           {/* 1. Header Information */}
-          <Card className="bg-slate-900/60 border-slate-800">
+          <Card className="bg-white border-slate-200/90 shadow-xs">
             <CardHeader className="p-4 sm:p-5 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                     {submission.courseId ? (
                       <Link
                         to={`/teacher/courses/${submission.courseId}/students/${student.id}`}
-                        className="hover:underline hover:text-indigo-400 transition-colors"
+                        className="hover:underline hover:text-blue-600 transition-colors"
                         title="View student academic profile"
                       >
                         {student.firstName} {student.lastName}
@@ -393,24 +393,24 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                     )}
                     <Badge
                       variant="outline"
-                      className="text-[10px] font-mono border-slate-700 text-slate-300"
+                      className="text-[10px] font-mono border-slate-200 bg-slate-100 text-slate-700 font-semibold"
                     >
                       {question.type}
                     </Badge>
                   </h2>
-                  <p className="text-xs text-slate-400 font-mono">{student.email}</p>
+                  <p className="text-xs text-slate-500 font-mono">{student.email}</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 block">Maximum Marks</span>
-                  <span className="text-sm font-bold font-mono text-slate-200">
+                  <span className="text-xs text-slate-500 block font-medium">Maximum Marks</span>
+                  <span className="text-sm font-bold font-mono text-slate-900">
                     {question.maxMarks} pts
                   </span>
                 </div>
               </div>
 
               {/* Question Prompt */}
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-slate-200 leading-relaxed">
-                <span className="font-semibold text-slate-400 font-mono mr-1">Prompt:</span>
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 leading-relaxed">
+                <span className="font-bold text-slate-700 font-mono mr-1">Prompt:</span>
                 {question.prompt}
               </div>
 
@@ -419,11 +419,11 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                 <Collapsible
                   open={isRubricOpen}
                   onOpenChange={setIsRubricOpen}
-                  className="border border-slate-800 rounded-lg bg-slate-950/40 overflow-hidden"
+                  className="border border-slate-200 rounded-lg bg-slate-50/50 overflow-hidden"
                 >
-                  <CollapsibleTrigger className="w-full flex items-center justify-between p-2.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 transition-colors">
+                  <CollapsibleTrigger className="w-full flex items-center justify-between p-2.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
                     <span className="flex items-center gap-1.5">
-                      <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                      <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
                       <span>Model answer and rubric criteria</span>
                     </span>
                     <ChevronDown
@@ -433,32 +433,32 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                       )}
                     />
                   </CollapsibleTrigger>
-                  <CollapsibleContent className="p-3 border-t border-slate-800 space-y-3 text-xs">
+                  <CollapsibleContent className="p-3 border-t border-slate-200 space-y-3 text-xs">
                     {question.modelAnswer && (
                       <div>
-                        <span className="text-slate-400 font-mono block mb-1">
+                        <span className="text-slate-600 font-mono font-medium block mb-1">
                           Model Answer:
                         </span>
-                        <div className="p-2.5 rounded bg-slate-900/80 border border-slate-800/80 text-slate-200 whitespace-pre-wrap leading-relaxed">
+                        <div className="p-2.5 rounded bg-white border border-slate-200 text-slate-800 whitespace-pre-wrap leading-relaxed">
                           {question.modelAnswer}
                         </div>
                       </div>
                     )}
                     {question.rubrics && question.rubrics.length > 0 && (
                       <div>
-                        <span className="text-slate-400 font-mono block mb-1">
+                        <span className="text-slate-600 font-mono font-medium block mb-1">
                           Rubric Criteria:
                         </span>
                         <div className="space-y-1.5">
                           {question.rubrics.map((r, i) => (
                             <div
                               key={r.id || i}
-                              className="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800/80 text-xs"
+                              className="flex items-center justify-between p-2 rounded bg-white border border-slate-200 text-xs"
                             >
-                              <span className="text-slate-300">{r.description}</span>
+                              <span className="text-slate-700 font-medium">{r.description}</span>
                               <Badge
                                 variant="outline"
-                                className="font-mono text-[10px] ml-2"
+                                className="font-mono text-[10px] ml-2 border-slate-200 bg-slate-50 text-slate-700 font-semibold"
                               >
                                 {r.marks} pts
                               </Badge>
@@ -474,17 +474,17 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
           </Card>
 
           {/* 2. OCR Editor (for Handwritten or any submission with text) */}
-          <Card className="bg-slate-900/60 border-slate-800">
+          <Card className="bg-white border-slate-200/90 shadow-xs">
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2">
-                <Edit3 className="w-4 h-4 text-indigo-400" />
-                <CardTitle className="text-sm font-semibold text-slate-200">
+                <Edit3 className="w-4 h-4 text-blue-600" />
+                <CardTitle className="text-sm font-bold text-slate-900">
                   {isHandwritten ? 'OCR Transcript' : 'Student Response'}
                 </CardTitle>
                 {submission.ocrEdited && (
                   <Badge
                     variant="outline"
-                    className="text-[10px] bg-indigo-950/40 text-indigo-300 border-indigo-800/60"
+                    className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-semibold"
                   >
                     Transcript edited
                   </Badge>
@@ -496,7 +496,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowOriginalModal(true)}
-                  className="h-7 text-xs text-slate-400 hover:text-slate-200"
+                  className="h-7 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium"
                 >
                   <FileText className="w-3.5 h-3.5 mr-1" />
                   View Original OCR
@@ -510,16 +510,16 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                 readOnly={!isHandwritten}
                 placeholder={isHandwritten ? 'Transcribed student answer...' : 'No student response submitted.'}
                 className={cn(
-                  'min-h-[120px] font-mono text-xs bg-slate-950/70 border-slate-800 text-slate-200 focus-visible:ring-indigo-500 leading-relaxed resize-y',
+                  'min-h-[120px] font-mono text-xs bg-slate-50/50 border-slate-200 text-slate-900 focus-visible:ring-blue-500 leading-relaxed resize-y',
                   !isHandwritten && 'cursor-default opacity-90'
                 )}
               />
 
               {/* Dirty actions bar (for handwritten OCR edits) */}
               {isDirty && isHandwritten && (
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-950/20 border border-amber-900/50">
-                  <span className="text-xs text-amber-300 flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+                  <span className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                     Unsaved transcript changes
                   </span>
                   <div className="flex items-center gap-2">
@@ -529,7 +529,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                       size="sm"
                       onClick={handleResetOcr}
                       disabled={updateOcrMutation.isPending}
-                      className="h-7 text-xs text-slate-400 hover:text-white"
+                      className="h-7 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                     >
                       <RotateCcw className="w-3 h-3 mr-1" />
                       Reset
@@ -539,7 +539,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                       size="sm"
                       onClick={handleSaveOcr}
                       disabled={updateOcrMutation.isPending}
-                      className="h-7 text-xs bg-indigo-600 hover:bg-indigo-500 text-white"
+                      className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
                     >
                       {updateOcrMutation.isPending ? 'Saving...' : 'Save Transcript'}
                     </Button>
@@ -592,7 +592,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                         ? 'Save or reset transcript changes before re-grading'
                         : 'Re-evaluate with AI'
                     }
-                    className="border-slate-800 text-slate-300 hover:text-white text-xs gap-1.5"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs gap-1.5"
                   >
                     <RefreshCw
                       className={cn(
@@ -609,7 +609,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={handleOpenOverride}
-                    className="border-slate-800 text-slate-300 hover:text-white text-xs gap-1.5"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs gap-1.5"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                     Override marks...
@@ -631,10 +631,10 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                         : 'Approve AI evaluation'
                     }
                     className={cn(
-                      'text-white text-xs gap-1.5 shadow-sm',
+                      'text-white text-xs gap-1.5 shadow-xs font-semibold',
                       grade.reviewed && !grade.overridden
-                        ? 'bg-slate-700 text-slate-300 opacity-80 cursor-default'
-                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+                        ? 'bg-slate-100 text-slate-500 border border-slate-200 opacity-90 cursor-default'
+                        : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                     )}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -644,15 +644,15 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
               }
             />
           ) : (
-            <Card className="bg-slate-900/60 border-slate-800 text-center p-6 space-y-4">
-              <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+            <Card className="bg-white border-slate-200/90 text-center p-6 space-y-4 shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-500">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-semibold text-slate-200">
+                <h3 className="text-base font-bold text-slate-900">
                   No Automated Grade Available
                 </h3>
-                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                <p className="text-xs text-slate-600 max-w-md mx-auto mt-1">
                   This submission could not be evaluated automatically (e.g. scan was unreadable or evaluation failed). You can provide the transcribed text and re-grade, or manually override the marks.
                 </p>
               </div>
@@ -663,7 +663,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                   size="sm"
                   disabled={isDirty || !ocrText.trim() || regradeMutation.isPending}
                   onClick={() => handleRegrade(false)}
-                  className="border-slate-800 text-slate-300 hover:text-white text-xs gap-1.5"
+                  className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs gap-1.5"
                 >
                   <RefreshCw
                     className={cn(
@@ -677,7 +677,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                   type="button"
                   size="sm"
                   onClick={handleOpenOverride}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs gap-1.5"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs gap-1.5 shadow-xs"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                   Override marks...
@@ -690,14 +690,14 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
           <Collapsible
             open={isHistoryOpen}
             onOpenChange={setIsHistoryOpen}
-            className="border border-slate-800 rounded-lg bg-slate-900/50 overflow-hidden"
+            className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-xs"
           >
-            <CollapsibleTrigger className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-300 hover:text-slate-100 hover:bg-slate-800/40 transition-colors">
+            <CollapsibleTrigger className="w-full flex items-center justify-between p-3 text-xs font-bold text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors">
               <span className="flex items-center gap-2">
-                <History className="w-4 h-4 text-indigo-400" />
+                <History className="w-4 h-4 text-blue-600" />
                 <span>Audit History</span>
                 {auditLogs && auditLogs.length > 0 && (
-                  <Badge variant="outline" className="text-[10px] font-mono ml-1">
+                  <Badge variant="outline" className="text-[10px] font-mono ml-1 border-slate-200 bg-slate-100 text-slate-700 font-semibold">
                     {auditLogs.length}
                   </Badge>
                 )}
@@ -709,7 +709,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                 )}
               />
             </CollapsibleTrigger>
-            <CollapsibleContent className="p-4 border-t border-slate-800 space-y-3">
+            <CollapsibleContent className="p-4 border-t border-slate-200 space-y-3">
               {!auditLogs || auditLogs.length === 0 ? (
                 <p className="text-xs text-slate-500 italic">No audit records found.</p>
               ) : (
@@ -717,45 +717,45 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                   {auditLogs.map((log) => (
                     <div
                       key={log.id}
-                      className="p-2.5 rounded bg-slate-950/60 border border-slate-800/80 text-xs space-y-1"
+                      className="p-2.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-1"
                     >
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span className="font-semibold text-indigo-300">
+                      <div className="flex items-center justify-between text-slate-800">
+                        <span className="font-bold text-blue-700">
                           {log.actorName}
                         </span>
                         <Badge
                           variant="outline"
-                          className="text-[10px] uppercase font-mono"
+                          className="text-[10px] uppercase font-mono border-slate-200 bg-white text-slate-700 font-semibold"
                         >
                           {log.action}
                         </Badge>
                       </div>
-                      <div className="text-[11px] text-slate-400">
+                      <div className="text-[11px] text-slate-500">
                         {new Date(log.createdAt).toLocaleString()}
                       </div>
                       {/* Action details */}
                       {log.action === 'OVERRIDE' && log.after && (
-                        <div className="pt-1 text-slate-300 text-[11px] border-t border-slate-800/60">
+                        <div className="pt-1 text-slate-700 text-[11px] border-t border-slate-200">
                           <div>
                             Marks: {log.before?.autoMarks ?? '—'} pts &rarr;{' '}
-                            <span className="font-semibold text-emerald-300">
+                            <span className="font-bold text-emerald-700">
                               {log.after.finalMarks} pts
                             </span>
                           </div>
                           {log.after.note && (
-                            <div className="italic text-slate-400 mt-0.5">
+                            <div className="italic text-slate-600 mt-0.5">
                               &ldquo;{log.after.note}&rdquo;
                             </div>
                           )}
                         </div>
                       )}
                       {log.action === 'OCR_EDIT' && log.after && (
-                        <div className="pt-1 text-slate-300 text-[11px] border-t border-slate-800/60">
+                        <div className="pt-1 text-slate-700 text-[11px] border-t border-slate-200">
                           Word edits: {log.after.wordEdits ?? '—'} (Length: {log.after.newLength} chars)
                         </div>
                       )}
                       {log.action === 'APPROVE' && (
-                        <div className="pt-1 text-emerald-400/90 text-[11px] border-t border-slate-800/60">
+                        <div className="pt-1 text-emerald-700 text-[11px] border-t border-slate-200 font-medium">
                           Approved AI evaluation without manual changes.
                         </div>
                       )}
@@ -770,17 +770,17 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
 
       {/* Modal: View Original OCR Transcript */}
       <Dialog open={showOriginalModal} onOpenChange={setShowOriginalModal}>
-        <DialogContent className="sm:max-w-[550px] bg-slate-900 border-slate-800 text-slate-200">
+        <DialogContent className="sm:max-w-[550px] bg-white border-slate-200 text-slate-900 shadow-xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base text-slate-100">
-              <FileText className="w-4 h-4 text-indigo-400" />
+            <DialogTitle className="flex items-center gap-2 text-base text-slate-900 font-bold">
+              <FileText className="w-4 h-4 text-blue-600" />
               Original Vision Transcription
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-400">
+            <DialogDescription className="text-xs text-slate-500">
               Unmodified OCR output captured when this scan was originally processed.
             </DialogDescription>
           </DialogHeader>
-          <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 whitespace-pre-wrap max-h-[350px] overflow-y-auto leading-relaxed">
+          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 font-mono text-xs text-slate-800 whitespace-pre-wrap max-h-[350px] overflow-y-auto leading-relaxed">
             {submission.ocrOriginal || 'No original text recorded.'}
           </div>
           <DialogFooter>
@@ -789,7 +789,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => setShowOriginalModal(false)}
-              className="border-slate-800 text-slate-300"
+              className="border-slate-200 text-slate-700 hover:bg-slate-50"
             >
               Close
             </Button>
@@ -802,13 +802,13 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
         open={showRegradeForceModal}
         onOpenChange={setShowRegradeForceModal}
       >
-        <DialogContent className="sm:max-w-[480px] bg-slate-900 border-slate-800 text-slate-200">
+        <DialogContent className="sm:max-w-[480px] bg-white border-slate-200 text-slate-900 shadow-xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base text-amber-400">
-              <AlertTriangle className="w-5 h-5 text-amber-400" />
+            <DialogTitle className="flex items-center gap-2 text-base text-amber-600 font-bold">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
               Discard Teacher Override?
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-300 leading-relaxed pt-2">
+            <DialogDescription className="text-xs text-slate-600 leading-relaxed pt-2">
               This submission was previously adjusted by an instructor. Re-grading will discard the teacher override and recalculate marks using the AI evaluation model. Continue?
             </DialogDescription>
           </DialogHeader>
@@ -818,7 +818,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => setShowRegradeForceModal(false)}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-600 hover:text-slate-900"
             >
               Cancel
             </Button>
@@ -826,7 +826,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
               type="button"
               size="sm"
               onClick={() => handleRegrade(true)}
-              className="bg-amber-600 hover:bg-amber-500 text-white"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-xs"
             >
               Discard & Re-grade
             </Button>
@@ -836,13 +836,13 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
 
       {/* Modal: Override Marks Dialog */}
       <Dialog open={showOverrideModal} onOpenChange={setShowOverrideModal}>
-        <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-800 text-slate-200">
+        <DialogContent className="sm:max-w-[500px] bg-white border-slate-200 text-slate-900 shadow-xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base text-slate-100">
-              <Award className="w-5 h-5 text-indigo-400" />
+            <DialogTitle className="flex items-center gap-2 text-base text-slate-900 font-bold">
+              <Award className="w-5 h-5 text-blue-600" />
               Override Marks & Feedback
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-400">
+            <DialogDescription className="text-xs text-slate-500">
               Assign an instructor override score and explanation. This value is displayed to the student alongside the AI suggestion.
             </DialogDescription>
           </DialogHeader>
@@ -857,7 +857,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
 
             {/* Final Marks input */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 block">
+              <label className="text-xs font-semibold text-slate-700 block">
                 Final Marks (0 to {question.maxMarks}, step 0.25)
               </label>
               <Input
@@ -868,28 +868,28 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
                 value={overrideMarks}
                 onChange={(e) => setOverrideMarks(e.target.value)}
                 placeholder={`0.00`}
-                className="font-mono text-xs bg-slate-950 border-slate-800 text-slate-100"
+                className="font-mono text-xs bg-slate-50/50 border-slate-200 text-slate-900 focus-visible:ring-blue-500"
               />
             </div>
 
             {/* Note input */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 block">
+              <label className="text-xs font-semibold text-slate-700 block">
                 Instructor Note (5 to 500 characters)
               </label>
               <Textarea
                 value={overrideNote}
                 onChange={(e) => setOverrideNote(e.target.value)}
                 placeholder="Explain the rationale for this grade adjustment..."
-                className="text-xs bg-slate-950 border-slate-800 text-slate-100 min-h-[90px]"
+                className="text-xs bg-slate-50/50 border-slate-200 text-slate-900 focus-visible:ring-blue-500 min-h-[90px]"
               />
-              <div className="flex justify-between text-[11px] text-slate-400">
+              <div className="flex justify-between text-[11px] text-slate-500">
                 <span>Required for transparency.</span>
                 <span
                   className={cn(
                     overrideNote.trim().length >= 5 && overrideNote.trim().length <= 500
-                      ? 'text-slate-400'
-                      : 'text-amber-400'
+                      ? 'text-slate-500'
+                      : 'text-amber-600 font-semibold'
                   )}
                 >
                   {overrideNote.trim().length} / 500
@@ -898,16 +898,16 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
             </div>
 
             {/* Score Comparison Preview */}
-            <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 text-xs space-y-1">
-              <span className="font-semibold text-slate-400 font-mono block">
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1">
+              <span className="font-bold text-slate-700 font-mono block">
                 Score Preview:
               </span>
               <div className="flex items-center justify-between font-mono text-xs">
-                <span className="text-slate-400">
+                <span className="text-slate-500">
                   AI Marks: {grade?.totalMarks !== undefined ? `${grade.totalMarks} pts` : 'None'}
                 </span>
-                <span className="text-indigo-400">&rarr;</span>
-                <span className="font-bold text-emerald-400">
+                <span className="text-blue-600 font-bold">&rarr;</span>
+                <span className="font-bold text-emerald-700">
                   Adjusted:{' '}
                   {!isNaN(parseFloat(overrideMarks))
                     ? `${parseFloat(overrideMarks)} pts`
@@ -923,7 +923,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => setShowOverrideModal(false)}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-600 hover:text-slate-900"
             >
               Cancel
             </Button>
@@ -932,7 +932,7 @@ export const TeacherReviewSubmissionPage: React.FC = () => {
               size="sm"
               disabled={!isOverrideValid || overrideMutation.isPending}
               onClick={handleConfirmOverride}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
             >
               {overrideMutation.isPending ? 'Saving...' : 'Confirm Override'}
             </Button>
