@@ -39,9 +39,20 @@ Applications of OCR:
 }
 
 function getDemoRubricGrading(prompt: string): string {
-  // Extract student answer
-  const studentAnswerMatch = prompt.match(/Student Answer:\s*"([\s\S]*?)"(?:\s*$)/);
-  const studentAnswer = (studentAnswerMatch ? studentAnswerMatch[1] : '').trim();
+  // Extract student answer safely without breaking on quotes or newlines
+  const marker = 'Student Answer:\n';
+  const idx = prompt.indexOf(marker);
+  let studentAnswer = '';
+  if (idx !== -1) {
+    let raw = prompt.slice(idx + marker.length).trim();
+    if (raw.startsWith('"') && raw.endsWith('"') && raw.length >= 2) {
+      raw = raw.slice(1, -1);
+    }
+    studentAnswer = raw.trim();
+  } else {
+    const studentAnswerMatch = prompt.match(/Student Answer:\s*"?([\s\S]*?)"?\s*$/);
+    studentAnswer = (studentAnswerMatch ? studentAnswerMatch[1] : '').trim();
+  }
   const lowerAnswer = studentAnswer.toLowerCase();
 
   // Extract rubric criteria: - ID: <id> | Max Marks: <marks> | Description: <desc>

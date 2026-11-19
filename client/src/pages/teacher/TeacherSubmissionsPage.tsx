@@ -27,8 +27,8 @@ import {
 } from 'lucide-react';
 
 export const TeacherSubmissionsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const assessmentId = id || '';
+  const params = useParams<{ id?: string; assessmentId?: string }>();
+  const assessmentId = params.assessmentId || params.id || '';
 
   const { data: assessment } = useAssessment(assessmentId);
   const {
@@ -182,18 +182,36 @@ export const TeacherSubmissionsPage: React.FC = () => {
                         Adjusted
                       </Badge>
                     )}
+                    {sub.question?.type && (
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-mono py-0 px-1.5 ${
+                          sub.question.type === 'HANDWRITTEN'
+                            ? 'border-purple-800 bg-purple-950/30 text-purple-300'
+                            : sub.question.type === 'SHORT'
+                            ? 'border-indigo-800 bg-indigo-950/30 text-indigo-300'
+                            : 'border-slate-700 bg-slate-800/50 text-slate-300'
+                        }`}
+                      >
+                        {sub.question.type}
+                      </Badge>
+                    )}
                   </div>
 
                   <p className="text-xs text-slate-300 line-clamp-1">
                     <span className="text-slate-400 font-medium">Question: </span>
-                    {sub.question.prompt}
+                    {sub.question?.prompt}
                   </p>
 
-                  {sub.answerText && (
+                  {sub.answerText ? (
                     <p className="text-xs text-slate-400 line-clamp-1 italic">
                       "{sub.answerText}"
                     </p>
-                  )}
+                  ) : (sub as any).scanPath ? (
+                    <p className="text-xs text-purple-400/80 line-clamp-1 italic">
+                      Handwritten scan submitted
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Score & Action */}
@@ -258,7 +276,10 @@ export const TeacherSubmissionsPage: React.FC = () => {
             <div className="space-y-4 pt-2">
               <GradeCard
                 variant="teacher"
-                question={submissionDetail.question}
+                question={{
+                  prompt: submissionDetail.question?.prompt || 'Question',
+                  maxMarks: submissionDetail.question?.maxMarks || 0,
+                }}
                 answer={submissionDetail.answerText || ''}
                 grade={submissionDetail.grade}
                 actions={
@@ -271,6 +292,15 @@ export const TeacherSubmissionsPage: React.FC = () => {
                     >
                       Close
                     </Button>
+                    <Link to={`/teacher/review/${submissionDetail.id}`}>
+                      <Button
+                        size="sm"
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs gap-1.5"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>Open Full Review & Actions</span>
+                      </Button>
+                    </Link>
                   </div>
                 }
               />
@@ -278,8 +308,17 @@ export const TeacherSubmissionsPage: React.FC = () => {
           )}
 
           {!isLoadingDetail && submissionDetail && !submissionDetail.grade && (
-            <div className="py-12 text-center text-sm text-slate-400">
-              This submission has not been evaluated yet.
+            <div className="py-12 text-center text-sm text-slate-400 space-y-3">
+              <p>This submission has not been evaluated yet.</p>
+              <Link to={`/teacher/review/${submissionDetail.id}`}>
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs gap-1.5"
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  <span>Evaluate / Review Submission</span>
+                </Button>
+              </Link>
             </div>
           )}
         </DialogContent>

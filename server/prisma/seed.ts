@@ -2,6 +2,7 @@ import { PrismaClient, Role, ResourceDifficulty, ResourceType } from '@prisma/cl
 import bcrypt from 'bcryptjs';
 import process from 'node:process';
 import { assessmentsService } from '../src/modules/assessments/assessments.service.js';
+import { gradingService } from '../src/modules/grading/grading.service.js';
 
 
 const prisma = new PrismaClient();
@@ -678,6 +679,26 @@ async function main() {
           { questionId: q[6].id, answerText: 'Decompose relations into smaller tables.' },
           { questionId: q[7].id, answerText: 'BCNF is stricter than 3NF.' },
         ]);
+      }
+    }
+
+    // Ensure all submitted SHORT/HANDWRITTEN questions in this assessment have initial AI grades
+    const ungradedSubs = await prisma.submission.findMany({
+      where: {
+        assessmentId: fullAssessment.id,
+        grade: null,
+        question: {
+          type: { in: ['SHORT', 'HANDWRITTEN'] },
+        },
+      },
+    });
+    for (const sub of ungradedSubs) {
+      if (sub.answerText && sub.answerText.trim().length > 0) {
+        try {
+          await gradingService.gradeShortOrHandwrittenSubmission(sub.id);
+        } catch {
+          // ignore
+        }
       }
     }
 

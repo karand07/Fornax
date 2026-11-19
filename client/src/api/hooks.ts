@@ -1083,6 +1083,7 @@ export interface TeacherSubmissionDetail {
     reviewedBy?: string | null;
     reviewerName?: string | null;
     reviewedAt?: string | null;
+    reviewed?: boolean;
     provisional: boolean;
     summary: string | null;
     missingPoints: string[];
